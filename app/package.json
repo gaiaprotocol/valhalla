@@ -1,0 +1,32 @@
+{
+  "scripts": {
+    "start": "webpack serve --watch --mode=development",
+    "build": "webpack --mode=production"
+  },
+  "dependencies": {
+    "@webtaku/el": "^0.0.3"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "css-loader": "^7.1.2",
+    "csv-parse": "^6.0.0",
+    "ignore-emit-webpack-plugin": "^2.0.6",
+    "jest": "^30.0.4",
+    "jest-environment-jsdom": "^30.0.4",
+    "less": "^4.3.0",
+    "less-loader": "^12.3.0",
+    "mini-css-extract-plugin": "^2.9.2",
+    "sass": "^1.89.2",
+    "sass-loader": "^16.0.5",
+    "style-loader": "^4.0.0",
+    "ts-jest": "^29.4.0",
+    "ts-loader": "^9.5.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3",
+    "webpack": "^5.100.1",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.2",
+    "yaml-loader": "^0.8.1"
+  },
+  "packageManager": "yarn@1.22.22"
+}
