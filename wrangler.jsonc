@@ -8,5 +8,8 @@
 	},
 	"observability": {
 		"enabled": true
+	},
+	"vars": {
+		"GAIA_API_URL": "api.gaia.cc"
 	}
 }
