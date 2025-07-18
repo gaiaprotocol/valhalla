@@ -5,14 +5,15 @@ import './main.less';
 import { createAboutView } from './views/authenticated/about';
 import { createLayoutView } from './views/authenticated/layout';
 import { createLoginView } from './views/unauthenticated/login';
+import { View } from './views/view';
 
 document.body.appendChild(createRainbowKit());
 
 const router = new Navigo('/');
 
-let layoutView: HTMLElement | undefined;
+let layoutView: View | undefined;
 let contentContainer: HTMLElement | undefined;
-let loginView: HTMLElement | undefined;
+let loginView: View | undefined;
 
 function removeLoginView() {
   loginView?.remove();
@@ -35,17 +36,17 @@ function saveLastPath(path: string) {
 /**
  * 최초 로그인 후 layout을 생성하고 content만 교체
  */
-function renderContent(content: HTMLElement) {
+function renderContent(content: View) {
   removeLoginView();
 
   if (!layoutView) {
     layoutView = createLayoutView(router);
-    contentContainer = layoutView.querySelector('#content') as HTMLElement;
-    contentContainer.appendChild(content);
-    document.body.appendChild(layoutView);
+    contentContainer = layoutView.el.querySelector('#content') as HTMLElement;
+    contentContainer.appendChild(content.el);
+    document.body.appendChild(layoutView.el);
   } else {
     contentContainer!.innerHTML = '';
-    contentContainer!.appendChild(content);
+    contentContainer!.appendChild(content.el);
   }
 }
 
@@ -61,7 +62,7 @@ function renderLogin() {
   removeLoginView();
 
   loginView = createLoginView(router);
-  document.body.appendChild(loginView);
+  document.body.appendChild(loginView.el);
 }
 
 // 루트: 로그인 되어있으면 마지막 path, 아니면 로그인
