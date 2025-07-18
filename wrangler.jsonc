@@ -1,26 +1,10 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "gaiaprotocol-api",
+	"name": "valhalla",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-07-15",
-	"migrations": [
-		{
-			"new_sqlite_classes": [
-				"MyDurableObject"
-			],
-			"tag": "v1"
-		}
-	],
 	"assets": {
 		"directory": "./public"
-	},
-	"durable_objects": {
-		"bindings": [
-			{
-				"class_name": "MyDurableObject",
-				"name": "MY_DURABLE_OBJECT"
-			}
-		]
 	},
 	"observability": {
 		"enabled": true
