@@ -3,21 +3,39 @@
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
-		"build-app": "npx tsx app/build.ts",
-		"watch-app": "nodemon --watch app --ext ts --exec \"yarn build-app\"",
-		"deploy": "yarn build-app && wrangler deploy",
-		"dev": "concurrently -k \"yarn watch-app\" \"wrangler dev\"",
-		"start": "concurrently \"wrangler dev\" \"yarn watch-app\"",
+		"build": "webpack --mode=production",
+		"deploy": "yarn build && wrangler deploy",
+		"dev": "concurrently -k \"webpack serve --watch --mode=development\" \"wrangler dev\"",
+		"start": "concurrently -k \"webpack serve --watch --mode=development\" \"wrangler dev\"",
 		"test": "vitest",
 		"cf-typegen": "wrangler types"
 	},
+  "dependencies": {
+    "@webtaku/el": "^0.0.4"
+  },
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.8.19",
-		"concurrently": "^9.2.0",
-		"tsx": "^4.20.3",
-		"typescript": "^5.5.2",
 		"vitest": "~3.2.0",
-		"wrangler": "^4.25.0"
+		"wrangler": "^4.25.0",
+		"@types/jest": "^30.0.0",
+    "css-loader": "^7.1.2",
+    "csv-parse": "^6.0.0",
+    "jest": "^30.0.4",
+    "jest-environment-jsdom": "^30.0.4",
+    "less": "^4.3.0",
+    "less-loader": "^12.3.0",
+    "mini-css-extract-plugin": "^2.9.2",
+    "sass": "^1.89.2",
+    "sass-loader": "^16.0.5",
+    "style-loader": "^4.0.0",
+    "ts-jest": "^29.4.0",
+    "ts-loader": "^9.5.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3",
+    "webpack": "^5.100.1",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.2",
+    "yaml-loader": "^0.8.1"
 	},
 	"packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
