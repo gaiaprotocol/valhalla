@@ -12,7 +12,12 @@ module.exports = {
     rules: [
       {
         test: /\.tsx?$/,
-        use: 'ts-loader',
+        use: {
+          loader: 'ts-loader',
+          options: {
+            configFile: 'tsconfig.app.json',
+          }
+        },
         exclude: /node_modules/
       },
       {
@@ -34,19 +39,11 @@ module.exports = {
     ]
   },
   resolve: {
-    extensions: ['.ts', '.js']
+    extensions: ['.tsx', '.ts', '.js']
   },
   plugins: [
     new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
     new MiniCssExtractPlugin({ filename: 'styles.css' })
   ],
-  devServer: {
-    static: './public',
-    client: {
-      overlay: false,
-      logging: 'none'
-    },
-    open: true
-  },
   mode: 'development'
 };
