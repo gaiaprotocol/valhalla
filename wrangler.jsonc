@@ -4,7 +4,8 @@
 	"main": "src/index.ts",
 	"compatibility_date": "2025-07-15",
 	"assets": {
-		"directory": "./public"
+		"directory": "./public",
+		"not_found_handling": "single-page-application"
 	},
 	"observability": {
 		"enabled": true
