@@ -1,5 +1,5 @@
 /*!************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[2].use[1]!./node_modules/less-loader/dist/cjs.js!./app/main.less ***!
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[1].use[1]!./node_modules/less-loader/dist/cjs.js!./app/main.less ***!
   \************************************************************************************************************************************/
 /* vanilla-extract-css-ns:src/css/reset.css.ts.vanilla.css?source=Lmlla2JjYzAgewogIGJvcmRlcjogMDsKICBib3gtc2l6aW5nOiBib3JkZXItYm94OwogIGZvbnQtc2l6ZTogMTAwJTsKICBsaW5lLWhlaWdodDogbm9ybWFsOwogIG1hcmdpbjogMDsKICBwYWRkaW5nOiAwOwogIHRleHQtYWxpZ246IGxlZnQ7CiAgdmVydGljYWwtYWxpZ246IGJhc2VsaW5lOwogIC13ZWJraXQtdGFwLWhpZ2hsaWdodC1jb2xvcjogdHJhbnNwYXJlbnQ7Cn0KLmlla2JjYzEgewogIGxpc3Qtc3R5bGU6IG5vbmU7Cn0KLmlla2JjYzIgewogIHF1b3Rlczogbm9uZTsKfQouaWVrYmNjMjpiZWZvcmUsIC5pZWtiY2MyOmFmdGVyIHsKICBjb250ZW50OiAnJzsKfQouaWVrYmNjMyB7CiAgYm9yZGVyLWNvbGxhcHNlOiBjb2xsYXBzZTsKICBib3JkZXItc3BhY2luZzogMDsKfQouaWVrYmNjNCB7CiAgYXBwZWFyYW5jZTogbm9uZTsKfQouaWVrYmNjNSB7CiAgb3V0bGluZTogbm9uZTsKfQouaWVrYmNjNTo6cGxhY2Vob2xkZXIgewogIG9wYWNpdHk6IDE7Cn0KLmlla2JjYzYgewogIGJhY2tncm91bmQtY29sb3I6IHRyYW5zcGFyZW50OwogIGNvbG9yOiBpbmhlcml0Owp9Ci5pZWtiY2M3OmRpc2FibGVkIHsKICBvcGFjaXR5OiAxOwp9Ci5pZWtiY2M3OjotbXMtZXhwYW5kIHsKICBkaXNwbGF5OiBub25lOwp9Ci5pZWtiY2M4OjotbXMtY2xlYXIgewogIGRpc3BsYXk6IG5vbmU7Cn0KLmlla2JjYzg6Oi13ZWJraXQtc2VhcmNoLWNhbmNlbC1idXR0b24gewogIC13ZWJraXQtYXBwZWFyYW5jZTogbm9uZTsKfQouaWVrYmNjOSB7CiAgYmFja2dyb3VuZDogbm9uZTsKICBjdXJzb3I6IHBvaW50ZXI7CiAgdGV4dC1hbGlnbjogbGVmdDsKfQouaWVrYmNjYSB7CiAgY29sb3I6IGluaGVyaXQ7CiAgdGV4dC1kZWNvcmF0aW9uOiBub25lOwp9 */
 [data-rk] .iekbcc0 {
@@ -2232,5 +2232,24 @@ body {
   overflow-x: hidden;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
+}
+
+/*!***********************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[1].use[1]!./node_modules/less-loader/dist/cjs.js!./app/views/unauthenticated/login.less ***!
+  \***********************************************************************************************************************************************************/
+.login-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+}
+.login-title {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+.login-description {
+  margin-bottom: 20px;
 }
 
