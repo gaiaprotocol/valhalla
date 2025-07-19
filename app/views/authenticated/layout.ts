@@ -3,7 +3,26 @@ import Navigo from 'navigo';
 import { logout } from '../../auth/logout';
 import { View } from '../view';
 
-export function createProfileModal(router: Navigo): HTMLElement {
+function createDashboardModal(router: Navigo): HTMLElement {
+  const modal = el('ion-modal.fullscreen', { trigger: 'open-dashboard' }); // 트리거는 레이아웃의 버튼 id
+
+  const modalHeader = el('ion-header',
+    el('ion-toolbar',
+      el('ion-buttons', { slot: 'start' },
+        el('ion-button', { onclick: () => modal.dismiss() },
+          el('ion-icon', { slot: 'icon-only', name: 'chevron-back' })
+        ),
+      ),
+      el('ion-title', { style: 'text-align: center;' }, 'Dashboard'),
+    )
+  );
+
+  modal.append(modalHeader);
+
+  return modal;
+}
+
+function createProfileModal(router: Navigo): HTMLElement {
   const profileData = {
     firstName: 'John',
     lastName: 'Doe',
@@ -63,7 +82,7 @@ export function createProfileModal(router: Navigo): HTMLElement {
     )*/
 
     el('ion-list',
-      menuItem('pencil-sharp', 'Personal Information', 'Name, email, phone', () => console.log('Personal Info')),
+      menuItem('pencil', 'Personal Information', 'Name, email, phone', () => console.log('Personal Info')),
       //menuItem('notifications', 'Notifications', 'Push notifications, email', () => console.log('Notifications')),
       menuItem('log-out', 'Sign Out', '', async () => {
         await logout();
@@ -90,8 +109,8 @@ function createHeader(): HTMLElement {
   return el('ion-header',
     el('ion-toolbar',
       el('ion-buttons', { slot: 'start' },
-        el('ion-button',
-          el('ion-icon', { slot: 'icon-only', name: 'bar-chart' })  // Dashboard 아이콘
+        el('ion-button', { id: 'open-dashboard' },
+          el('ion-icon', { slot: 'icon-only', name: 'bar-chart-sharp' })  // Dashboard 아이콘
         )
       ),
       el('ion-title', { style: 'text-align: center;' }, 'Valhalla'),
@@ -108,6 +127,7 @@ function createLayoutView(router: Navigo): View {
   const layout = el('ion-app',
     createHeader(),
     el('ion-content.content'),
+    createDashboardModal(router),
     createProfileModal(router),
   );
 
