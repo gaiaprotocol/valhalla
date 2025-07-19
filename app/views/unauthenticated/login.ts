@@ -10,8 +10,11 @@ import { showErrorAlert } from '../../components/alert';
 import { View } from '../view';
 import './login.less';
 import logoImage from './logo.png';
+import { logout } from '../../auth/logout';
 
 export function createLoginView(router: Navigo): View {
+  logout(); // logout을 먼저 실행하여 지갑 연결 해제를 보장
+
   const title = el('h1', { class: 'login-title' }, 'Welcome to Valhalla');
 
   const logo = el('img', {
