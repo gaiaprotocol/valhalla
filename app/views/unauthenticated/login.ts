@@ -42,24 +42,21 @@ async function handleLoginClick(router: Navigo) {
 }
 
 export function createLoginView(router: Navigo): View {
-  const title = el('h1', { class: 'login-title' }, 'Welcome to Valhalla');
+  const title = el('h1.login-title', 'Welcome to Valhalla');
 
-  const logo = el('img', {
+  const logo = el('img.login-logo', {
     src: logoImage,
     alt: 'Valhalla Logo',
-    class: 'login-logo'
   });
 
   const description = el(
-    'p',
-    { class: 'login-description' },
+    'p.login-description',
     'Please connect your wallet and sign a message to access Valhalla.'
   );
 
   const connectButton = el(
-    'sl-button',
+    'sl-button.login-button',
     {
-      class: 'login-button',
       variant: 'primary',
       onclick: () => {
         if (getAccount(wagmiConfig).isConnected) {
@@ -74,9 +71,8 @@ export function createLoginView(router: Navigo): View {
 
   const isConnected = getAccount(wagmiConfig).isConnected;
   const signButton = el(
-    'sl-button',
+    'sl-button.login-button',
     {
-      class: 'login-button',
       variant: isConnected ? 'primary' : 'default',
       disabled: !isConnected,
       onclick: async () => {
