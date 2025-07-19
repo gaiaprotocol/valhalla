@@ -26,7 +26,6 @@ async function handleLoginClick(router: Navigo) {
     const address = await ensureWalletConnected();
     const signature = await signMessage(address);
     const token = await requestLogin(address, signature);
-    TokenManager.set(token, address);
 
     const godMode = await checkGodMode(address);
     if (!godMode) {
@@ -34,6 +33,7 @@ async function handleLoginClick(router: Navigo) {
       return;
     }
 
+    TokenManager.set(token, address);
     router.navigate('/');
   } catch (err) {
     console.error(err);
