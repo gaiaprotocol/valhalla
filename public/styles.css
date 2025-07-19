@@ -2298,6 +2298,9 @@ body {
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
 }
+ion-app {
+  --ion-toolbar-color: var(--sl-color-neutral-900);
+}
 ion-app ion-content.content {
   --color: var(--sl-color-neutral-900);
 }
