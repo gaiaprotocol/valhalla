@@ -1,10 +1,4 @@
-import { getAccount } from '@wagmi/core';
-import { wagmiConfig } from './wallet';
-
-async function requestLogin(signature: string): Promise<string> {
-  const address = getAccount(wagmiConfig).address;
-  if (!address) throw new Error('No wallet connected');
-
+async function requestLogin(address: `0x${string}`, signature: `0x${string}`): Promise<string> {
   const response = await fetch(
     '/api/login',
     {

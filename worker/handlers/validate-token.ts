@@ -1,4 +1,4 @@
-import { verifyToken } from '../services/token';
+import { verifyToken } from '../services/jwt';
 
 export async function handleValidateToken(request: Request, env: Env) {
   const auth = request.headers.get('authorization');

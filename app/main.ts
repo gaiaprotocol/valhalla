@@ -2,7 +2,9 @@ import Navigo from 'navigo';
 import { TokenManager } from './auth/token';
 import { validateToken } from './auth/validate';
 import { createRainbowKit } from './auth/wallet';
+import { showGodModeRequirementDialog } from './components/god-mode-req-alert';
 import './main.less';
+import { checkGodMode } from './services/god-mode';
 import { createAboutView } from './views/authenticated/about';
 import { createLayoutView } from './views/authenticated/layout';
 import { createLoginView } from './views/unauthenticated/login';
@@ -107,10 +109,28 @@ router.on('/login', () => {
   }
 });
 
-// 최초 1회 서버 검증
 (async () => {
   const ok = await validateToken();
-  if (!ok) TokenManager.clear();
+  if (!ok) {
+    TokenManager.clear();
+    router.resolve();
+    return;
+  }
+
+  const address = TokenManager.getAddress();
+  if (!address) {
+    TokenManager.clear();
+    router.resolve();
+    return;
+  }
+
+  const hasGodMode = await checkGodMode(address);
+  if (!hasGodMode) {
+    showGodModeRequirementDialog();
+    TokenManager.clear();
+    router.navigate('/login');
+    return;
+  }
 
   router.resolve();
 })();

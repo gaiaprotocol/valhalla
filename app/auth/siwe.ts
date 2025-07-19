@@ -1,4 +1,4 @@
-import { getAccount, signMessage as wagmiSignMessage } from '@wagmi/core';
+import { signMessage as wagmiSignMessage } from '@wagmi/core';
 import { createSiweMessage as viemCreateSiweMessage } from 'viem/siwe';
 import { MESSAGE_FOR_WALLET_LOGIN } from '../vars';
 import { wagmiConfig } from './wallet';
@@ -16,10 +16,7 @@ function createSiweMessage(address: `0x${string}`, nonce: string, issuedAt: stri
   });
 }
 
-async function signMessage(): Promise<string> {
-  const address = getAccount(wagmiConfig).address;
-  if (!address) throw new Error('No wallet connected');
-
+async function signMessage(address: `0x${string}`): Promise<`0x${string}`> {
   const response = await fetch(
     '/api/nonce',
     {

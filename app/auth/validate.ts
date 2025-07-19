@@ -1,7 +1,7 @@
 import { TokenManager } from './token';
 
 export async function validateToken(): Promise<boolean> {
-  const token = TokenManager.get();
+  const token = TokenManager.getToken();
   if (!token) return false;
 
   const res = await fetch('/api/validate-token', {

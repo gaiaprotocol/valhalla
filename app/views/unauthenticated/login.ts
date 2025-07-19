@@ -7,9 +7,39 @@ import { signMessage } from '../../auth/siwe';
 import { TokenManager } from '../../auth/token';
 import { openWalletConnectModal, wagmiConfig } from '../../auth/wallet';
 import { showErrorAlert } from '../../components/alert';
+import { showGodModeRequirementDialog } from '../../components/god-mode-req-alert';
+import { checkGodMode } from '../../services/god-mode';
 import { View } from '../view';
 import './login.less';
 import logoImage from './logo.png';
+
+async function ensureWalletConnected(): Promise<`0x${string}`> {
+  const account = getAccount(wagmiConfig);
+  if (!account.isConnected || !account.address) {
+    throw new Error('No wallet connected');
+  }
+  return account.address;
+}
+
+async function handleLoginClick(router: Navigo) {
+  try {
+    const address = await ensureWalletConnected();
+    const signature = await signMessage(address);
+    const token = await requestLogin(address, signature);
+    TokenManager.set(token, address);
+
+    const godMode = await checkGodMode(address);
+    if (!godMode) {
+      showGodModeRequirementDialog();
+      return;
+    }
+
+    router.navigate('/');
+  } catch (err) {
+    console.error(err);
+    showErrorAlert('Error', err instanceof Error ? err.message : String(err));
+  }
+}
 
 export function createLoginView(router: Navigo): View {
   const title = el('h1', { class: 'login-title' }, 'Welcome to Valhalla');
@@ -52,13 +82,7 @@ export function createLoginView(router: Navigo): View {
       onclick: async () => {
         signButton.loading = true;
         try {
-          const signature = await signMessage();
-          const token = await requestLogin(signature);
-          TokenManager.set(token);
-          router.navigate('/');
-        } catch (error) {
-          console.error(error);
-          showErrorAlert('Error', error instanceof Error ? error.message : String(error));
+          await handleLoginClick(router);
         } finally {
           signButton.loading = false;
         }

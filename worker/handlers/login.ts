@@ -1,7 +1,7 @@
 import { getAddress } from 'viem';
 import { z } from 'zod';
+import { generateToken } from '../services/jwt';
 import { validateSiwe } from '../services/siwe';
-import { generateToken } from '../services/token';
 
 export async function handleLogin(request: Request, env: Env) {
   const schema = z.object({
