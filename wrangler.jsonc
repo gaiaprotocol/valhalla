@@ -13,6 +13,29 @@
 	"observability": {
 		"enabled": true
 	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "valhalla",
+			"database_id": "8135259c-c6dc-49fb-ab5f-903822979af0"
+		}
+	],
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "CHATROOM",
+				"class_name": "ChatRoom"
+			}
+		]
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_classes": [
+				"ChatRoom"
+			]
+		}
+	],
 	"kv_namespaces": [
 		{
 			"binding": "SIWE_NONCES",
@@ -28,6 +51,21 @@
 	},
 	"env": {
 		"development": {
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "valhalla",
+					"database_id": "8135259c-c6dc-49fb-ab5f-903822979af0"
+				}
+			],
+			"durable_objects": {
+				"bindings": [
+					{
+						"name": "CHATROOM",
+						"class_name": "ChatRoom"
+					}
+				]
+			},
 			"kv_namespaces": [
 				{
 					"binding": "SIWE_NONCES",
