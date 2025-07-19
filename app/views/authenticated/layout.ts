@@ -1,7 +1,6 @@
-import { disconnect } from '@wagmi/core';
 import { el } from '@webtaku/el';
-import { wagmiConfig } from '../../auth/wallet';
 import Navigo from 'navigo';
+import { logout } from '../../auth/logout';
 import { View } from '../view';
 
 function createLayoutView(router: Navigo): View {
@@ -10,7 +9,7 @@ function createLayoutView(router: Navigo): View {
     el('#content'),
     el('button', {
       onclick: async () => {
-        await disconnect(wagmiConfig);
+        await logout();
         router.navigate('/');
       }
     }, 'logout'));

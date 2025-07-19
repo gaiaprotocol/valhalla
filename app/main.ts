@@ -1,6 +1,7 @@
-import { getAccount } from '@wagmi/core';
 import Navigo from 'navigo';
-import { createRainbowKit, wagmiConfig } from './auth/wallet';
+import { TokenManager } from './auth/token';
+import { validateToken } from './auth/validate';
+import { createRainbowKit } from './auth/wallet';
 import './main.less';
 import { createAboutView } from './views/authenticated/about';
 import { createLayoutView } from './views/authenticated/layout';
@@ -20,9 +21,8 @@ function removeLoginView() {
   loginView = undefined;
 }
 
-function requireWallet(next: () => void) {
-  const account = getAccount(wagmiConfig);
-  if (!account.isConnected) {
+function requireAuth(next: () => void) {
+  if (!TokenManager.has()) {
     router.navigate('/login');
   } else {
     next();
@@ -68,7 +68,7 @@ function renderLogin() {
 // 루트: 로그인 되어있으면 마지막 path, 아니면 로그인
 router.on('/', () => {
   removeLoginView();
-  requireWallet(() => {
+  requireAuth(() => {
     const lastPath = localStorage.getItem('lastPath');
     if (!lastPath || lastPath === '/login') {
       router.navigate('/about');
@@ -80,7 +80,7 @@ router.on('/', () => {
 
 // About
 router.on('/about', () => {
-  requireWallet(() => {
+  requireAuth(() => {
     console.log('About page');
     saveLastPath('/about');
     renderContent(createAboutView());
@@ -95,8 +95,7 @@ router.on('/login', () => {
     contentContainer = undefined;
   }
 
-  const account = getAccount(wagmiConfig);
-  if (account.isConnected) {
+  if (TokenManager.has()) {
     const lastPath = localStorage.getItem('lastPath');
     if (!lastPath || lastPath === '/login') {
       router.navigate('/');
@@ -108,4 +107,10 @@ router.on('/login', () => {
   }
 });
 
-router.resolve();
+// 최초 1회 서버 검증
+(async () => {
+  const ok = await validateToken();
+  if (!ok) TokenManager.clear();
+
+  router.resolve();
+})();

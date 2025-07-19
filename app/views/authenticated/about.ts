@@ -1,5 +1,5 @@
-import { el } from "@webtaku/el";
-import { View } from "../view";
+import { el } from '@webtaku/el';
+import { View } from '../view';
 
 function createAboutView(): View {
   const content = el('div', 'About View');

@@ -1,10 +1,14 @@
-import { SlButton } from "@shoelace-style/shoelace";
-import { disconnect, getAccount, watchAccount } from "@wagmi/core";
-import { el } from "@webtaku/el";
-import Navigo from "navigo";
-import { openWalletConnectModal, wagmiConfig } from "../../auth/wallet";
-import { View } from "../view";
-import "./login.less";
+import { SlButton } from '@shoelace-style/shoelace';
+import { disconnect, getAccount, watchAccount } from '@wagmi/core';
+import { el } from '@webtaku/el';
+import Navigo from 'navigo';
+import { requestLogin } from '../../auth/login';
+import { signMessage } from '../../auth/siwe';
+import { TokenManager } from '../../auth/token';
+import { openWalletConnectModal, wagmiConfig } from '../../auth/wallet';
+import { showErrorAlert } from '../../components/alert';
+import { View } from '../view';
+import './login.less';
 import logoImage from './logo.png';
 
 export function createLoginView(router: Navigo): View {
@@ -38,15 +42,26 @@ export function createLoginView(router: Navigo): View {
     '1. Connect Wallet'
   ) as SlButton;
 
+  const isConnected = getAccount(wagmiConfig).isConnected;
   const signButton = el(
     'sl-button',
     {
       class: 'login-button',
-      variant: 'primary',
-      disabled: !getAccount(wagmiConfig).isConnected,
-      onclick: () => {
-        // 여기에 메시지 서명 로직 추가
-        alert('Message signed (placeholder)');
+      variant: isConnected ? 'primary' : 'default',
+      disabled: !isConnected,
+      onclick: async () => {
+        signButton.loading = true;
+        try {
+          const signature = await signMessage();
+          const token = await requestLogin(signature);
+          TokenManager.set(token);
+          router.navigate('/');
+        } catch (error) {
+          console.error(error);
+          showErrorAlert('Error', error instanceof Error ? error.message : String(error));
+        } finally {
+          signButton.loading = false;
+        }
       }
     },
     '2. Sign Message'

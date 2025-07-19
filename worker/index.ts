@@ -1,13 +1,23 @@
+import { handleLogin } from './handlers/login';
+import { handleNonce } from './handlers/nonce';
+import { handleValidateToken } from './handlers/validate-token';
+
 export default {
   async fetch(request, env, ctx): Promise<Response> {
     const url = new URL(request.url);
 
-    if (url.pathname.startsWith("/api/")) {
-      return Response.json({
-        name: "Cloudflare",
-      });
+    if (url.pathname === '/api/nonce' && request.method === 'POST') {
+      return handleNonce(request, env);
     }
 
-    return new Response(null, { status: 404 });
+    if (url.pathname === '/api/login' && request.method === 'POST') {
+      return handleLogin(request, env);
+    }
+
+    if (url.pathname === '/api/validate-token' && request.method === 'GET') {
+      return handleValidateToken(request, env);
+    }
+
+    return new Response('Not Found', { status: 404 });
   },
 } satisfies ExportedHandler<Env>;
