@@ -2417,14 +2417,35 @@ ion-app ion-content.content {
 }
 .chat-component .composer {
   display: flex;
+  flex-wrap: wrap;
   padding: 12px;
   gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 .chat-component .composer sl-input {
   flex: 1;
+  min-width: 0;
 }
 .chat-component .composer sl-button {
   flex-shrink: 0;
+}
+.img-loading {
+  background: repeating-linear-gradient(-45deg, #444 0 10px, #333 10px 20px);
+  animation: pulse 1s infinite linear;
+  width: 180px;
+  height: 120px;
+}
+@keyframes pulse {
+  0% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 0.7;
+  }
 }
 
 /*!***********************************************************************************************************************************************************!*\

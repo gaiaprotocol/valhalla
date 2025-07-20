@@ -8,6 +8,7 @@ const WHITELIST = [
   '0xa9a6D8C0ACc5266CC5Db2c3FE2EF799A10d9ceA8',
   '0x67aaB54e9F81d35B2d9Ad7Bc3b6505095618aeB0',
   '0x7a2bBEc3a4064d43A691A5809fAC81547f3Fa202',
+  '0x5223595e40ACeAaC6F829b4aa79D9ef430758E09',
 ];
 
 export async function handleGodModeCheck(request: Request): Promise<Response> {

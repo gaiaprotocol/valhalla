@@ -45,7 +45,7 @@ class ChatRoom extends DurableObject<Env> {
 
       const schema = z.object({
         text: z.string().optional().default(''),
-        localId: z.string().uuid(),
+        localId: z.uuid(),
         attachments: z.array(
           z.object({
             kind: z.literal('image'),

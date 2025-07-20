@@ -5,6 +5,7 @@ import { Attachment } from '../types/chat';
 import { createAddressAvatar } from './address-avatar';
 import './chat.less';
 import { Component } from './component';
+import { shortenAddress } from '../utils/address';
 
 interface Options {
   roomId: string;
@@ -22,6 +23,30 @@ async function waitForImages(node: HTMLElement) {
       });
     })
   );
+}
+
+function replaceWithFallback(img: HTMLImageElement) {
+  const wrapper = el('div.img-fallback');
+  wrapper.style.width = '180px';
+  wrapper.style.height = '120px';
+  wrapper.style.display = 'flex';
+  wrapper.style.flexDirection = 'column';
+  wrapper.style.justifyContent = 'center';
+  wrapper.style.alignItems = 'center';
+  wrapper.style.border = '1px solid var(--sl-color-neutral-200)';
+  wrapper.style.borderRadius = '8px';
+  wrapper.style.boxSizing = 'border-box';
+
+  const icon = el('sl-icon', { name: 'image' });
+  icon.style.fontSize = '48px';
+  icon.style.color = 'var(--sl-color-neutral-500)';
+
+  const msg = el('div', '불러올 수 없음');
+  msg.style.fontSize = '12px';
+  msg.style.color = 'var(--sl-color-neutral-600)';
+
+  wrapper.append(icon, msg);
+  img.replaceWith(wrapper);
 }
 
 function createChatComponent({ roomId, myAccount }: Options): Component {
@@ -87,7 +112,7 @@ function createChatComponent({ roomId, myAccount }: Options): Component {
 
     const meta = el(
       'div.meta',
-      el('span.name', msg.account),
+      el('span.name', shortenAddress(msg.account)),
       el('time.time', new Date(msg.timestamp).toLocaleTimeString())
     );
 
@@ -98,7 +123,16 @@ function createChatComponent({ roomId, myAccount }: Options): Component {
     if (msg.attachments.length) {
       const gallery = el('div.attachments',
         ...msg.attachments.filter(a => a.kind === 'image')
-          .map(a => el('img.img-msg', { src: a.url, alt: 'image' }))
+          .map(a => {
+            const img = el(`img.img-msg`, { alt: 'image' }) as HTMLImageElement;
+            img.src = a.url;
+            if (!img.complete) {
+              img.classList.add('img-loading');
+              img.onload = () => img.classList.remove('img-loading');
+              img.onerror = () => replaceWithFallback(img);
+            }
+            return img;
+          })
       );
       body.append(gallery);
     }
@@ -152,7 +186,11 @@ function createChatComponent({ roomId, myAccount }: Options): Component {
     }
 
     if (list.querySelector(`[data-id="${msg.id}"]`)) return; // safety
-    list.append(buildNode(msg)); scrollToBottom();
+    list.append(buildNode(msg));
+
+    waitForImages(list).then(() => {
+      scrollToBottom();
+    });
   });
 
   /* ---------- outgoing messages ---------- */

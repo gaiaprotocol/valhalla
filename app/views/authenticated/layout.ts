@@ -14,6 +14,11 @@ function createDashboardModal(router: Navigo): HTMLElement {
         ),
       ),
       el('ion-title', { style: 'text-align: center;' }, 'Dashboard'),
+      el('ion-buttons', { slot: 'end' },
+        el('ion-button', { style: 'visibility: hidden' },
+          el('ion-icon', { slot: 'icon-only', name: 'ellipsis-vertical' })
+        ),
+      )
     )
   );
 
