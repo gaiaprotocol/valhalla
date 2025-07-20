@@ -2302,6 +2302,9 @@ ion-app {
 ion-app ion-content.content {
   --color: var(--sl-color-neutral-900);
 }
+ion-modal ion-content {
+  --color: var(--sl-color-neutral-900);
+}
 .page {
   height: 100%;
   display: flex;
