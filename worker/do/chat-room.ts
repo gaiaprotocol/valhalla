@@ -1,9 +1,7 @@
 import { DurableObject } from 'cloudflare:workers';
 import z from 'zod';
 import { verifyToken } from '../services/jwt';
-
-type OutgoingMessage =
-  | { id: number; type: 'chat'; account: string; text: string; timestamp: number };
+import { Attachment, ChatMessage } from '../types/chat';
 
 interface Client {
   account: string;
@@ -46,17 +44,27 @@ class ChatRoom extends DurableObject<Env> {
       }
 
       const schema = z.object({
-        text: z.string().min(1),
+        text: z.string().optional().default(''),
+        localId: z.string().uuid(),
+        attachments: z.array(
+          z.object({
+            kind: z.literal('image'),
+            url: z.url(),
+            thumb: z.url().optional()
+          })
+        ).default([]),
       });
 
-      const { text } = schema.parse(await request.json());
-      const id = await this.#saveMessageToD1(payload.sub, text.trim());
+      const { text, attachments, localId } = schema.parse(await request.json());
+      const id = await this.#saveMessageToD1(payload.sub, text.trim(), attachments);
 
-      const message: OutgoingMessage = {
+      const message: ChatMessage = {
         id,
+        localId,
         type: 'chat',
         account: payload.sub,
         text: text.trim(),
+        attachments,
         timestamp: Date.now(),
       };
 
@@ -103,7 +111,7 @@ class ChatRoom extends DurableObject<Env> {
     return response;
   }
 
-  #broadcast(message: OutgoingMessage) {
+  #broadcast(message: ChatMessage) {
     const json = JSON.stringify(message);
     const data = `data: ${json}\n\n`;
     const encoder = new TextEncoder();
@@ -118,23 +126,23 @@ class ChatRoom extends DurableObject<Env> {
     });
   }
 
-  async #saveMessageToD1(account: string, text: string) {
+  async #saveMessageToD1(account: string, text: string, attachments: Attachment[]) {
     const roomId = this.ctx.id.toString();
     const timestamp = Date.now();
 
     const result = await this.env.DB.prepare(`
-      INSERT INTO messages (room_id, account, text, timestamp)
-      VALUES (?, ?, ?, ?)
-    `).bind(roomId, account, text, timestamp).run();
+      INSERT INTO messages (room_id, account, text, attachments, timestamp)
+      VALUES (?, ?, ?, ?, ?)
+    `).bind(roomId, account, text, JSON.stringify(attachments), timestamp).run();
 
     return result.meta.last_row_id;
   }
 
-  async #loadRecentMessagesFromD1(): Promise<OutgoingMessage[]> {
+  async #loadRecentMessagesFromD1(): Promise<ChatMessage[]> {
     const roomId = this.ctx.id.toString();
 
     const { results } = await this.env.DB.prepare(`
-      SELECT id, account, text, timestamp
+      SELECT id, account, text, attachments, timestamp
       FROM messages
       WHERE room_id = ?
       ORDER BY id DESC
@@ -143,14 +151,16 @@ class ChatRoom extends DurableObject<Env> {
       id: number;
       account: string;
       text: string;
+      attachments: string;
       timestamp: number;
     }>();
 
     return results.reverse().map(row => ({
       id: row.id,
-      type: 'chat' as const,
+      type: 'chat',
       account: row.account,
       text: row.text,
+      attachments: JSON.parse(row.attachments),
       timestamp: row.timestamp,
     }));
   }

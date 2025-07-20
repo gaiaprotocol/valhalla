@@ -22,7 +22,7 @@
     gap: 8px;
 
     &.pending {
-      opacity: 0.6;
+      opacity: 0.8;
     }
 
     &.failed {
@@ -41,6 +41,18 @@
       padding: 8px 12px;
       max-width: 60%;
       word-wrap: break-word;
+
+      .attachments {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 4px;
+
+        img.img-msg {
+          max-width: 180px;
+          border-radius: 8px;
+        }
+      }
     }
 
     .meta {
@@ -59,6 +71,44 @@
 
     .text {
       font-size: 14px;
+    }
+  }
+
+  .thumb-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+
+    .thumb-wrapper {
+      position: relative;
+      width: 64px;
+      height: 64px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      overflow: hidden;
+
+      img.thumb {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .remove {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        background: rgba(0, 0, 0, 0.6);
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        font-size: 12px;
+        line-height: 14px;
+        text-align: center;
+        cursor: pointer;
+      }
     }
   }
 

@@ -2,6 +2,7 @@ import { ChatRoom } from './do/chat-room';
 import { handleGodModeCheck } from './handlers/god-mode-check';
 import { handleLogin } from './handlers/login';
 import { handleNonce } from './handlers/nonce';
+import { handleUploadImage } from './handlers/upload-image';
 import { handleValidateToken } from './handlers/validate-token';
 
 export { ChatRoom };
@@ -24,6 +25,10 @@ export default {
 
     if (url.pathname === '/api/god-mode' && request.method === 'POST') {
       return handleGodModeCheck(request);
+    }
+
+    if (url.pathname === '/api/upload-image' && request.method === 'POST') {
+      return handleUploadImage(request, env);
     }
 
     const chatMatch = url.pathname.match(/^\/api\/chat\/([^/]+)\/(stream|send)$/);

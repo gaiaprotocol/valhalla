@@ -1,12 +1,6 @@
 import { TokenManager } from '../auth/token';
+import { Attachment, ChatMessage } from '../types/chat';
 
-interface ChatMessage {
-  id: number;
-  type: 'chat';
-  account: string;
-  text: string;
-  timestamp: number;
-}
 class ChatService extends EventTarget {
   private roomId: string;
 
@@ -33,7 +27,7 @@ class ChatService extends EventTarget {
   }
 
   /** 텍스트 메시지 전송 → 서버가 확정한 ChatMessage 반환 */
-  async send(text: string): Promise<ChatMessage> {
+  async send(text: string, attachments: Attachment[] = [], localId: string): Promise<ChatMessage> {
     const token = TokenManager.getToken();
     const resp = await fetch(`/api/chat/${this.roomId}/send`, {
       method: 'POST',
@@ -41,7 +35,7 @@ class ChatService extends EventTarget {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, attachments, localId }),
     });
 
     if (!resp.ok) {
