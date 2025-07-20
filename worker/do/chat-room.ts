@@ -3,7 +3,7 @@ import z from 'zod';
 import { verifyToken } from '../services/jwt';
 
 type OutgoingMessage =
-  | { type: 'chat'; account: string; text: string; timestamp: number };
+  | { id: number; type: 'chat'; account: string; text: string; timestamp: number };
 
 interface Client {
   account: string;
@@ -50,8 +50,10 @@ class ChatRoom extends DurableObject<Env> {
       });
 
       const { text } = schema.parse(await request.json());
+      const id = await this.#saveMessageToD1(payload.sub, text.trim());
 
       const message: OutgoingMessage = {
+        id,
         type: 'chat',
         account: payload.sub,
         text: text.trim(),
@@ -59,7 +61,6 @@ class ChatRoom extends DurableObject<Env> {
       };
 
       this.#broadcast(message);
-      this.#saveMessageToD1(payload.sub, text.trim());
 
       return new Response('OK');
     }
@@ -119,28 +120,32 @@ class ChatRoom extends DurableObject<Env> {
     const roomId = this.ctx.id.toString();
     const timestamp = Date.now();
 
-    await this.env.DB.prepare(`
+    const result = await this.env.DB.prepare(`
       INSERT INTO messages (room_id, account, text, timestamp)
       VALUES (?, ?, ?, ?)
     `).bind(roomId, account, text, timestamp).run();
+
+    return result.meta.last_row_id;
   }
 
   async #loadRecentMessagesFromD1(): Promise<OutgoingMessage[]> {
     const roomId = this.ctx.id.toString();
 
     const { results } = await this.env.DB.prepare(`
-      SELECT account, text, timestamp
+      SELECT id, account, text, timestamp
       FROM messages
       WHERE room_id = ?
       ORDER BY id DESC
       LIMIT ?
     `).bind(roomId, this.#MAX_MESSAGES).all<{
+      id: number;
       account: string;
       text: string;
       timestamp: number;
     }>();
 
     return results.reverse().map(row => ({
+      id: row.id,
       type: 'chat' as const,
       account: row.account,
       text: row.text,

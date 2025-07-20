@@ -5,37 +5,47 @@ import { View } from '../view';
 const roomId = 'test';
 
 function createHomeView(): View {
-  const page = el('ion-page');
+  // -------- 레이아웃 --------
+  const page = el('div', { className: 'page flex flex-col h-screen p-4 gap-4' });
 
-  const chatList = el('ion-list');
-  const input = el('ion-input', { placeholder: 'Type a message…' });
-  const sendBtn = el('ion-button', { expand: 'block' }, 'Send');
+  // 채팅 목록 (스크롤 영역)
+  const chatList = el('div', {
+    className: 'chat-list flex-1 overflow-auto rounded bg-slate-50 p-2 space-y-2 text-sm',
+  });
 
-  const content = el(
-    'ion-content.ion-padding',
-    el('h2', `Room: ${roomId}`),
-    chatList,
-    el('div',
-      input,
-      sendBtn
-    )
+  // 입력 영역
+  const input = el('sl-input', {
+    placeholder: 'Type a message…',
+    pill: true,
+    className: 'flex-1',
+  });
+
+  const sendBtn = el('sl-button', { variant: 'primary', pill: true }, 'Send');
+
+  const inputRow = el(
+    'div',
+    { className: 'flex gap-2' },
+    input,
+    sendBtn,
   );
 
-  page.append(content);
+  const header = el('h2', { className: 'text-xl font-semibold' }, `Room: ${roomId}`);
 
+  page.append(header, chatList, inputRow);
+
+  // -------- 메시지 유틸 --------
   function addMessage(message: { type: string; account: string; text?: string; timestamp: number }) {
     const time = new Date(message.timestamp).toLocaleTimeString();
-    const text = `[${time}] ${message.account}: ${message.text || ''}`;
-
-    chatList.append(
-      el('ion-item',
-        el('ion-label', text)
-      )
+    const label = el(
+      'div',
+      { className: 'whitespace-pre-wrap' },
+      `[${time}] ${message.account}: ${message.text || ''}`,
     );
-
+    chatList.append(label);
     chatList.scrollTop = chatList.scrollHeight;
   }
 
+  // -------- SSE 연결 --------
   let abortController: AbortController | null = null;
   let currentPromise: Promise<void> | null = null;
   let reconnectDelay = 3000;
@@ -49,9 +59,7 @@ function createHomeView(): View {
       if (currentPromise) {
         try {
           await currentPromise;
-        } catch {
-          // 무시
-        }
+        } catch { /* 무시 */ }
       }
     }
 
@@ -66,17 +74,16 @@ function createHomeView(): View {
 
         const resp = await fetch(`/api/chat/${roomId}/stream`, {
           headers: {
-            'Authorization': `Bearer ${TokenManager.getToken()}`
+            'Authorization': `Bearer ${TokenManager.getToken()}`,
           },
           signal: abortController.signal,
         });
 
         if (!resp.ok || !resp.body) {
-          throw new Error(`SSE failed ${resp?.status}`);
+          throw new Error(`SSE failed ${resp.status}`);
         }
 
         reconnectDelay = 3000;
-
         reader = resp.body.getReader();
         const decoder = new TextDecoder();
 
@@ -85,14 +92,12 @@ function createHomeView(): View {
           if (done) break;
 
           buffer += decoder.decode(value, { stream: true });
+          const chunks = buffer.split('\n\n');
+          buffer = chunks.pop() || '';
 
-          const lines = buffer.split('\n\n');
-          buffer = lines.pop() || '';
-
-          for (const line of lines) {
+          for (const line of chunks) {
             if (line.startsWith('data: ')) {
-              const json = line.slice(6);
-              const msg = JSON.parse(json);
+              const msg = JSON.parse(line.slice(6));
               addMessage(msg);
             }
           }
@@ -105,9 +110,7 @@ function createHomeView(): View {
         console.error('SSE error:', err);
       } finally {
         if (reader) {
-          try {
-            await reader.cancel();
-          } catch { }
+          try { await reader.cancel(); } catch { /* 무시 */ }
         }
         scheduleReconnect();
       }
@@ -116,7 +119,6 @@ function createHomeView(): View {
 
   function scheduleReconnect() {
     if (stopped) return;
-
     console.log(`Reconnecting in ${reconnectDelay / 1000}s…`);
     setTimeout(() => {
       reconnectDelay = Math.min(reconnectDelay * 1.5, 60000);
@@ -126,37 +128,34 @@ function createHomeView(): View {
 
   connectSSE().catch(console.error);
 
-  sendBtn.onclick = async () => {
+  // -------- 전송 핸들러 --------
+  sendBtn.addEventListener('click', async () => {
     const text = (input.value as string)?.trim();
     if (!text) return;
-
     input.value = '';
-
-    const token = TokenManager.getToken();
 
     const resp = await fetch(`/api/chat/${roomId}/send`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${TokenManager.getToken()}`,
       },
-      body: JSON.stringify({ text })
+      body: JSON.stringify({ text }),
     });
 
     if (!resp.ok) {
       console.error('Failed to send message', resp.status);
     }
-  };
+  });
 
+  // -------- View 인터페이스 --------
   return {
     el: page,
-    remove: () => {
+    remove() {
       stopped = true;
-      if (abortController) {
-        abortController.abort();
-      }
+      abortController?.abort();
       page.remove();
-    }
+    },
   };
 }
 
