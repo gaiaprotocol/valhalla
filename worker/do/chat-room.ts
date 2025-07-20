@@ -62,7 +62,9 @@ class ChatRoom extends DurableObject<Env> {
 
       this.#broadcast(message);
 
-      return new Response('OK');
+      return new Response(JSON.stringify(message), {
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     return new Response('Not Found', { status: 404 });
