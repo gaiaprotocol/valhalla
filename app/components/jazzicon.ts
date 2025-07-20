@@ -1,5 +1,7 @@
+import { el } from '@webtaku/el';
 import Color from 'color';
 import MersenneTwister from 'mersenne-twister';
+import './jazzicon.less';
 
 const DEFAULT_SHAPE_COUNT = 3;
 const DEFAULT_WOBBLE = 30;
@@ -82,7 +84,7 @@ function createJazziconDataURL(
 }
 
 function createJazzicon(address: string) {
-  const img = document.createElement('img');
+  const img = el('img.jazzicon');
   img.src = createJazziconDataURL(address);
   return img;
 }

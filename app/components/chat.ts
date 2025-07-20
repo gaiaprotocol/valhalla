@@ -1,5 +1,6 @@
 import { el } from '@webtaku/el';
 import { ChatMessage, ChatService } from '../services/chat';
+import { createAddressAvatar } from './address-avatar';
 import { Component } from './component';
 
 interface Options {
@@ -50,7 +51,7 @@ export function createChatComponent(opts: Options): Component {
           opacity: pending ? '0.5' : '1',
         },
       },
-      `[${time}] ${msg.account}: ${msg.text}`,
+      `[${time}] `, createAddressAvatar(msg.account), `: ${msg.text}`,
     );
   }
 
