@@ -1,110 +1,103 @@
 import { el } from '@webtaku/el';
 import { ChatMessage, ChatService } from '../services/chat';
 import { createAddressAvatar } from './address-avatar';
-import { Component } from './component';
+import './chat.less';
 
 interface Options {
   roomId: string;
-  myAccount: string; // 현재 로그인한 사용자명
+  myAccount: string;
 }
 
-/** 외부 페이지에서 호출해 DOM 노드를 얻고, unmount 시 remove() 호출 */
-export function createChatComponent(opts: Options): Component {
-  const { roomId, myAccount } = opts;
-
-  /* -------------------- 레이아웃 -------------------- */
-  const root = el('div.chat-component', { className: 'flex flex-col h-full gap-4' });
-
-  const header = el('h2', { className: 'text-xl font-semibold' }, `Room: ${roomId}`);
-
-  const list = el('div', {
-    className: 'flex-1 overflow-auto bg-slate-50 rounded p-2 space-y-2 text-sm',
-  });
-
-  const input = el('sl-input', {
-    placeholder: 'Type a message…',
-    pill: true,
-    className: 'flex-1',
-  });
-
+function createChatComponent({ roomId, myAccount }: Options) {
+  const root = el('div.chat-component');
+  const list = el('div.message-list');
+  const input = el('sl-input', { placeholder: 'Type a message…', pill: true });
   const sendBtn = el('sl-button', { variant: 'primary', pill: true }, 'Send');
+  const composer = el('div.composer', input, sendBtn);
 
-  const composer = el('div', { className: 'flex gap-2' }, input, sendBtn);
+  root.append(list, composer);
 
-  root.append(header, list, composer);
-
-  /* ------------------ ChatService ------------------ */
   const service = new ChatService(roomId);
   service.connect();
 
-  /* ------------------- 렌더 함수 ------------------- */
+  /* ---------- view builders ---------- */
   function buildNode(msg: ChatMessage, pending = false): HTMLElement {
-    const time = new Date(msg.timestamp).toLocaleTimeString();
-    return el(
-      'div',
-      {
-        className: 'whitespace-pre-wrap',
-        dataset: {
-          id: String(msg.id),
-        },
-        style: {
-          opacity: pending ? '0.5' : '1',
-        },
-      },
-      `[${time}] `, createAddressAvatar(msg.account), `: ${msg.text}`,
+    const wrapper = el('div.message', {
+      className: `${pending ? 'pending' : ''} ${msg.account === myAccount ? 'own' : ''}`.trim(),
+      dataset: { id: String(msg.id) }
+    });
+
+    const avatar = createAddressAvatar(msg.account);
+    avatar.classList.add('avatar');
+
+    const meta = el(
+      'div.meta',
+      el('span.name', msg.account),
+      el('time.time', new Date(msg.timestamp).toLocaleTimeString())
     );
+
+    const text = el('div.text', msg.text);
+    const body = el('div.msg-body', meta, text);
+
+    wrapper.append(avatar, body);
+    return wrapper;
   }
 
-  /** 낙관적 메시지: placeholder 반환 */
-  function renderOptimistic(text: string): HTMLElement {
-    const pendingMsg: ChatMessage = {
+  /* ---------- optimistic UI helpers ---------- */
+  function renderOptimistic(text: string) {
+    const temp: ChatMessage = {
       id: -1,
       type: 'chat',
       account: myAccount,
       text,
-      timestamp: Date.now(),
+      timestamp: Date.now()
     };
-    const node = buildNode(pendingMsg, true);
+    const node = buildNode(temp, true);
     node.dataset.temp = '1';
     list.append(node);
     list.scrollTop = list.scrollHeight;
     return node;
   }
 
-  /** 서버 응답으로 placeholder 교체 */
-  function overwritePlaceholder(node: HTMLElement, real: ChatMessage) {
-    node.textContent = `[${new Date(real.timestamp).toLocaleTimeString()}] ${real.account}: ${real.text}`;
-    node.style.opacity = '1';
-    node.dataset.id = String(real.id);
-    delete node.dataset.temp;
+  function overwritePlaceholder(placeholder: HTMLElement, real: ChatMessage) {
+    placeholder.replaceWith(buildNode(real));
   }
 
-  /** 실패 표시 */
   function markFailed(node: HTMLElement) {
-    node.style.opacity = '0.5';
-    node.style.color = 'red';
+    node.classList.remove('pending');
+    node.classList.add('failed');
   }
 
-  /* -------------------- 이벤트 -------------------- */
+  /* ---------- incoming messages ---------- */
   service.addEventListener('message', (e) => {
     const msg = (e as CustomEvent<ChatMessage>).detail;
 
-    // 이미 받은(내가 방금 보낸) placeholder가 있다면 무시
-    const existing = list.querySelector<HTMLElement>(`[data-id="${msg.id}"]`);
-    if (existing) return;
+    // 이미 같은 id가 있으면 종료
+    if (list.querySelector(`[data-id="${msg.id}"]`)) return;
 
+    // 내가 방금 보낸 것이면, placeholder와 교체
+    if (msg.account === myAccount) {
+      const placeholder = Array.from(
+        list.querySelectorAll<HTMLElement>('.message.pending[data-temp="1"]')
+      ).find((node) => node.querySelector('.text')?.textContent === msg.text);
+
+      if (placeholder) {
+        overwritePlaceholder(placeholder, msg);
+        list.scrollTop = list.scrollHeight;
+        return;
+      }
+    }
+
+    // 일반적인 수신 메시지
     list.append(buildNode(msg));
     list.scrollTop = list.scrollHeight;
   });
 
-  service.addEventListener('error', (e) => {
-    console.error('ChatService error:', (e as CustomEvent).detail);
-  });
-
-  /* ---------------- 전송 핸들러 ---------------- */
-  sendBtn.addEventListener('click', async () => {
-    const text = (input.value as string)?.trim();
+  /* ---------- outgoing messages ---------- */
+  async function sendCurrentInput() {
+    const text = (input.value as string).trim();
     if (!text) return;
+
     input.value = '';
 
     const placeholder = renderOptimistic(text);
@@ -115,14 +108,26 @@ export function createChatComponent(opts: Options): Component {
     } catch {
       markFailed(placeholder);
     }
+  }
+
+  sendBtn.addEventListener('click', sendCurrentInput);
+
+  /* Enter 로 전송 (Shift+Enter 줄바꿈) */
+  input.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();          // 줄바꿈 방지
+      sendCurrentInput();
+    }
   });
 
-  /* ---------------- View 리턴 ---------------- */
+  /* ---------- teardown ---------- */
   return {
     el: root,
     remove() {
       service.disconnect();
       root.remove();
-    },
+    }
   };
 }
+
+export { createChatComponent };

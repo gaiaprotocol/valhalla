@@ -20,7 +20,11 @@ function getMyAccount(): string {
 
 function createHomeView(): View {
   /* ---------- 페이지 레이아웃 ---------- */
-  const page = el('div', { className: 'page flex flex-col h-screen p-4' });
+  const page = el('div', { className: 'page flex flex-col h-screen p-4' }, {
+    style: {
+      height: '100%',
+    }
+  });
 
   /* ---------- ChatComponent 삽입 ---------- */
   const chat = createChatComponent({
