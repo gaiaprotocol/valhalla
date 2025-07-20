@@ -1,11 +1,13 @@
 import { el } from '@webtaku/el';
+import { getAddress } from 'viem';
+import { fetchGaiaNames } from '../api/gaia-name';
 import { TokenManager } from '../auth/token';
 import { ChatMessage, ChatService } from '../services/chat';
 import { Attachment } from '../types/chat';
+import { shortenAddress } from '../utils/address';
 import { createAddressAvatar } from './address-avatar';
 import './chat.less';
 import { Component } from './component';
-import { shortenAddress } from '../utils/address';
 
 interface Options {
   roomId: string;
@@ -51,6 +53,8 @@ function replaceWithFallback(img: HTMLImageElement) {
 
 function createChatComponent({ roomId, myAccount }: Options): Component {
   const pendingAttachments: { file: File, blobUrl: string }[] = [];
+  const nameMap = new Map<string, string>();
+  const seenAccounts = new Set<string>();
 
   const root = el('div.chat-component');
   const list = el('div.message-list');
@@ -102,19 +106,28 @@ function createChatComponent({ roomId, myAccount }: Options): Component {
   const service = new ChatService(roomId);
   service.connect();
 
+  function maybeFetchNames() {
+    if (seenAccounts.size === 0) return;
+    fetchGaiaNames(Array.from(seenAccounts), nameMap, list);
+  }
+
   /* ---------- view builders ---------- */
   function buildNode(msg: ChatMessage, pending = false): HTMLElement {
+
+    const account = getAddress(msg.account);
     const wrapper = el('div.message', {
-      className: `${pending ? 'pending' : ''} ${msg.account === myAccount ? 'own' : ''}`.trim(),
+      className: `${pending ? 'pending' : ''} ${account === myAccount ? 'own' : ''}`.trim(),
       dataset: { id: String(msg.id) }
     });
 
-    const avatar = createAddressAvatar(msg.account);
+    const avatar = createAddressAvatar(account);
     avatar.classList.add('avatar');
+
+    const displayName = nameMap.get(account) || shortenAddress(account);
 
     const meta = el(
       'div.meta',
-      el('span.name', shortenAddress(msg.account)),
+      el('span.name', { dataset: { account } }, displayName),
       el('time.time', new Date(msg.timestamp).toLocaleTimeString())
     );
 
@@ -140,6 +153,13 @@ function createChatComponent({ roomId, myAccount }: Options): Component {
     }
 
     wrapper.append(avatar, body);
+
+    // 이름 수집
+    if (!seenAccounts.has(account)) {
+      seenAccounts.add(account);
+      maybeFetchNames();
+    }
+
     return wrapper;
   }
 
