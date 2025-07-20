@@ -135,7 +135,6 @@ function createLayoutView(router: Navigo): View {
     el('ion-content.content'),
     createDashboardModal(router),
     createProfileModal(router),
-    createNoticeModal(),
   );
 
   return {

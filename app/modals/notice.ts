@@ -1,13 +1,15 @@
 import { el } from "@webtaku/el";
+import { Notice } from "../api/notice";
+import { marked } from "marked";
 
- function createNoticeModal(): HTMLElement {
+const renderer = new marked.Renderer();
+renderer.link = ({ href, title, text }) => {
+  return `<a href="${href}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+};
+marked.setOptions({ renderer });
+
+function createNoticeModal(notices: Notice[]): HTMLElement {
   const modal = el('ion-modal', { trigger: 'open-notice' });
-
-  const notices = [
-    { title: 'New Feature Released', date: '2025-07-15', content: 'We have released a new feature for better user experience.' },
-    { title: 'Scheduled Maintenance', date: '2025-07-10', content: 'Our service will be down for maintenance from 1 AM to 3 AM.' },
-    { title: 'Welcome to Valhalla', date: '2025-07-01', content: 'Thank you for joining Valhalla. Let’s get started!' },
-  ];
 
   const modalHeader = el('ion-header',
     el('ion-toolbar',
@@ -31,7 +33,7 @@ import { el } from "@webtaku/el";
         },
           el('ion-label',
             el('h2', notice.title),
-            el('p', `${notice.date}`)
+            el('p', `${notice.created_at}`)
           )
         )
       )
@@ -43,7 +45,7 @@ import { el } from "@webtaku/el";
   return modal;
 }
 
-function createNoticeDetailModal(notice: { title: string, date: string, content: string }): HTMLIonModalElement {
+function createNoticeDetailModal(notice: Notice): HTMLIonModalElement {
   const detailModal = el('ion-modal');
 
   const header = el('ion-header',
@@ -55,14 +57,26 @@ function createNoticeDetailModal(notice: { title: string, date: string, content:
     )
   );
 
-  const content = el('ion-content.ion-padding',
-    el('p', `📅 ${notice.date}`),
-    el('p', notice.content)
-  );
+  const content = el('ion-content.ion-padding');
+  const mdContainer = el('div');
+
+  const result = marked.parse(notice.content);
+
+  if (result instanceof Promise) {
+    result.then(html => {
+      mdContainer.innerHTML = html;
+    });
+  } else {
+    mdContainer.innerHTML = result;
+  }
+
+  const date = el('p.notice-date', notice.created_at);
+
+  content.append(date, mdContainer);
 
   detailModal.append(header, content);
 
   return detailModal;
 }
 
-export { createNoticeModal, createNoticeDetailModal };
+export { createNoticeDetailModal, createNoticeModal };
