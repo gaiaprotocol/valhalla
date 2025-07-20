@@ -54,11 +54,7 @@ module.exports = {
     new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
     new MiniCssExtractPlugin({ filename: 'styles.css' }),
     new webpack.DefinePlugin({
-      GAIA_API_URI: JSON.stringify(
-        process.env.NODE_ENV === 'production'
-          ? 'https://api.gaia.cc'
-          : 'http://localhost:8080'
-      )
+      GAIA_API_URI: JSON.stringify(process.env.GAIA_API_URI)
     })
   ],
   mode: 'development'
