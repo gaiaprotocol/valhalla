@@ -56,7 +56,9 @@ function createChatComponent({ roomId, myAccount }: Options): Component {
   const list = el('div.message-list');
   const input = el('sl-input', { placeholder: 'Type a message…', pill: true });
   const sendBtn = el('sl-button', { variant: 'primary', pill: true }, 'Send');
-  const attachBtn = el('sl-icon-button', { name: 'paperclip' });
+  const attachBtn = el('sl-button', { variant: 'default', circle: true },
+    el('sl-icon', { name: 'paperclip' })
+  );
   const fileInput = el('input', { type: 'file', accept: 'image/*', multiple: true, style: 'display:none' });
 
   const composer = el('div.composer', input, fileInput, attachBtn, sendBtn);
