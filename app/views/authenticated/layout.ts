@@ -2,6 +2,7 @@ import { el } from '@webtaku/el';
 import Navigo from 'navigo';
 import { logout } from '../../auth/logout';
 import { View } from '../view';
+import { createNoticeModal } from '../../modals/notice';
 
 function createDashboardModal(router: Navigo): HTMLElement {
   const modal = el('ion-modal.fullscreen', { trigger: 'open-dashboard' }); // 트리거는 레이아웃의 버튼 id
@@ -134,6 +135,7 @@ function createLayoutView(router: Navigo): View {
     el('ion-content.content'),
     createDashboardModal(router),
     createProfileModal(router),
+    createNoticeModal(),
   );
 
   return {

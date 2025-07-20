@@ -8,9 +8,7 @@
   --ion-color-primary-contrast: #000000;
   --ion-color-primary-contrast-rgb: 0, 0, 0;
   --ion-color-primary-shade: #B19A72;
-  /* Darker version of #C1A87D */
   --ion-color-primary-tint: #D1BD9C;
-  /* Lighter version of #C1A87D */
 
   --ion-color-secondary: #0163aa;
   --ion-color-secondary-rgb: 1, 99, 170;
@@ -124,4 +122,39 @@ ion-app {
   ion-content.content {
     --color: var(--sl-color-neutral-900);
   }
+}
+
+.page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.notice-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #222;
+  color: #eee;
+  font-size: 0.85rem;
+  padding: 6px 12px;
+  border-bottom: 1px solid #333;
+}
+
+.notice-bar .title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.notice-bar button {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.notice-bar button:hover {
+  color: #aaa;
 }
