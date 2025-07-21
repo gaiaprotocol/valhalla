@@ -2470,8 +2470,8 @@ ion-modal ion-content {
 .img-loading {
   background: repeating-linear-gradient(-45deg, #444 0 10px, #333 10px 20px);
   animation: pulse 1s infinite linear;
-  width: 180px;
-  height: 120px;
+  min-width: 180px;
+  min-height: 120px;
 }
 @keyframes pulse {
   0% {

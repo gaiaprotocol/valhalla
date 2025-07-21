@@ -1,10 +1,13 @@
 package webviewapp
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.os.Message
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -22,20 +25,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import webviewapp.ui.theme.WebViewAppTheme
+import androidx.core.net.toUri
 
 class MainActivity : ComponentActivity() {
     private var fileCallback: ValueCallback<Array<Uri>>? = null
 
     private val fileChooserLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
-                val data = result.data
-                val resultUris =
-                    WebChromeClient.FileChooserParams.parseResult(result.resultCode, data)
-                fileCallback?.onReceiveValue(resultUris)
-            } else {
-                fileCallback?.onReceiveValue(null)
+            val uriArray: Array<Uri>? = when {
+                result.resultCode != Activity.RESULT_OK -> null   // 사용자가 취소
+                result.data?.clipData != null -> {                // 여러 장 선택
+                    val clip = result.data!!.clipData!!
+                    Array(clip.itemCount) { clip.getItemAt(it).uri }
+                }
+                else -> WebChromeClient.FileChooserParams.parseResult( // 단일 선택
+                    result.resultCode, result.data)
             }
+
+            fileCallback?.onReceiveValue(uriArray)
             fileCallback = null
         }
 
@@ -78,6 +85,13 @@ fun WebViewScreen(
     AndroidView(
         factory = { context ->
             WebView(context).apply {
+                setBackgroundColor(Color.BLACK)
+                settings.apply {
+                    javaScriptEnabled = true
+                    domStorageEnabled = true
+                    setSupportMultipleWindows(true)
+                }
+
                 webViewClient = object : WebViewClient() {
                     override fun shouldOverrideUrlLoading(
                         view: WebView,
@@ -107,10 +121,26 @@ fun WebViewScreen(
                         onFileChooser?.invoke(filePathCallback, fileChooserParams.createIntent())
                         return true
                     }
+
+                    override fun onCreateWindow(
+                        view: WebView,
+                        isDialog: Boolean,
+                        isUserGesture: Boolean,
+                        resultMsg: Message
+                    ): Boolean {
+                        val href = view.hitTestResult.extra
+                        if (href != null) {
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, href.toUri())
+                                view.context.startActivity(intent)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        }
+                        return false
+                    }
                 }
 
-                settings.javaScriptEnabled = true
-                settings.domStorageEnabled = true
                 loadUrl(url)
             }
         },

@@ -61,6 +61,7 @@ export function createLoginView(router: Navigo): View {
       onclick: () => {
         if (getAccount(wagmiConfig).isConnected) {
           disconnect(wagmiConfig);
+          signButton.loading = false;
         } else {
           openWalletConnectModal();
         }

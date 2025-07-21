@@ -141,15 +141,17 @@ function createChatComponent({ roomId, myAccount }: Options): Component & {
     if (msg.attachments.length) {
       const gallery = el('div.attachments',
         ...msg.attachments.filter(a => a.kind === 'image')
-          .map(a => {
+          .map(attachment => {
+            const a = el('a', { href: attachment.url, target: '_blank' });
             const img = el(`img.img-msg`, { alt: 'image' }) as HTMLImageElement;
-            img.src = a.url;
+            img.src = attachment.url;
             if (!img.complete) {
               img.classList.add('img-loading');
               img.onload = () => img.classList.remove('img-loading');
               img.onerror = () => replaceWithFallback(img);
             }
-            return img;
+            a.append(img);
+            return a;
           })
       );
       body.append(gallery);
