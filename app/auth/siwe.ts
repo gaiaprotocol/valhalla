@@ -4,6 +4,18 @@ import { MESSAGE_FOR_WALLET_LOGIN } from '../vars';
 import { wagmiConfig } from './wallet';
 
 function createSiweMessage(address: `0x${string}`, nonce: string, issuedAt: string) {
+
+  console.log({
+    domain: location.host,
+    address,
+    statement: MESSAGE_FOR_WALLET_LOGIN,
+    uri: location.origin,
+    version: '1',
+    chainId: 1,
+    nonce,
+    issuedAt: new Date(issuedAt),
+  });
+
   return viemCreateSiweMessage({
     domain: location.host,
     address,
