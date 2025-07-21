@@ -103,6 +103,9 @@ function createChatComponent({ roomId, myAccount }: Options): Component & {
   attachBtn.onclick = () => fileInput.click();
 
   fileInput.onchange = () => {
+
+    console.log(fileInput.files);
+
     Array.from(fileInput.files || []).forEach(f => {
       const blobUrl = URL.createObjectURL(f);
       pendingAttachments.push({ file: f, blobUrl });
@@ -266,12 +269,24 @@ function createChatComponent({ roomId, myAccount }: Options): Component & {
     { capture: true },
   );
 
+  const onResize = () => {
+    scrollToBottom();
+  };
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', onResize);
+  }
+
   return {
     el: root,
     scrollToBottom,
     remove() {
       service.disconnect();
       root.remove();
+
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', onResize);
+      }
     }
   };
 }
