@@ -97,18 +97,12 @@ fun WebViewScreen(
                         view: WebView,
                         request: WebResourceRequest
                     ): Boolean {
-                        val requestedUrl = request.url.toString()
-                        if (requestedUrl.startsWith("http://") || requestedUrl.startsWith("https://")) {
-                            return false
-                        } else {
-                            try {
-                                val intent = Intent(Intent.ACTION_VIEW, request.url)
-                                view.context.startActivity(intent)
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
+                        if (!request.isForMainFrame) {
+                            val intent = Intent(Intent.ACTION_VIEW, request.url)
+                            view.context.startActivity(intent)
                             return true
                         }
+                        return false
                     }
                 }
 
@@ -128,16 +122,22 @@ fun WebViewScreen(
                         isUserGesture: Boolean,
                         resultMsg: Message
                     ): Boolean {
-                        val href = view.hitTestResult.extra
-                        if (href != null) {
-                            try {
-                                val intent = Intent(Intent.ACTION_VIEW, href.toUri())
-                                view.context.startActivity(intent)
-                            } catch (e: Exception) {
-                                e.printStackTrace()
+                        val ctx = view.context
+                        val newWebView = WebView(ctx)
+                        newWebView.settings.javaScriptEnabled = true
+                        newWebView.webViewClient = object : WebViewClient() {
+                            override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+                                if (url != null) {
+                                    val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+                                    ctx.startActivity(intent)
+                                }
+                                newWebView.destroy()
                             }
                         }
-                        return false
+                        val transport = resultMsg.obj as WebView.WebViewTransport
+                        transport.webView = newWebView
+                        resultMsg.sendToTarget()
+                        return true
                     }
                 }
 
