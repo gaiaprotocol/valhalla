@@ -97,12 +97,18 @@ fun WebViewScreen(
                         view: WebView,
                         request: WebResourceRequest
                     ): Boolean {
-                        if (!request.isForMainFrame) {
-                            val intent = Intent(Intent.ACTION_VIEW, request.url)
-                            view.context.startActivity(intent)
+                        val requestedUrl = request.url.toString()
+                        if (requestedUrl.startsWith("http://") || requestedUrl.startsWith("https://")) {
+                            return false
+                        } else {
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, request.url)
+                                view.context.startActivity(intent)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
                             return true
                         }
-                        return false
                     }
                 }
 
