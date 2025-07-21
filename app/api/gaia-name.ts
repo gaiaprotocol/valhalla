@@ -4,24 +4,31 @@ declare const GAIA_API_URI: string;
 
 async function fetchGaiaNames(
   addresses: string[],
-  nameMap: Map<string, string>,
-  list: HTMLElement,
-) {
+): Promise<Record<string, string>> {
+  if (addresses.length === 0) return {};
+
+  const normalized = addresses.map(getAddress);
+
   const res = await fetch(`${GAIA_API_URI}/get-names`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ addresses })
+    body: JSON.stringify({ addresses: normalized })
   });
-  if (!res.ok) return;
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    console.error(`fetchGaiaNames failed: ${res.status} ${res.statusText}`, text);
+    throw new Error(`Failed to fetch Gaia names: ${res.status}`);
+  }
 
   const names: { address: string; name: string }[] = await res.json();
-  names.forEach(({ address, name }) => {
-    address = getAddress(address);
-    nameMap.set(address, name);
-    // 기존 메시지 업데이트
-    const nodes = list.querySelectorAll<HTMLElement>(`.message .name[data-account="${address}"]`);
-    nodes.forEach(node => { node.textContent = name });
-  });
+
+  const result: Record<string, string> = {};
+  for (const { address, name } of names) {
+    result[getAddress(address)] = name;
+  }
+
+  return result;
 }
 
 export { fetchGaiaNames };

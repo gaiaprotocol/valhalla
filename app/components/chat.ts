@@ -1,8 +1,8 @@
 import { el } from '@webtaku/el';
 import { getAddress } from 'viem';
-import { fetchGaiaNames } from '../api/gaia-name';
 import { TokenManager } from '../auth/token';
 import { ChatMessage, ChatService } from '../services/chat';
+import { nameService } from '../services/name';
 import { Attachment } from '../types/chat';
 import { shortenAddress } from '../utils/address';
 import { createAddressAvatar } from './address-avatar';
@@ -51,10 +51,10 @@ function replaceWithFallback(img: HTMLImageElement) {
   img.replaceWith(wrapper);
 }
 
-function createChatComponent({ roomId, myAccount }: Options): Component {
+function createChatComponent({ roomId, myAccount }: Options): Component & {
+  scrollToBottom: () => void;
+} {
   const pendingAttachments: { file: File, blobUrl: string }[] = [];
-  const nameMap = new Map<string, string>();
-  const seenAccounts = new Set<string>();
 
   const root = el('div.chat-component');
   const list = el('div.message-list');
@@ -69,20 +69,30 @@ function createChatComponent({ roomId, myAccount }: Options): Component {
 
   const thumbBar = el('div.thumb-bar');
 
+  root.append(list, thumbBar, composer);
+
+  const service = new ChatService(roomId);
+  service.connect();
+
+  nameService.addEventListener('namechange', (e) => {
+    const { account, name } = (e as CustomEvent<any>).detail;
+    list.querySelectorAll<HTMLElement>(`.message .name[data-account="${account}"]`)
+      .forEach(node => {
+        node.textContent = name;
+      });
+  });
+
   function pushThumb(file: File, blobUrl: string) {
     const wrapper = el('div.thumb-wrapper');
-
     const img = el('img.thumb', { src: blobUrl });
     const removeBtn = el('button.remove', '×');
 
     removeBtn.onclick = () => {
-      // 배열에서 제거
       const idx = pendingAttachments.findIndex(p => p.blobUrl === blobUrl);
       if (idx >= 0) {
         URL.revokeObjectURL(pendingAttachments[idx].blobUrl);
         pendingAttachments.splice(idx, 1);
       }
-      // DOM에서 제거
       wrapper.remove();
     };
 
@@ -101,20 +111,10 @@ function createChatComponent({ roomId, myAccount }: Options): Component {
     fileInput.value = '';
   };
 
-  root.append(list, thumbBar, composer);
-
-  const service = new ChatService(roomId);
-  service.connect();
-
-  function maybeFetchNames() {
-    if (seenAccounts.size === 0) return;
-    fetchGaiaNames(Array.from(seenAccounts), nameMap, list);
-  }
-
   /* ---------- view builders ---------- */
   function buildNode(msg: ChatMessage, pending = false): HTMLElement {
-
     const account = getAddress(msg.account);
+
     const wrapper = el('div.message', {
       className: `${pending ? 'pending' : ''} ${account === myAccount ? 'own' : ''}`.trim(),
       dataset: { id: String(msg.id) }
@@ -123,11 +123,11 @@ function createChatComponent({ roomId, myAccount }: Options): Component {
     const avatar = createAddressAvatar(account);
     avatar.classList.add('avatar');
 
-    const displayName = nameMap.get(account) || shortenAddress(account);
-
+    // 이름 표기
+    const cachedName = nameService.getCached(account) || shortenAddress(account);
     const meta = el(
       'div.meta',
-      el('span.name', { dataset: { account } }, displayName),
+      el('span.name', { dataset: { account } }, cachedName),
       el('time.time', new Date(msg.timestamp).toLocaleTimeString())
     );
 
@@ -154,11 +154,8 @@ function createChatComponent({ roomId, myAccount }: Options): Component {
 
     wrapper.append(avatar, body);
 
-    // 이름 수집
-    if (!seenAccounts.has(account)) {
-      seenAccounts.add(account);
-      maybeFetchNames();
-    }
+    // 이름 요청
+    nameService.preload([account]);
 
     return wrapper;
   }
@@ -207,7 +204,7 @@ function createChatComponent({ roomId, myAccount }: Options): Component {
       if (ph) { overwritePlaceholder(ph, msg); scrollToBottom(); return; }
     }
 
-    if (list.querySelector(`[data-id="${msg.id}"]`)) return; // safety
+    if (list.querySelector(`[data-id="${msg.id}"]`)) return;
     list.append(buildNode(msg));
 
     waitForImages(list).then(() => {
@@ -222,33 +219,32 @@ function createChatComponent({ roomId, myAccount }: Options): Component {
 
     input.value = '';
 
-    /* ---------- 1) optimistic 노드 ---------- */
     const tempAttachments: Attachment[] = pendingAttachments.map(p => ({
       kind: 'image', url: p.blobUrl
     }));
     const localId = crypto.randomUUID();
     const placeholder = renderOptimistic(text, tempAttachments, localId);
 
-    /* ---------- 2) 실제 업로드 ---------- */
     try {
-      // 모든 파일 parallel 업로드
       const uploaded: Attachment[] = await Promise.all(
         pendingAttachments.map(async (p) => {
           const fd = new FormData(); fd.append('image', p.file);
-          const res = await fetch('/api/upload-image', { method: 'POST', body: fd, headers: { Authorization: `Bearer ${TokenManager.getToken()}` } });
+          const res = await fetch('/api/upload-image', {
+            method: 'POST',
+            body: fd,
+            headers: { Authorization: `Bearer ${TokenManager.getToken()}` }
+          });
           const { imageUrl, thumbnailUrl } = await res.json();
           return { kind: 'image', url: imageUrl, thumb: thumbnailUrl };
         })
       );
 
-      /* ---------- 3) 메시지 전송 ---------- */
       const saved = await service.send(text, uploaded, localId);
 
       overwritePlaceholder(placeholder, saved);
     } catch {
       markFailed(placeholder);
     } finally {
-      /* cleanup */
       pendingAttachments.forEach(p => URL.revokeObjectURL(p.blobUrl));
       pendingAttachments.length = 0;
       thumbBar.innerHTML = '';
@@ -257,23 +253,22 @@ function createChatComponent({ roomId, myAccount }: Options): Component {
 
   sendBtn.addEventListener('click', sendCurrentInput);
 
-  /* Enter 로 전송 (Shift+Enter 줄바꿈) */
   input.addEventListener(
     'keydown',
     (e: KeyboardEvent) => {
       if (e.isComposing || e.key === 'Process') return;
 
       if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();          // 줄바꿈 방지
+        e.preventDefault();
         sendCurrentInput();
       }
     },
     { capture: true },
   );
 
-  /* ---------- teardown ---------- */
   return {
     el: root,
+    scrollToBottom,
     remove() {
       service.disconnect();
       root.remove();

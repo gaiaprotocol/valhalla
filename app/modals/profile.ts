@@ -1,6 +1,11 @@
 import { el } from "@webtaku/el";
 import Navigo from "navigo";
+import { getAddress } from "viem";
 import { logout } from "../auth/logout";
+import { TokenManager } from "../auth/token";
+import { createAddressAvatar } from "../components/address-avatar";
+import { nameService } from "../services/name";
+import { shortenAddress } from "../utils/address";
 
 function createInfoModal(title: string, message: string) {
   const modal = el('ion-modal');
@@ -27,23 +32,29 @@ function createInfoModal(title: string, message: string) {
 }
 
 function createProfileModal(router: Navigo): HTMLElement {
-  const profileData = {
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
-    location: 'San Francisco, CA',
-  };
+  const myAddress = getAddress(TokenManager.getAddress() || '');
+
+  const avatar = createAddressAvatar(myAddress);
+  avatar.style.width = '64px';
+  avatar.style.height = '64px';
+  avatar.style.margin = 'auto';
+
+  const nameSpan = el("span", "Loading…");
+  const addressSpan = el("span", myAddress);
 
   const modal = el('ion-modal', { trigger: 'open-profile' }); // 트리거는 레이아웃의 버튼 id
 
   const profileCard = el('ion-card',
-    el('ion-card-header',
+    el('ion-card-header', {
+      style: `
+        text-align: center;
+      `
+    },
       el('ion-avatar', { style: 'width:64px;height:64px;margin:auto' },
-        el('img', { src: '/placeholder.svg?height=64&width=64', alt: 'Profile' })
+        avatar
       ),
-      el('ion-card-title', `${profileData.firstName} ${profileData.lastName}`),
-      el('ion-card-subtitle', profileData.email),
-      el('ion-card-subtitle', profileData.location)
+      el('ion-card-title', nameSpan),
+      el('ion-card-subtitle', addressSpan),
     ),
     el('ion-button',
       { slot: 'end', style: 'position:absolute;right:16px;top:16px', fill: 'clear' },
@@ -125,6 +136,21 @@ function createProfileModal(router: Navigo): HTMLElement {
   );
 
   modal.append(modalHeader, modalContent);
+
+  // 이름 초기화
+  const cachedName = nameService.getCached(myAddress);
+  nameSpan.textContent = cachedName || shortenAddress(myAddress);
+
+  // 이름 가져오기 요청
+  nameService.preload([myAddress]);
+
+  // 이름이 바뀌면 DOM 갱신
+  nameService.addEventListener("namechange", (e) => {
+    const { account, name } = (e as CustomEvent<any>).detail;
+    if (getAddress(account) === myAddress) {
+      nameSpan.textContent = name || myAddress;
+    }
+  });
 
   return modal;
 }

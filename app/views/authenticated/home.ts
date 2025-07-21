@@ -58,6 +58,8 @@ function createHomeView(): View {
       )
     );
     page.prepend(noticeBar);
+
+    chat.scrollToBottom();
   });
 
   /* ---------- ChatComponent ---------- */
