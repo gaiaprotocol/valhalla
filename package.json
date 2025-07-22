@@ -3,7 +3,6 @@
  "version": "0.0.1",
  "private": true,
  "scripts": {
-  "deploy": "yarn build && wrangler deploy",
   "dev": "concurrently -k \"webpack --watch --mode=development\" \"wrangler dev --env development --port=8081\"",
   "start": "concurrently -k \"webpack --watch --mode=development\" \"wrangler dev --env development --port=8081\"",
   "test": "vitest",
