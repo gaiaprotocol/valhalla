@@ -1,4 +1,4 @@
-import { TokenManager } from './token';
+import { TokenManager } from './token-mananger';
 
 export async function validateToken(): Promise<boolean> {
   const token = TokenManager.getToken();

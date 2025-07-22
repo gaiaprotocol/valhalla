@@ -1,9 +1,9 @@
 import { defineCustomElements } from '@ionic/core/loader';
 import Navigo from 'navigo';
-import { TokenManager } from './auth/token';
+import { TokenManager } from './auth/token-mananger';
 import { validateToken } from './auth/validate';
-import { createRainbowKit } from './auth/wallet';
 import { showGodModeRequirementDialog } from './components/god-mode-req-alert';
+import { createRainbowKit } from './components/wallet';
 import './main.less';
 import { checkGodMode } from './services/god-mode';
 import { createHomeView } from './views/authenticated/home';

@@ -1,6 +1,6 @@
 import { getAddress } from 'viem';
 import { fetchGaiaNames } from '../api/gaia-name';
-import { TokenManager } from '../auth/token';
+import { TokenManager } from '../auth/token-mananger';
 
 /** 캐시에 저장되는 구조 */
 type NameEntry = {

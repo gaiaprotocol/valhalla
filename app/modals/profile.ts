@@ -2,7 +2,7 @@ import { el } from "@webtaku/el";
 import Navigo from "navigo";
 import { getAddress } from "viem";
 import { logout } from "../auth/logout";
-import { TokenManager } from "../auth/token";
+import { TokenManager } from "../auth/token-mananger";
 import { createAddressAvatar } from "../components/address-avatar";
 import { nameService } from "../services/name";
 import { shortenAddress } from "../utils/address";

@@ -1,4 +1,4 @@
-import { TokenManager } from '../auth/token';
+import { TokenManager } from '../auth/token-mananger';
 import { Attachment, ChatMessage } from '../types/chat';
 
 class ChatService extends EventTarget {

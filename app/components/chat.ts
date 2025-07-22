@@ -1,6 +1,6 @@
 import { el } from '@webtaku/el';
 import { getAddress } from 'viem';
-import { TokenManager } from '../auth/token';
+import { TokenManager } from '../auth/token-mananger';
 import { ChatMessage, ChatService } from '../services/chat';
 import { nameService } from '../services/name';
 import { Attachment } from '../types/chat';

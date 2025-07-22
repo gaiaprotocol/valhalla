@@ -1,6 +1,6 @@
 import { el } from '@webtaku/el';
 import { fetchNotices } from '../../api/notice';
-import { TokenManager } from '../../auth/token';
+import { TokenManager } from '../../auth/token-mananger';
 import { createChatComponent } from '../../components/chat';
 import { createNoticeDetailModal, createNoticeModal } from '../../modals/notice';
 import { View } from '../view';
