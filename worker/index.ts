@@ -10,7 +10,7 @@ export { ChatRoom };
 
 export default {
   async fetch(request, env, ctx): Promise<Response> {
-    const serviceAccount = JSON.parse(env.FIREBASE_SERVICE_ACCOUNT_JSON);
+    /*const serviceAccount = JSON.parse(env.FIREBASE_SERVICE_ACCOUNT_JSON);
     const fcmOptions = new FcmOptions({
       serviceAccount,
       kvStore: env.FCM_TOKEN_CACHE,
@@ -62,7 +62,7 @@ export default {
       await fcm.sendToToken(message, 'czPiIUmzVga6GuaMxJvhzV:APA91bGPYi3dH0OtWi6sugZtN6svaX-OrwsO85oZYAM4SiXmSpdMNE2RZyt5WpeWU0xPlhTWCKKVIlcsTcaBkA012vd-XkVaxzyzuSCUW4uPdQLcT00z6Y4');
     } catch (error) {
       console.error('Error sending message:', error);
-    }
+    }*/
 
     const url = new URL(request.url);
 
