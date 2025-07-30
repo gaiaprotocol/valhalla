@@ -41,6 +41,10 @@
 			"binding": "SIWE_NONCES",
 			"id": "d2b5e7eb744247eb8c4d556877c4f265",
 			"preview_id": "b779dc1cfda041a5973570a66db1b42d"
+		},
+		{
+			"binding": "FCM_TOKEN_CACHE",
+			"id": "b20c55f82bc24774bc81ce9e2cbd32d3"
 		}
 	],
 	"vars": {
@@ -71,6 +75,10 @@
 					"binding": "SIWE_NONCES",
 					"id": "d2b5e7eb744247eb8c4d556877c4f265",
 					"preview_id": "b779dc1cfda041a5973570a66db1b42d"
+				},
+				{
+					"binding": "FCM_TOKEN_CACHE",
+					"id": "b20c55f82bc24774bc81ce9e2cbd32d3"
 				}
 			],
 			"vars": {

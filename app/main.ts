@@ -1,6 +1,6 @@
 import { defineCustomElements } from '@ionic/core/loader';
-import { getAnalytics } from "firebase/analytics";
-import { initializeApp } from "firebase/app";
+import { initializeApp } from 'firebase/app';
+import { getMessaging, getToken } from 'firebase/messaging';
 import Navigo from 'navigo';
 import { TokenManager } from './auth/token-mananger';
 import { validateToken } from './auth/validate';
@@ -17,18 +17,34 @@ defineCustomElements(window);
 document.body.appendChild(createRainbowKit());
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD21Q4smrSlTxs-FucpGnW2FX_br1rm0HA",
-  authDomain: "gaia-valhalla.firebaseapp.com",
-  projectId: "gaia-valhalla",
-  storageBucket: "gaia-valhalla.firebasestorage.app",
-  messagingSenderId: "797829770593",
-  appId: "1:797829770593:web:ac557a31562d0c8bd26920",
-  measurementId: "G-GP4SH06LSL"
+  apiKey: 'AIzaSyD21Q4smrSlTxs-FucpGnW2FX_br1rm0HA',
+  authDomain: 'gaia-valhalla.firebaseapp.com',
+  projectId: 'gaia-valhalla',
+  storageBucket: 'gaia-valhalla.firebasestorage.app',
+  messagingSenderId: '797829770593',
+  appId: '1:797829770593:web:ac557a31562d0c8bd26920',
+  measurementId: 'G-GP4SH06LSL'
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+const messaging = getMessaging(app);
+
+async function requestNotificationPermission() {
+  return new Promise<NotificationPermission>((resolve) => {
+    Notification.requestPermission((permission) => resolve(permission));
+  });
+}
+
+/*requestNotificationPermission().then((permission) => {
+  if (permission === "granted") {
+    getToken(messaging, { vapidKey: 'BGPXUkzHHkFCCnB0qvuEkj3VtJ3eK8z71PvYTorx4xRq9lBaY9BE4knxb1i13Qn49nogLJX9B1zOoX-Gvaj5TjI' }).then((token) => {
+      console.log(token);
+    });
+  } else {
+    console.log("Permission denied:", permission);
+  }
+});*/
 
 const router = new Navigo('/');
 
