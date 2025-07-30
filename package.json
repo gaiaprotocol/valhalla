@@ -3,8 +3,11 @@
  "version": "0.0.1",
  "private": true,
  "scripts": {
-  "dev": "concurrently -k \"webpack --watch --mode=development\" \"wrangler dev --env development --port=8081\"",
-  "start": "concurrently -k \"webpack --watch --mode=development\" \"wrangler dev --env development --port=8081\"",
+  "build:app": "webpack --mode=production",
+  "build:sw": "cd firebase-messaging-sw && webpack --mode=production --config webpack.config.js",
+  "build": "concurrently \"npm run build:app\" \"npm run build:sw\"",
+  "dev": "concurrently -k \"webpack --watch --mode=development\" \"cd firebase-messaging-sw && webpack --watch --mode=development\" \"wrangler dev --env development --port=8081\"",
+  "start": "concurrently -k \"webpack --watch --mode=development\" \"cd firebase-messaging-sw && webpack --watch --mode=development\" \"wrangler dev --env development --port=8081\"",
   "test": "vitest",
   "cf-typegen": "wrangler types"
  },
