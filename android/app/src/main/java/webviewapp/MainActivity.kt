@@ -19,6 +19,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -27,6 +28,10 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -140,6 +145,17 @@ fun WebViewScreen(
     modifier: Modifier = Modifier,
     onFileChooser: ((ValueCallback<Array<Uri>>, Intent) -> Unit)? = null
 ) {
+    var webView: WebView? by remember { mutableStateOf(null) }
+
+    BackHandler(enabled = true) {
+        if (webView?.canGoBack() == true) {
+            webView?.goBack()
+        } else {
+            // 히스토리가 없다면 앱 종료 (Activity.finish())
+            (webView?.context as? Activity)?.finish()
+        }
+    }
+
     AndroidView(
         factory = { context ->
             WebView(context).apply {
@@ -206,6 +222,8 @@ fun WebViewScreen(
                 }
 
                 loadUrl(url)
+
+                webView = this
             }
         },
         modifier = modifier.fillMaxSize()
