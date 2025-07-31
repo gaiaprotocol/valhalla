@@ -1,6 +1,8 @@
 import SwiftUI
 import WebKit
 
+let mainURL = URL(string: "https://valhalla.gaia.cc/")!
+
 // WKWebView를 Identifiable로 만들어 .sheet(item:) 수정자에서 사용할 수 있게 합니다.
 extension WKWebView: @retroactive Identifiable {
     public var id: UUID {
@@ -48,6 +50,7 @@ struct WebView: UIViewRepresentable {
         webView.navigationDelegate = context.coordinator
         // UIDelegate를 설정하여 팝업 이벤트를 받습니다.
         webView.uiDelegate = context.coordinator
+        webView.isInspectable = true
         
         let request = URLRequest(url: url)
         webView.load(request)
@@ -107,7 +110,7 @@ struct ContentView: View {
     @State private var popupWebView: WKWebView?
 
     var body: some View {
-        WebView(url: URL(string: "https://valhalla.gaia.cc/")!, popupWebView: $popupWebView)
+        WebView(url: mainURL, popupWebView: $popupWebView)
             .edgesIgnoringSafeArea(.all)
             // popupWebView State가 nil이 아닐 때 시트(Sheet)를 띄웁니다.
             .sheet(item: $popupWebView) { webView in
