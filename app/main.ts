@@ -1,6 +1,7 @@
+import { setupConfig } from '@ionic/core';
 import { defineCustomElements } from '@ionic/core/loader';
 import { initializeApp } from 'firebase/app';
-import { getMessaging, getToken } from 'firebase/messaging';
+import { getMessaging } from 'firebase/messaging';
 import Navigo from 'navigo';
 import { TokenManager } from './auth/token-mananger';
 import { validateToken } from './auth/validate';
@@ -12,6 +13,11 @@ import { createHomeView } from './views/authenticated/home';
 import { createLayoutView } from './views/authenticated/layout';
 import { createLoginView } from './views/unauthenticated/login';
 import { View } from './views/view';
+
+setupConfig({
+  hardwareBackButton: true,
+  experimentalCloseWatcher: true
+});
 
 defineCustomElements(window);
 document.body.appendChild(createRainbowKit());
