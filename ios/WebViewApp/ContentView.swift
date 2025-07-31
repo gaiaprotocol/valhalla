@@ -1,7 +1,7 @@
 import SwiftUI
 import WebKit
 
-let mainURL = URL(string: "https://valhalla.gaia.cc/")!
+let mainURL = URL(string: "https://valhalla.gaia.cc/?platform=ios&source=webview")!
 
 // WKWebView를 Identifiable로 만들어 .sheet(item:) 수정자에서 사용할 수 있게 합니다.
 extension WKWebView: @retroactive Identifiable {
