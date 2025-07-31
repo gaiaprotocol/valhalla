@@ -16,35 +16,40 @@ import { View } from './views/view';
 defineCustomElements(window);
 document.body.appendChild(createRainbowKit());
 
-const firebaseConfig = {
-  apiKey: 'AIzaSyD21Q4smrSlTxs-FucpGnW2FX_br1rm0HA',
-  authDomain: 'gaia-valhalla.firebaseapp.com',
-  projectId: 'gaia-valhalla',
-  storageBucket: 'gaia-valhalla.firebasestorage.app',
-  messagingSenderId: '797829770593',
-  appId: '1:797829770593:web:ac557a31562d0c8bd26920',
-  measurementId: 'G-GP4SH06LSL'
-};
+const urlParams = new URLSearchParams(window.location.search);
+const isWebView = urlParams.get('source') === 'webview';
+if (!isWebView) {
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const messaging = getMessaging(app);
+  const firebaseConfig = {
+    apiKey: 'AIzaSyD21Q4smrSlTxs-FucpGnW2FX_br1rm0HA',
+    authDomain: 'gaia-valhalla.firebaseapp.com',
+    projectId: 'gaia-valhalla',
+    storageBucket: 'gaia-valhalla.firebasestorage.app',
+    messagingSenderId: '797829770593',
+    appId: '1:797829770593:web:ac557a31562d0c8bd26920',
+    measurementId: 'G-GP4SH06LSL'
+  };
 
-async function requestNotificationPermission() {
-  return new Promise<NotificationPermission>((resolve) => {
-    Notification.requestPermission((permission) => resolve(permission));
-  });
-}
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const messaging = getMessaging(app);
 
-/*requestNotificationPermission().then((permission) => {
-  if (permission === "granted") {
-    getToken(messaging, { vapidKey: 'BGPXUkzHHkFCCnB0qvuEkj3VtJ3eK8z71PvYTorx4xRq9lBaY9BE4knxb1i13Qn49nogLJX9B1zOoX-Gvaj5TjI' }).then((token) => {
-      console.log(token);
+  async function requestNotificationPermission() {
+    return new Promise<NotificationPermission>((resolve) => {
+      Notification.requestPermission((permission) => resolve(permission));
     });
-  } else {
-    console.log("Permission denied:", permission);
   }
-});*/
+
+  /*requestNotificationPermission().then((permission) => {
+    if (permission === "granted") {
+      getToken(messaging, { vapidKey: 'BGPXUkzHHkFCCnB0qvuEkj3VtJ3eK8z71PvYTorx4xRq9lBaY9BE4knxb1i13Qn49nogLJX9B1zOoX-Gvaj5TjI' }).then((token) => {
+        console.log(token);
+      });
+    } else {
+      console.log("Permission denied:", permission);
+    }
+  });*/
+}
 
 const router = new Navigo('/');
 
