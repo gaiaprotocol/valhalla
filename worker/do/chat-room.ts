@@ -1,6 +1,6 @@
+import { verifyToken } from '@gaiaprotocol/worker-common';
 import { DurableObject } from 'cloudflare:workers';
 import z from 'zod';
-import { verifyToken } from '../services/jwt';
 import { Attachment, ChatMessage } from '../types/chat';
 
 interface Client {

@@ -1,3 +1,4 @@
+import '@shoelace-style/shoelace';
 import { el } from '@webtaku/el';
 import { getAddress } from 'viem';
 import { TokenManager } from '../auth/token-mananger';
@@ -58,7 +59,7 @@ function createChatComponent({ roomId, myAccount }: Options): Component & {
 
   const root = el('div.chat-component');
   const list = el('div.message-list');
-  const input = el('sl-input', { placeholder: 'Type a message…', pill: true });
+  const input: any = el('sl-input', { placeholder: 'Type a message…', pill: true, autocorrect: 'off', autocapitalize: 'off', autocomplete: 'off' });
   const sendBtn = el('sl-button', { variant: 'primary', pill: true }, 'Send');
   const attachBtn = el('sl-button', { variant: 'default', circle: true },
     el('sl-icon', { name: 'paperclip' })

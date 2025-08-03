@@ -1,3 +1,4 @@
+import { createRainbowKit } from '@gaiaprotocol/client-common';
 import { BackButtonEvent, setupConfig } from '@ionic/core';
 import { defineCustomElements } from '@ionic/core/loader';
 import { initializeApp } from 'firebase/app';
@@ -6,7 +7,6 @@ import Navigo from 'navigo';
 import { TokenManager } from './auth/token-mananger';
 import { validateToken } from './auth/validate';
 import { showGodModeRequirementDialog } from './components/god-mode-req-alert';
-import { createRainbowKit } from './components/wallet';
 import './main.css';
 import { checkGodMode } from './services/god-mode';
 import { createHomeView } from './views/authenticated/home';

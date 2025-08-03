@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[3660],{23660:(a,l,e)=>{e.r(l),e.d(l,{default:()=>h.n});var h=e(82492)}}]);

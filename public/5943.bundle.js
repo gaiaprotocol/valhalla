@@ -1,8 +1,8 @@
-"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[5943],{5943:(l,e,a)=>{a.r(e),a.d(e,{closeSvg:()=>s});const s=a(12618).JW`<svg fill="none" viewBox="0 0 16 16">
+"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[5943],{75943:(l,a,e)=>{e.r(a),e.d(a,{arrowRightSvg:()=>r});const r=e(76731).JW`<svg fill="none" viewBox="0 0 14 15">
   <path
     fill="currentColor"
     fill-rule="evenodd"
-    d="M2.54 2.54a1 1 0 0 1 1.42 0L8 6.6l4.04-4.05a1 1 0 1 1 1.42 1.42L9.4 8l4.05 4.04a1 1 0 0 1-1.42 1.42L8 9.4l-4.04 4.05a1 1 0 0 1-1.42-1.42L6.6 8 2.54 3.96a1 1 0 0 1 0-1.42Z"
+    d="M1 7.99a1 1 0 0 1 1-1h7.58L7.12 4.53A1 1 0 1 1 8.54 3.1l4.16 4.17a1 1 0 0 1 0 1.41l-4.16 4.17a1 1 0 1 1-1.42-1.41l2.46-2.46H2a1 1 0 0 1-1-1Z"
     clip-rule="evenodd"
   />
 </svg>`}}]);

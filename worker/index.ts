@@ -1,10 +1,6 @@
+import { handleGodModeCheck, handleLogin, handleNonce, handleUploadImage, handleValidateToken } from '@gaiaprotocol/worker-common';
 import { ChatRoom } from './do/chat-room';
-import { handleGodModeCheck } from './handlers/god-mode-check';
-import { handleLogin } from './handlers/login';
-import { handleNonce } from './handlers/nonce';
-import { handleUploadImage } from './handlers/upload-image';
-import { handleValidateToken } from './handlers/validate-token';
-import { EnhancedFcmMessage, FCM, FcmOptions } from 'fcm-cloudflare-workers';
+//import { EnhancedFcmMessage, FCM, FcmOptions } from 'fcm-cloudflare-workers';
 
 export { ChatRoom };
 

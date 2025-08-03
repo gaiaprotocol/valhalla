@@ -1,3 +1,4 @@
+import { openWalletConnectModal, wagmiConfig } from '@gaiaprotocol/client-common';
 import { SlButton } from '@shoelace-style/shoelace';
 import { disconnect, getAccount, watchAccount } from '@wagmi/core';
 import { el } from '@webtaku/el';
@@ -5,7 +6,6 @@ import Navigo from 'navigo';
 import { requestLogin } from '../../auth/login';
 import { signMessage } from '../../auth/siwe';
 import { TokenManager } from '../../auth/token-mananger';
-import { openWalletConnectModal, wagmiConfig } from '../../components/wallet';
 import { showErrorAlert } from '../../components/alert';
 import { showGodModeRequirementDialog } from '../../components/god-mode-req-alert';
 import { checkGodMode } from '../../services/god-mode';
