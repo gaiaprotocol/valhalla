@@ -10,7 +10,7 @@ import { showErrorAlert } from '../../components/alert';
 import { showGodModeRequirementDialog } from '../../components/god-mode-req-alert';
 import { checkGodMode } from '../../services/god-mode';
 import { View } from '../view';
-import './login.less';
+import './login.css';
 import logoImage from './logo.png';
 
 async function ensureWalletConnected(): Promise<`0x${string}`> {

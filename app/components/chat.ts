@@ -6,7 +6,7 @@ import { nameService } from '../services/name';
 import { Attachment } from '../types/chat';
 import { shortenAddress } from '../utils/address';
 import { createAddressAvatar } from './address-avatar';
-import './chat.less';
+import './chat.css';
 import { Component } from './component';
 
 interface Options {

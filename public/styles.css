@@ -1,6 +1,3 @@
-/*!************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[1].use[1]!./node_modules/less-loader/dist/cjs.js!./app/main.less ***!
-  \************************************************************************************************************************************/
 /* vanilla-extract-css-ns:src/css/reset.css.ts.vanilla.css?source=Lmlla2JjYzAgewogIGJvcmRlcjogMDsKICBib3gtc2l6aW5nOiBib3JkZXItYm94OwogIGZvbnQtc2l6ZTogMTAwJTsKICBsaW5lLWhlaWdodDogbm9ybWFsOwogIG1hcmdpbjogMDsKICBwYWRkaW5nOiAwOwogIHRleHQtYWxpZ246IGxlZnQ7CiAgdmVydGljYWwtYWxpZ246IGJhc2VsaW5lOwogIC13ZWJraXQtdGFwLWhpZ2hsaWdodC1jb2xvcjogdHJhbnNwYXJlbnQ7Cn0KLmlla2JjYzEgewogIGxpc3Qtc3R5bGU6IG5vbmU7Cn0KLmlla2JjYzIgewogIHF1b3Rlczogbm9uZTsKfQouaWVrYmNjMjpiZWZvcmUsIC5pZWtiY2MyOmFmdGVyIHsKICBjb250ZW50OiAnJzsKfQouaWVrYmNjMyB7CiAgYm9yZGVyLWNvbGxhcHNlOiBjb2xsYXBzZTsKICBib3JkZXItc3BhY2luZzogMDsKfQouaWVrYmNjNCB7CiAgYXBwZWFyYW5jZTogbm9uZTsKfQouaWVrYmNjNSB7CiAgb3V0bGluZTogbm9uZTsKfQouaWVrYmNjNTo6cGxhY2Vob2xkZXIgewogIG9wYWNpdHk6IDE7Cn0KLmlla2JjYzYgewogIGJhY2tncm91bmQtY29sb3I6IHRyYW5zcGFyZW50OwogIGNvbG9yOiBpbmhlcml0Owp9Ci5pZWtiY2M3OmRpc2FibGVkIHsKICBvcGFjaXR5OiAxOwp9Ci5pZWtiY2M3OjotbXMtZXhwYW5kIHsKICBkaXNwbGF5OiBub25lOwp9Ci5pZWtiY2M4OjotbXMtY2xlYXIgewogIGRpc3BsYXk6IG5vbmU7Cn0KLmlla2JjYzg6Oi13ZWJraXQtc2VhcmNoLWNhbmNlbC1idXR0b24gewogIC13ZWJraXQtYXBwZWFyYW5jZTogbm9uZTsKfQouaWVrYmNjOSB7CiAgYmFja2dyb3VuZDogbm9uZTsKICBjdXJzb3I6IHBvaW50ZXI7CiAgdGV4dC1hbGlnbjogbGVmdDsKfQouaWVrYmNjYSB7CiAgY29sb3I6IGluaGVyaXQ7CiAgdGV4dC1kZWNvcmF0aW9uOiBub25lOwp9 */
 [data-rk] .iekbcc0 {
   border: 0;
@@ -2203,48 +2200,56 @@
   --ion-color-primary-contrast-rgb: 0, 0, 0;
   --ion-color-primary-shade: #B19A72;
   --ion-color-primary-tint: #D1BD9C;
+
   --ion-color-secondary: #0163aa;
   --ion-color-secondary-rgb: 1, 99, 170;
   --ion-color-secondary-contrast: #ffffff;
   --ion-color-secondary-contrast-rgb: 255, 255, 255;
   --ion-color-secondary-shade: #015796;
   --ion-color-secondary-tint: #1a73b3;
+
   --ion-color-tertiary: #6030ff;
   --ion-color-tertiary-rgb: 96, 48, 255;
   --ion-color-tertiary-contrast: #ffffff;
   --ion-color-tertiary-contrast-rgb: 255, 255, 255;
   --ion-color-tertiary-shade: #542ae0;
   --ion-color-tertiary-tint: #7045ff;
+
   --ion-color-success: #2dd55b;
   --ion-color-success-rgb: 45, 213, 91;
   --ion-color-success-contrast: #000000;
   --ion-color-success-contrast-rgb: 0, 0, 0;
   --ion-color-success-shade: #28bb50;
   --ion-color-success-tint: #42d96b;
+
   --ion-color-warning: #ffc409;
   --ion-color-warning-rgb: 255, 196, 9;
   --ion-color-warning-contrast: #000000;
   --ion-color-warning-contrast-rgb: 0, 0, 0;
   --ion-color-warning-shade: #e0ac08;
   --ion-color-warning-tint: #ffca22;
+
   --ion-color-danger: #c5000f;
   --ion-color-danger-rgb: 197, 0, 15;
   --ion-color-danger-contrast: #ffffff;
   --ion-color-danger-contrast-rgb: 255, 255, 255;
   --ion-color-danger-shade: #ad000d;
   --ion-color-danger-tint: #cb1a27;
+
   --ion-color-light: #f6f8fc;
   --ion-color-light-rgb: 246, 248, 252;
   --ion-color-light-contrast: #000000;
   --ion-color-light-contrast-rgb: 0, 0, 0;
   --ion-color-light-shade: #d8dade;
   --ion-color-light-tint: #f7f9fc;
+
   --ion-color-medium: #5f5f5f;
   --ion-color-medium-rgb: 95, 95, 95;
   --ion-color-medium-contrast: #ffffff;
   --ion-color-medium-contrast-rgb: 255, 255, 255;
   --ion-color-medium-shade: #545454;
   --ion-color-medium-tint: #6f6f6f;
+
   --ion-color-dark: #2f2f2f;
   --ion-color-dark-rgb: 47, 47, 47;
   --ion-color-dark-contrast: #ffffff;
@@ -2252,10 +2257,12 @@
   --ion-color-dark-shade: #292929;
   --ion-color-dark-tint: #444444;
 }
+
 ion-modal.fullscreen {
   --width: 100%;
   --height: 100%;
 }
+
 .sl-theme-dark {
   --docs-background-color: var(--ion-background-color);
   --docs-border-color: var(--sl-color-neutral-200);
@@ -2267,15 +2274,17 @@ ion-modal.fullscreen {
   --docs-content-toc-max-width: 260px;
   --docs-content-padding: 2rem;
   --docs-content-vertical-spacing: 2rem;
-  --docs-search-overlay-background: rgba(0, 0, 0, 0.2);
+  --docs-search-overlay-background: rgb(0 0 0 / 0.2);
   --docs-skip-to-main-width: 200px;
-  --docs-overlay-color: hsla(0, 0%, 0%, 0.66);
-  --docs-shadow-x-small: 0 1px 2px rgba(0, 0, 0, 0.36);
-  --docs-shadow-small: 0 1px 2px rgba(0, 0, 0, 0.48);
-  --docs-shadow-medium: 0 2px 4px rgba(0, 0, 0, 0.48);
-  --docs-shadow-large: 0 2px 8px rgba(0, 0, 0, 0.48);
-  --docs-shadow-x-large: 0 4px 16px rgba(0, 0, 0, 0.48);
+
+  --docs-overlay-color: hsl(0 0% 0% / 66%);
+  --docs-shadow-x-small: 0 1px 2px rgb(0 0 0 / 36%);
+  --docs-shadow-small: 0 1px 2px rgb(0 0 0 / 48%);
+  --docs-shadow-medium: 0 2px 4px rgb(0 0 0 / 48%);
+  --docs-shadow-large: 0 2px 8px rgb(0 0 0 / 48%);
+  --docs-shadow-x-large: 0 4px 16px rgb(0 0 0 / 48%);
 }
+
 html {
   height: 100%;
   box-sizing: border-box;
@@ -2283,6 +2292,7 @@ html {
   padding: 0;
   margin: 0;
 }
+
 body {
   height: 100%;
   font: 16px var(--sl-font-sans);
@@ -2296,20 +2306,25 @@ body {
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
 }
+
 ion-app {
   --ion-toolbar-color: var(--sl-color-neutral-900);
+
+  ion-content.content {
+    --color: var(--sl-color-neutral-900);
+  }
 }
-ion-app ion-content.content {
-  --color: var(--sl-color-neutral-900);
-}
+
 ion-modal ion-content {
   --color: var(--sl-color-neutral-900);
 }
+
 .page {
   height: 100%;
   display: flex;
   flex-direction: column;
 }
+
 .notice-bar {
   display: flex;
   justify-content: space-between;
@@ -2320,11 +2335,13 @@ ion-modal ion-content {
   padding: 6px 12px;
   border-bottom: 1px solid #333;
 }
+
 .notice-bar .title {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+
 .notice-bar button {
   background: none;
   border: none;
@@ -2332,162 +2349,179 @@ ion-modal ion-content {
   font-size: 0.8rem;
   cursor: pointer;
 }
+
 .notice-bar button:hover {
   color: #aaa;
 }
+
 .notice-date {
   font-size: 0.9rem;
   color: #888;
   margin: 0.5em 0;
 }
-
-/*!*********************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[1].use[1]!./node_modules/less-loader/dist/cjs.js!./app/components/address-avatar.less ***!
-  \*********************************************************************************************************************************************************/
 .address-avatar {
   display: inline-block;
   width: 40px;
   height: 40px;
   border-radius: 50%;
 }
-
-/*!***********************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[1].use[1]!./node_modules/less-loader/dist/cjs.js!./app/components/chat.less ***!
-  \***********************************************************************************************************************************************/
 .chat-component {
   flex: 1 1 auto;
   min-height: 0;
+
   display: flex;
   flex-direction: column;
+
+  .header {
+    padding: 12px;
+  }
+
+  .message-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .message {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+
+    &.pending {
+      opacity: 0.8;
+    }
+
+    &.failed {
+      opacity: 0.6;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .msg-body {
+      border-radius: 8px;
+      padding: 8px 12px;
+      max-width: 60%;
+      word-wrap: break-word;
+
+      .attachments {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 4px;
+
+        img.img-msg {
+          max-width: 180px;
+          border-radius: 8px;
+        }
+      }
+    }
+
+    .meta {
+      font-size: 12px;
+      margin-bottom: 4px;
+
+      .name {
+        font-weight: bold;
+      }
+
+      .time {
+        margin-left: 8px;
+        font-size: 11px;
+      }
+    }
+
+    .text {
+      font-size: 14px;
+    }
+  }
+
+  .thumb-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+
+    .thumb-wrapper {
+      position: relative;
+      width: 64px;
+      height: 64px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      overflow: hidden;
+
+      img.thumb {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .remove {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        background: rgba(0, 0, 0, 0.6);
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        font-size: 12px;
+        line-height: 14px;
+        text-align: center;
+        cursor: pointer;
+      }
+    }
+  }
+
+  .composer {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 12px;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+
+    sl-input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    sl-button {
+      flex-shrink: 0;
+    }
+  }
 }
-.chat-component .header {
-  padding: 12px;
-}
-.chat-component .message-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.chat-component .message {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-.chat-component .message.pending {
-  opacity: 0.8;
-}
-.chat-component .message.failed {
-  opacity: 0.6;
-}
-.chat-component .message .avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.chat-component .message .msg-body {
-  border-radius: 8px;
-  padding: 8px 12px;
-  max-width: 60%;
-  word-wrap: break-word;
-}
-.chat-component .message .msg-body .attachments {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 4px;
-}
-.chat-component .message .msg-body .attachments img.img-msg {
-  max-width: 180px;
-  border-radius: 8px;
-}
-.chat-component .message .meta {
-  font-size: 12px;
-  margin-bottom: 4px;
-}
-.chat-component .message .meta .name {
-  font-weight: bold;
-}
-.chat-component .message .meta .time {
-  margin-left: 8px;
-  font-size: 11px;
-}
-.chat-component .message .text {
-  font-size: 14px;
-}
-.chat-component .thumb-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-.chat-component .thumb-bar .thumb-wrapper {
-  position: relative;
-  width: 64px;
-  height: 64px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  overflow: hidden;
-}
-.chat-component .thumb-bar .thumb-wrapper img.thumb {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.chat-component .thumb-bar .thumb-wrapper .remove {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  background: rgba(0, 0, 0, 0.6);
-  color: #fff;
-  border: none;
-  border-radius: 50%;
-  width: 16px;
-  height: 16px;
-  font-size: 12px;
-  line-height: 14px;
-  text-align: center;
-  cursor: pointer;
-}
-.chat-component .composer {
-  display: flex;
-  flex-wrap: wrap;
-  padding: 12px;
-  gap: 8px;
-  width: 100%;
-  box-sizing: border-box;
-}
-.chat-component .composer sl-input {
-  flex: 1;
-  min-width: 0;
-}
-.chat-component .composer sl-button {
-  flex-shrink: 0;
-}
+
 .img-loading {
-  background: repeating-linear-gradient(-45deg, #444 0 10px, #333 10px 20px);
+  background: repeating-linear-gradient(-45deg,
+      #444 0 10px,
+      #333 10px 20px);
   animation: pulse 1s infinite linear;
   min-width: 180px;
   min-height: 120px;
 }
+
 @keyframes pulse {
   0% {
-    opacity: 0.7;
+    opacity: .7;
   }
+
   50% {
-    opacity: 0.4;
+    opacity: .4;
   }
+
   100% {
-    opacity: 0.7;
+    opacity: .7;
   }
 }
-
-/*!***********************************************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[1].use[1]!./node_modules/less-loader/dist/cjs.js!./app/views/unauthenticated/login.less ***!
-  \***********************************************************************************************************************************************************/
 .login-wrapper {
   display: flex;
   box-sizing: border-box;
@@ -2499,19 +2533,23 @@ ion-modal ion-content {
   gap: 12px;
   padding: 20px;
 }
+
 .login-logo {
   width: 120px;
   height: 120px;
 }
+
 .login-title {
   font-size: 24px;
   margin-bottom: 12px;
 }
+
 .login-description {
   margin-bottom: 24px;
   text-align: center;
   max-width: 300px;
 }
+
 .login-button {
   width: 220px;
   /* 원하는 버튼 너비 */
@@ -2522,4 +2560,3 @@ ion-modal ion-content {
   /* 둥글기 */
   text-align: center;
 }
-

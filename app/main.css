@@ -1,6 +1,6 @@
-@import (inline) "~@rainbow-me/rainbowkit/styles.css";
-@import (inline) "~@ionic/core/css/ionic.bundle.css";
-@import (inline) "~@ionic/core/css/palettes/dark.always.css";
+@import "@rainbow-me/rainbowkit/styles.css";
+@import "@ionic/core/css/ionic.bundle.css";
+@import "@ionic/core/css/palettes/dark.always.css";
 
 :root {
   --ion-color-primary: #C1A87D;

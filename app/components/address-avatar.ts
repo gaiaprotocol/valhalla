@@ -1,5 +1,5 @@
 import { getAddress } from 'viem';
-import './address-avatar.less';
+import './address-avatar.css';
 import { el } from '@webtaku/el';
 
 const ELEMENTS = 3;

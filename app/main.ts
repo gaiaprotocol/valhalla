@@ -7,7 +7,7 @@ import { TokenManager } from './auth/token-mananger';
 import { validateToken } from './auth/validate';
 import { showGodModeRequirementDialog } from './components/god-mode-req-alert';
 import { createRainbowKit } from './components/wallet';
-import './main.less';
+import './main.css';
 import { checkGodMode } from './services/god-mode';
 import { createHomeView } from './views/authenticated/home';
 import { createLayoutView } from './views/authenticated/layout';
