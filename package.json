@@ -3,8 +3,8 @@
  "version": "0.0.1",
  "private": true,
  "scripts": {
-  "build:app": "webpack --mode=production",
-  "build:sw": "cd firebase-messaging-sw && webpack --mode=production --config webpack.config.js",
+  "build:app": "NODE_ENV=production webpack --mode=production",
+  "build:sw": "cd firebase-messaging-sw && NODE_ENV=production webpack --mode=production --config webpack.config.js",
   "build": "concurrently \"npm run build:app\" \"npm run build:sw\"",
   "dev": "concurrently -k \"webpack --watch --mode=development\" \"cd firebase-messaging-sw && webpack --watch --mode=development\" \"wrangler dev --env development --port=8081\"",
   "start": "concurrently -k \"webpack --watch --mode=development\" \"cd firebase-messaging-sw && webpack --watch --mode=development\" \"wrangler dev --env development --port=8081\"",
