@@ -3,10 +3,7 @@ import { Attachment, ChatMessage } from '../types/chat';
 
 class ChatService extends EventTarget {
   private roomId: string;
-
-  private abortController: AbortController | null = null;
-  private currentPromise: Promise<void> | null = null;
-
+  private socket: WebSocket | null = null;
   private reconnectDelay = 3000;
   private stopped = false;
 
@@ -15,15 +12,15 @@ class ChatService extends EventTarget {
     this.roomId = roomId;
   }
 
-  /** SSE 연결 시작 */
+  /** WebSocket 연결 시작 */
   connect() {
-    this.#connectSSE().catch(console.error);
+    this.#connectWS();
   }
 
   /** 연결 중단(페이지 언마운트 시 호출) */
   disconnect() {
     this.stopped = true;
-    this.abortController?.abort();
+    this.socket?.close();
   }
 
   /** 텍스트 메시지 전송 → 서버가 확정한 ChatMessage 반환 */
@@ -49,77 +46,54 @@ class ChatService extends EventTarget {
   }
 
   /* ------------------------------------------------------------------ */
-  /*                           내부 구현부                               */
+  /*                         내부 WebSocket 구현부                        */
   /* ------------------------------------------------------------------ */
 
-  async #connectSSE() {
+  #connectWS() {
     if (this.stopped) return;
 
-    // 기존 연결 정리
-    if (this.abortController) {
-      this.abortController.abort();
-      if (this.currentPromise) {
-        try {
-          await this.currentPromise;
-        } catch {/* ignore */ }
-      }
+    const token = TokenManager.getToken();
+    if (!token) {
+      this.dispatchEvent(new CustomEvent('error', { detail: new Error('No token') }));
+      return;
     }
 
-    this.abortController = new AbortController();
+    const wsUrl = new URL(`/api/chat/${this.roomId}/stream`, location.origin.replace(/^http/, 'ws'));
+    wsUrl.searchParams.set('token', token);
 
-    this.currentPromise = (async () => {
-      let reader: ReadableStreamDefaultReader | null = null;
-      let buffer = '';
+    const socket = new WebSocket(wsUrl.toString());
+    this.socket = socket;
 
+    socket.addEventListener('open', () => {
+      this.reconnectDelay = 3000; // 연결 성공 시 딜레이 초기화
+    });
+
+    socket.addEventListener('message', (e) => {
       try {
-        const resp = await fetch(`/api/chat/${this.roomId}/stream`, {
-          headers: { Authorization: `Bearer ${TokenManager.getToken()}` },
-          signal: this.abortController!.signal,
-        });
-
-        if (!resp.ok || !resp.body) {
-          throw new Error(`SSE failed ${resp.status}`);
-        }
-
-        // 성공적으로 연결되면 재연결 지연 초기화
-        this.reconnectDelay = 3000;
-        reader = resp.body.getReader();
-        const decoder = new TextDecoder();
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const chunks = buffer.split('\n\n');
-          buffer = chunks.pop() || '';
-
-          for (const chunk of chunks) {
-            if (chunk.startsWith('data: ')) {
-              const msg: ChatMessage = JSON.parse(chunk.slice(6));
-              this.dispatchEvent(new CustomEvent('message', { detail: msg }));
-            }
-          }
-        }
+        const msg: ChatMessage = JSON.parse(e.data);
+        this.dispatchEvent(new CustomEvent('message', { detail: msg }));
       } catch (err) {
-        if (!this.abortController!.signal.aborted) {
-          this.dispatchEvent(new CustomEvent('error', { detail: err }));
-        }
-      } finally {
-        try { await reader?.cancel(); } catch {/* ignore */ }
-        this.#scheduleReconnect();
+        console.error('Invalid message from server:', e.data);
       }
-    })();
+    });
+
+    socket.addEventListener('close', () => {
+      if (!this.stopped) this.#scheduleReconnect();
+    });
+
+    socket.addEventListener('error', (e) => {
+      this.dispatchEvent(new CustomEvent('error', { detail: e }));
+      socket.close(); // 에러 시 강제 종료
+    });
   }
 
   #scheduleReconnect() {
     if (this.stopped) return;
     setTimeout(() => {
       this.reconnectDelay = Math.min(this.reconnectDelay * 1.5, 60000);
-      this.#connectSSE().catch(console.error);
+      this.#connectWS();
     }, this.reconnectDelay);
   }
 }
 
 export { ChatMessage, ChatService };
-
