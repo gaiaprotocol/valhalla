@@ -15,26 +15,28 @@ class ChatRoom extends DurableObject<Env> {
   async fetch(request: Request) {
     const url = new URL(request.url);
 
+    // WebSocket 연결 처리
     if (url.pathname.endsWith('/stream') && request.headers.get('upgrade') === 'websocket') {
-      const auth = request.headers.get('authorization');
-      if (!auth?.startsWith('Bearer ')) {
-        return new Response('Unauthorized', { status: 401 });
+      const token = url.searchParams.get('token');
+      if (!token) {
+        return new Response('Unauthorized: missing token', { status: 401 });
       }
 
-      const token = auth.slice(7);
       const payload = await verifyToken(token, this.env);
       if (!payload?.sub) {
-        return new Response('Unauthorized', { status: 401 });
+        return new Response('Unauthorized: invalid token', { status: 401 });
       }
 
       const [clientSocket, serverSocket] = Object.values(new WebSocketPair()) as [WebSocket, WebSocket];
       this.#handleWebSocketConnection(serverSocket, payload.sub);
+
       return new Response(null, {
         status: 101,
         webSocket: clientSocket,
       });
     }
 
+    // 메시지 전송 처리
     if (request.method === 'POST' && url.pathname.endsWith('/send')) {
       const auth = request.headers.get('authorization');
       if (!auth?.startsWith('Bearer ')) {
