@@ -5,8 +5,7 @@ import { Attachment, ChatMessage } from '../types/chat';
 
 interface Client {
   account: string;
-  writer: WritableStreamDefaultWriter;
-  controller: AbortController;
+  socket: WebSocket;
 }
 
 class ChatRoom extends DurableObject<Env> {
@@ -16,7 +15,7 @@ class ChatRoom extends DurableObject<Env> {
   async fetch(request: Request) {
     const url = new URL(request.url);
 
-    if (url.pathname.endsWith('/stream')) {
+    if (url.pathname.endsWith('/stream') && request.headers.get('upgrade') === 'websocket') {
       const auth = request.headers.get('authorization');
       if (!auth?.startsWith('Bearer ')) {
         return new Response('Unauthorized', { status: 401 });
@@ -28,7 +27,12 @@ class ChatRoom extends DurableObject<Env> {
         return new Response('Unauthorized', { status: 401 });
       }
 
-      return this.#join(payload.sub);
+      const [clientSocket, serverSocket] = Object.values(new WebSocketPair()) as [WebSocket, WebSocket];
+      this.#handleWebSocketConnection(serverSocket, payload.sub);
+      return new Response(null, {
+        status: 101,
+        webSocket: clientSocket,
+      });
     }
 
     if (request.method === 'POST' && url.pathname.endsWith('/send')) {
@@ -50,7 +54,7 @@ class ChatRoom extends DurableObject<Env> {
           z.object({
             kind: z.literal('image'),
             url: z.url(),
-            thumb: z.url().optional()
+            thumb: z.url().optional(),
           })
         ).default([]),
       });
@@ -78,50 +82,40 @@ class ChatRoom extends DurableObject<Env> {
     return new Response('Not Found', { status: 404 });
   }
 
-  async #join(account: string): Promise<Response> {
-    const stream = new TransformStream();
-    const writer = stream.writable.getWriter();
-    const controller = new AbortController();
+  #handleWebSocketConnection(socket: WebSocket, account: string) {
+    socket.accept();
 
-    const client: Client = { account, writer, controller };
+    const client: Client = { account, socket };
     this.#clients.push(client);
 
-    const encoder = new TextEncoder();
-
-    controller.signal.addEventListener('abort', () => {
+    socket.addEventListener('close', () => {
       this.#clients = this.#clients.filter(c => c !== client);
     });
 
-    const response = new Response(stream.readable, {
-      headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      },
+    socket.addEventListener('error', () => {
+      this.#clients = this.#clients.filter(c => c !== client);
     });
 
-    // 클라이언트에게 응답을 먼저 반환하고 데이터를 쓰기 시작
     queueMicrotask(async () => {
       const history = await this.#loadRecentMessagesFromD1();
       for (const msg of history) {
-        await writer.write(encoder.encode(`data: ${JSON.stringify(msg)}\n\n`));
+        try {
+          socket.send(JSON.stringify(msg));
+        } catch (err) {
+          console.error(`Error sending history to ${account}`, err);
+        }
       }
     });
-
-    return response;
   }
 
   #broadcast(message: ChatMessage) {
     const json = JSON.stringify(message);
-    const data = `data: ${json}\n\n`;
-    const encoder = new TextEncoder();
-
-    this.#clients.forEach(async (c) => {
+    this.#clients.forEach(({ account, socket }) => {
       try {
-        await c.writer.write(encoder.encode(data));
+        socket.send(json);
       } catch (err) {
-        console.error(`Failed to send to ${c.account}`, err);
-        c.controller.abort();
+        console.error(`Failed to send to ${account}`, err);
+        socket.close();
       }
     });
   }
