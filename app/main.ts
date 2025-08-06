@@ -129,7 +129,12 @@ function renderLogin() {
 
 router.on('/', () => {
   removeLoginView();
-  requireAuth(() => renderContent(createHomeView()));
+  requireAuth(() => {
+    const view = createHomeView();
+    renderContent(view);
+    view.scrollToBottom();
+    setTimeout(() => view.scrollToBottom(), 100);
+  });
 });
 
 router.on('/login', () => {

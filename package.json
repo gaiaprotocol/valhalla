@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.8.59",
-    "@gaiaprotocol/chat-worker": "^0.0.2",
+    "@gaiaprotocol/chat-worker": "^0.0.3",
     "@gaiaprotocol/worker-common": "^0.0.7",
     "@shoelace-style/shoelace": "^2.20.1",
     "@tsndr/cloudflare-worker-jwt": "^3.2.0",

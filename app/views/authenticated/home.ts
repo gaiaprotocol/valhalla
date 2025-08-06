@@ -18,7 +18,9 @@ function getMyAccount(): string {
   }
 }
 
-function createHomeView(): View {
+function createHomeView(): View & {
+  scrollToBottom: () => void;
+} {
   const page = el('div', { className: 'page flex flex-col h-screen p-4 gap-2' }, {
     style: { height: '100%' }
   });
@@ -72,6 +74,7 @@ function createHomeView(): View {
 
   return {
     el: page,
+    scrollToBottom: chat.scrollToBottom,
     remove() {
       chat.remove();
       page.remove();
