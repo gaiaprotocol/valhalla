@@ -1,7 +1,7 @@
-import { TokenManager } from './token-mananger';
+import { tokenManager } from "@gaiaprotocol/client-common";
 
 export async function validateToken(): Promise<boolean> {
-  const token = TokenManager.getToken();
+  const token = tokenManager.getToken();
   if (!token) return false;
 
   const res = await fetch('/api/validate-token', {
@@ -9,7 +9,7 @@ export async function validateToken(): Promise<boolean> {
   });
 
   if (!res.ok) {
-    TokenManager.clear();
+    tokenManager.clear();
     return false;
   }
 

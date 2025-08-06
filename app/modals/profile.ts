@@ -1,11 +1,8 @@
+import { createAddressAvatar, logout, shortenAddress, tokenManager } from "@gaiaprotocol/client-common";
 import { el } from "@webtaku/el";
 import Navigo from "navigo";
 import { getAddress } from "viem";
-import { logout } from "../auth/logout";
-import { TokenManager } from "../auth/token-mananger";
-import { createAddressAvatar } from "../components/address-avatar";
-import { nameService } from "../services/name";
-import { shortenAddress } from "../utils/address";
+import { chatProfileService } from "@gaiaprotocol/chat-client";
 
 function createInfoModal(title: string, message: string) {
   const modal = el('ion-modal');
@@ -32,7 +29,7 @@ function createInfoModal(title: string, message: string) {
 }
 
 function createProfileModal(router: Navigo): HTMLElement {
-  const myAddress = getAddress(TokenManager.getAddress() || '');
+  const myAddress = getAddress(tokenManager.getAddress() || '');
 
   const avatar = createAddressAvatar(myAddress);
   avatar.style.width = '64px';
@@ -138,17 +135,17 @@ function createProfileModal(router: Navigo): HTMLElement {
   modal.append(modalHeader, modalContent);
 
   // 이름 초기화
-  const cachedName = nameService.getCached(myAddress);
-  nameSpan.textContent = cachedName || shortenAddress(myAddress);
+  const cachedProfile = chatProfileService.getCached(myAddress);
+  nameSpan.textContent = cachedProfile?.nickname || shortenAddress(myAddress);
 
   // 이름 가져오기 요청
-  nameService.preload([myAddress]);
+  chatProfileService.preload([myAddress]);
 
   // 이름이 바뀌면 DOM 갱신
-  nameService.addEventListener("namechange", (e) => {
-    const { account, name } = (e as CustomEvent<any>).detail;
+  chatProfileService.addEventListener("chatprofilechange", (e) => {
+    const { account, profile } = (e as CustomEvent<any>).detail;
     if (getAddress(account) === myAddress) {
-      nameSpan.textContent = name || myAddress;
+      nameSpan.textContent = profile?.nickname || myAddress;
     }
   });
 

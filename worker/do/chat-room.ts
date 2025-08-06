@@ -1,7 +1,6 @@
-import { ChatStorage, WebSocketManager } from '@gaiaprotocol/chat-worker';
+import { ChatMessage, ChatStorage, WebSocketManager } from '@gaiaprotocol/chat-worker';
 import { verifyToken } from '@gaiaprotocol/worker-common';
 import z from 'zod';
-import { ChatMessage } from '../types/chat';
 
 export class ChatRoom {
   readonly #websockets: WebSocketManager;

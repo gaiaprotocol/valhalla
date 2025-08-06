@@ -1,10 +1,11 @@
-import { createRainbowKit } from '@gaiaprotocol/client-common';
+import { chatProfileService } from '@gaiaprotocol/chat-client';
+import { createRainbowKit, tokenManager } from '@gaiaprotocol/client-common';
 import { BackButtonEvent, setupConfig } from '@ionic/core';
 import { defineCustomElements } from '@ionic/core/loader';
 import { initializeApp } from 'firebase/app';
 import { getMessaging } from 'firebase/messaging';
 import Navigo from 'navigo';
-import { TokenManager } from './auth/token-mananger';
+import { fetchGaiaNames } from './api/gaia-name';
 import { validateToken } from './auth/validate';
 import { showGodModeRequirementDialog } from './components/god-mode-req-alert';
 import './main.css';
@@ -63,6 +64,18 @@ if (!isWebView) {
   });*/
 }
 
+chatProfileService.init(async (addresses) => {
+  const names = await fetchGaiaNames(addresses);
+  const result: Record<string, { nickname?: string | null; profileImage?: string | null } | null> = {};
+  for (const address of addresses) {
+    result[address] = {
+      nickname: names[address] || null,
+      profileImage: null
+    };
+  }
+  return result;
+});
+
 const router = new Navigo('/');
 
 let layoutView: View | undefined;
@@ -75,7 +88,7 @@ function removeLoginView() {
 }
 
 function requireAuth(next: () => void) {
-  if (!TokenManager.has()) {
+  if (!tokenManager.has()) {
     router.navigate('/login');
   } else {
     next();
@@ -126,7 +139,7 @@ router.on('/login', () => {
     contentContainer = undefined;
   }
 
-  if (TokenManager.has()) {
+  if (tokenManager.has()) {
     router.navigate('/');
   } else {
     renderLogin();
@@ -136,14 +149,14 @@ router.on('/login', () => {
 (async () => {
   const ok = await validateToken();
   if (!ok) {
-    TokenManager.clear();
+    tokenManager.clear();
     router.resolve();
     return;
   }
 
-  const address = TokenManager.getAddress();
+  const address = tokenManager.getAddress();
   if (!address) {
-    TokenManager.clear();
+    tokenManager.clear();
     router.resolve();
     return;
   }
@@ -151,7 +164,7 @@ router.on('/login', () => {
   const hasGodMode = await checkGodMode(address);
   if (!hasGodMode) {
     showGodModeRequirementDialog();
-    TokenManager.clear();
+    tokenManager.clear();
     router.navigate('/login');
     return;
   }
