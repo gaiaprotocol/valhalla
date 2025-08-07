@@ -176,3 +176,6 @@ router.on('/login', () => {
 
   router.resolve();
 })();
+
+//test
+console.log(await (await fetch('https://raw.githubusercontent.com/matedevdao/static-kaia-nft-assets/refs/heads/main/dogesoundclub-biased-mates/metadata/0.json')).text());
