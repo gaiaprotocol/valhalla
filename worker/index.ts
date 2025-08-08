@@ -1,5 +1,7 @@
 import { handleGodModeCheck, handleLogin, handleNonce, handleUploadImage, handleValidateToken } from '@gaiaprotocol/worker-common';
 import { ChatRoom } from './do/chat-room';
+import { handleGetMainGod } from './handlers/get-main-god';
+import { handleSetMainGod } from './handlers/set-main-god';
 //import { EnhancedFcmMessage, FCM, FcmOptions } from 'fcm-cloudflare-workers';
 
 export { ChatRoom };
@@ -61,26 +63,13 @@ export default {
     }*/
 
     const url = new URL(request.url);
-
-    if (url.pathname === '/api/nonce' && request.method === 'POST') {
-      return handleNonce(request, env);
-    }
-
-    if (url.pathname === '/api/login' && request.method === 'POST') {
-      return handleLogin(request, env);
-    }
-
-    if (url.pathname === '/api/validate-token' && request.method === 'GET') {
-      return handleValidateToken(request, env);
-    }
-
-    if (url.pathname === '/api/god-mode' && request.method === 'POST') {
-      return handleGodModeCheck(request);
-    }
-
-    if (url.pathname === '/api/upload-image' && request.method === 'POST') {
-      return handleUploadImage(request, env);
-    }
+    if (url.pathname === '/api/nonce' && request.method === 'POST') return handleNonce(request, env);
+    if (url.pathname === '/api/login' && request.method === 'POST') return handleLogin(request, env);
+    if (url.pathname === '/api/validate-token' && request.method === 'GET') return handleValidateToken(request, env);
+    if (url.pathname === '/api/god-mode' && request.method === 'POST') return handleGodModeCheck(request);
+    if (url.pathname === '/api/upload-image' && request.method === 'POST') return handleUploadImage(request, env);
+    if (url.pathname === '/api/set-main-god' && request.method === 'POST') return handleSetMainGod(request, env);
+    if (url.pathname === '/api/get-main-god' && request.method === 'GET') return handleGetMainGod(request, env);
 
     const chatMatch = url.pathname.match(/^\/api\/chat\/([^/]+)\/(stream|send)$/);
     if (chatMatch) {

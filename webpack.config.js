@@ -52,12 +52,12 @@ module.exports = {
   plugins: [
     new MiniCssExtractPlugin({ filename: 'styles.css' }),
     new webpack.DefinePlugin({
-      GAIA_API_URI: JSON.stringify(
+      GAIA_API_BASE_URI: JSON.stringify(
         process.env.NODE_ENV === 'production'
           ? 'https://api.gaia.cc'
           : 'http://localhost:8080'
       ),
-      API_URI: JSON.stringify(
+      API_BASE_URI: JSON.stringify(
         process.env.NODE_ENV === 'production'
           ? 'https://valhalla.gaia.cc/api'
           : 'http://localhost:8081/api'

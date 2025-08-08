@@ -48,7 +48,7 @@
 		}
 	],
 	"vars": {
-		"GAIA_API_URI": "https://api.gaia.cc",
+		"GAIA_API_BASE_URI": "https://api.gaia.cc",
 		"ALLOWED_DOMAIN": "valhalla.gaia.cc",
 		"ALLOWED_URI": "https://valhalla.gaia.cc",
 		"MESSAGE_FOR_WALLET_LOGIN": "Please sign this message to log in to Valhalla."
@@ -82,7 +82,7 @@
 				}
 			],
 			"vars": {
-				"GAIA_API_URI": "http://localhost:8080",
+				"GAIA_API_BASE_URI": "http://localhost:8080",
 				"ALLOWED_DOMAIN": "localhost:8081",
 				"ALLOWED_URI": "http://localhost:8081",
 				"MESSAGE_FOR_WALLET_LOGIN": "Please sign this message to log in to Valhalla."

@@ -4,6 +4,8 @@ import { createNoticeDetailModal, createNoticeModal } from '../../modals/notice'
 import { View } from '../view';
 import { tokenManager } from '@gaiaprotocol/client-common';
 import { createChatComponent } from '@gaiaprotocol/chat-client';
+import { fetchMainGod, setMainGod } from '../../api/main-god';
+import { createSelectMainGodModal } from '../../modals/select-main-god';
 
 const roomId = 'test';
 
@@ -68,9 +70,24 @@ function createHomeView(): View & {
   const chat = createChatComponent({
     roomId,
     myAccount: getMyAccount(),
+    useAddressAvatar: true,
   });
 
   page.append(chat.el);
+
+  fetchMainGod().then(data => {
+    if (data.god_id === undefined) {
+      const modal = createSelectMainGodModal({
+        loadGods: () => Promise.resolve([]), //TODO: 구현
+        onSelected: async (godId: string) => {
+          await setMainGod(godId);
+          //TODO: 선택 완료 후 UI 업데이트가 필요하면 여기서 갱신
+        }
+      });
+      document.body.appendChild(modal);
+      modal.present();
+    }
+  });
 
   return {
     el: page,

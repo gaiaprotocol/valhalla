@@ -1,6 +1,6 @@
 import { getAddress } from 'viem';
 
-declare const GAIA_API_URI: string;
+declare const GAIA_API_BASE_URI: string;
 
 async function fetchGaiaNames(
   addresses: string[],
@@ -9,7 +9,7 @@ async function fetchGaiaNames(
 
   const normalized = addresses.map(getAddress);
 
-  const res = await fetch(`${GAIA_API_URI}/get-names`, {
+  const res = await fetch(`${GAIA_API_BASE_URI}/get-names`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ addresses: normalized })
