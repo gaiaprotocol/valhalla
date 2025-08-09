@@ -1,6 +1,6 @@
 import { jsonWithCors, verifyToken } from "@gaiaprotocol/worker-common";
 
-export async function handleGetMainGod(request: Request, env: Env): Promise<Response> {
+export async function handleGetMyMainGod(request: Request, env: Env): Promise<Response> {
   try {
     // Authorization check
     const auth = request.headers.get('authorization');

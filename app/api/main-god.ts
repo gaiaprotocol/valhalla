@@ -11,7 +11,7 @@ interface MainGodData {
  * Get the main god for a specific account address.
  */
 async function fetchMainGod(): Promise<MainGodData> {
-  const res = await fetch(`${API_BASE_URI}/get-main-god`, {
+  const res = await fetch(`${API_BASE_URI}/get-my-main-god`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

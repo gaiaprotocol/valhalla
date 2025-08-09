@@ -102,7 +102,6 @@ export function createSelectMainGodModal(options: SelectMainGodOptions) {
   (async () => {
     try {
       const gods = await loadGods();
-      console.log(gods);
       if (!gods || gods.length === 0) {
         grid.append(
           el('div', {
