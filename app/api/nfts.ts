@@ -1,4 +1,3 @@
-// app/api/nfts.ts
 import { getAddress } from 'viem';
 
 declare const GAIA_API_BASE_URI: string;

@@ -1,4 +1,4 @@
-import { createChatComponent } from '@gaiaprotocol/chat-client';
+import { chatProfileService, createChatComponent } from '@gaiaprotocol/chat-client';
 import { tokenManager } from '@gaiaprotocol/client-common';
 import { el } from '@webtaku/el';
 import { fetchMainGod, setMainGod } from '../../api/main-god';
@@ -108,7 +108,9 @@ function createHomeView(): View & {
         },
         onSelected: async (godId: string) => {
           await setMainGod(godId);
-          //TODO: 선택 완료 후 UI 업데이트가 필요하면 여기서 갱신
+          // 선택 완료 후 UI 업데이트가 필요하면 여기서 갱신
+          const account = getMyAccount();
+          chatProfileService.preload([account]);
         }
       });
       document.body.appendChild(modal);

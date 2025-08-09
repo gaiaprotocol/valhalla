@@ -1,4 +1,3 @@
-// app/api/main-gods-with-nfts.ts
 import { getAddress } from 'viem';
 
 declare const API_BASE_URI: string;
