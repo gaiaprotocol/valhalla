@@ -1,6 +1,7 @@
 import { handleGodModeCheck, handleLogin, handleNonce, handleUploadImage, handleValidateToken } from '@gaiaprotocol/worker-common';
 import { ChatRoom } from './do/chat-room';
 import { handleGetMainGod } from './handlers/get-main-god';
+import { handleGetMainGodsWithNfts } from './handlers/get-main-gods-with-nfts';
 import { handleSetMainGod } from './handlers/set-main-god';
 //import { EnhancedFcmMessage, FCM, FcmOptions } from 'fcm-cloudflare-workers';
 
@@ -70,6 +71,7 @@ export default {
     if (url.pathname === '/api/upload-image' && request.method === 'POST') return handleUploadImage(request, env);
     if (url.pathname === '/api/set-main-god' && request.method === 'POST') return handleSetMainGod(request, env);
     if (url.pathname === '/api/get-main-god' && request.method === 'GET') return handleGetMainGod(request, env);
+    if (url.pathname === '/api/get-main-gods-with-nfts') return handleGetMainGodsWithNfts(request, env);
 
     const chatMatch = url.pathname.match(/^\/api\/chat\/([^/]+)\/(stream|send)$/);
     if (chatMatch) {

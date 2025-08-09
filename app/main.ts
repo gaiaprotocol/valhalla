@@ -14,6 +14,8 @@ import { createHomeView } from './views/authenticated/home';
 import { createLayoutView } from './views/authenticated/layout';
 import { createLoginView } from './views/unauthenticated/login';
 import { View } from './views/view';
+import { fetchMainGodsWithNfts } from './api/main-gods-with-nfts';
+import { getAddress } from 'viem';
 
 setupConfig({
   hardwareBackButton: true,
@@ -65,14 +67,32 @@ if (!isWebView) {
 }
 
 chatProfileService.init(async (addresses) => {
-  const names = await fetchGaiaNames(addresses);
+  // 주소 정규화(체크섬) – names, nfts 모두 같은 키를 쓰도록
+  const normalized = addresses.map(getAddress);
+
+  const [names, nfts] = await Promise.all([
+    fetchGaiaNames(normalized),           // Record<checksumAddr, name>
+    fetchMainGodsWithNfts(normalized),    // { address, nft?: { image? } }[]
+  ]);
+
+  // 주소 → NFT 응답 매핑 (체크섬 주소 기준)
+  const nftMap = new Map<string, { image?: string | null } | null>();
+  for (const row of nfts) {
+    const addr = getAddress(row.address);
+    nftMap.set(addr, row.nft ?? null);
+  }
+
   const result: Record<string, { nickname?: string | null; profileImage?: string | null } | null> = {};
-  for (const address of addresses) {
-    result[address] = {
-      nickname: names[address] || null,
-      profileImage: null
+  for (const addr of normalized) {
+    const nft = nftMap.get(addr) ?? null;
+    const imageUrl = nft?.image ?? null;
+
+    result[addr] = {
+      nickname: names[addr] ?? null,
+      profileImage: imageUrl,
     };
   }
+
   return result;
 });
 
