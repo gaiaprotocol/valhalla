@@ -70,34 +70,7 @@ export async function handleGetMainGodsWithNfts(request: Request, env: Env): Pro
       return jsonWithCors(items, 200);
     }
 
-    // 3) GAIA API의 /nfts/by-ids 호출
-    const res = await fetch(`${env.GAIA_API_BASE_URI}/nfts/by-ids`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      // 백엔드 스펙: { nft_address, token_ids: number[] }
-      body: JSON.stringify({
-        ids: tokenIds,
-      }),
-    });
-
-    if (!res.ok) {
-      const text = await res.text().catch(() => '');
-      console.error(`nfts/by-ids failed: ${res.status} ${res.statusText}`, text);
-      // NFT 정보를 못 가져와도 main_god은 반환하고, nft는 null로 둡니다.
-      const items = rows.map(r => ({
-        address: r.account,
-        god_id: r.god_id,
-        selected_at: r.selected_at,
-        nft: null as NftItem | null,
-      }));
-      return jsonWithCors(items, 200);
-    }
-
-    const result: {
-      results: Record<string, NftItem>;
-    } = await res.json();
-
-    const byTokenId = result.results;
+    const byTokenId = await (env.API_WORKER as any).fetchNftDataByIds(tokenIds);
 
     // 4) 병합하여 반환
     const items = rows.map(r => {
