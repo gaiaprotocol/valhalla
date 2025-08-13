@@ -1,4 +1,5 @@
-import { handleGodModeCheck, handleLogin, handleNonce, handleUploadImage, handleValidateToken } from '@gaiaprotocol/worker-common';
+import { handleGodModeCheck } from '@gaiaprotocol/god-mode-worker';
+import { handleLogin, handleNonce, handleUploadImage, handleValidateToken } from '@gaiaprotocol/worker-common';
 import { ChatRoom } from './do/chat-room';
 import { handleGetMainGodsWithNfts } from './handlers/get-main-gods-with-nfts';
 import { handleGetMyMainGod } from './handlers/get-my-main-god';
@@ -65,7 +66,7 @@ export default {
 
     const url = new URL(request.url);
     if (url.pathname === '/api/nonce' && request.method === 'POST') return handleNonce(request, env);
-    if (url.pathname === '/api/login' && request.method === 'POST') return handleLogin(request, env);
+    if (url.pathname === '/api/login' && request.method === 'POST') return handleLogin(request, 1, env);
     if (url.pathname === '/api/validate-token' && request.method === 'GET') return handleValidateToken(request, env);
     if (url.pathname === '/api/god-mode' && request.method === 'POST') return handleGodModeCheck(request);
     if (url.pathname === '/api/upload-image' && request.method === 'POST') return handleUploadImage(request, env);
