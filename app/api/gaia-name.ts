@@ -2,7 +2,7 @@ import { getAddress } from 'viem';
 
 declare const GAIA_API_BASE_URI: string;
 
-async function fetchGaiaNames(
+export async function fetchGaiaNames(
   addresses: string[],
 ): Promise<Record<string, string>> {
   if (addresses.length === 0) return {};
@@ -30,5 +30,3 @@ async function fetchGaiaNames(
 
   return result;
 }
-
-export { fetchGaiaNames };
