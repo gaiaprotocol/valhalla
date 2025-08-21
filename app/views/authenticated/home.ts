@@ -2,11 +2,11 @@ import { chatProfileService, createChatComponent } from '@gaiaprotocol/chat-clie
 import { tokenManager } from '@gaiaprotocol/client-common';
 import { el } from '@webtaku/el';
 import { fetchMainGod, setMainGod } from '../../api/main-god';
+import { fetchHeldNfts, HeldNft } from '../../api/nfts';
 import { fetchNotices } from '../../api/notice';
 import { createNoticeDetailModal, createNoticeModal } from '../../modals/notice';
 import { createSelectMainGodModal } from '../../modals/select-main-god';
 import { View } from '../view';
-import { fetchHeldNfts, HeldNft } from '../../api/nfts';
 
 const roomId = 'test';
 
@@ -25,18 +25,14 @@ function getMyAccount(): string {
 function toImageUrl(img?: string | null) {
   if (!img) return '';
   try {
-    return new URL(img).href; // 절대 경로면 그대로
+    return new URL(img).href;
   } catch {
-    return `https://god-images.gaia.cc/${img}`;   // 상대 경로면 프리픽스 (환경에 맞게 조정)
+    return `https://god-images.gaia.cc/${img}`;
   }
 }
 
-function createHomeView(): View & {
-  scrollToBottom: () => void;
-} {
-  const page = el('div', { className: 'page flex flex-col h-screen p-4 gap-2' }, {
-    style: { height: '100%' }
-  });
+function createHomeView(): View & { scrollToBottom: () => void } {
+  const page = el('div', { className: 'page flex flex-col h-screen p-4 gap-2' }, { style: { height: '100%' } });
 
   fetchNotices().then(notices => {
     const latestNotice = notices[0];
@@ -59,7 +55,8 @@ function createHomeView(): View & {
       el(
         'button',
         {
-          className: 'text-blue-600 text-xs underline', onclick: (e: Event) => {
+          className: 'text-blue-600 text-xs underline',
+          onclick: (e: Event) => {
             e.stopPropagation();
             let noticeModal = document.querySelector('ion-modal[trigger="open-notice"]');
             if (!noticeModal) {
@@ -73,32 +70,32 @@ function createHomeView(): View & {
       )
     );
     page.prepend(noticeBar);
-
     chat.scrollToBottom();
   });
 
   /* ---------- ChatComponent ---------- */
+  const myAccount = getMyAccount();
   const chat = createChatComponent({
     roomId,
-    myAccount: getMyAccount(),
+    myAccount,
     useAddressAvatar: true,
   });
 
   page.append(chat.el);
 
+  /* ---------- 내 프로필 프리로드 ---------- */
+  if (myAccount && myAccount !== 'unknown') {
+    chatProfileService.preload([myAccount]);
+  }
+
+  /* ---------- Main God 선택 ---------- */
   fetchMainGod().then(data => {
     if (data.god_id === undefined) {
       const modal = createSelectMainGodModal({
         loadGods: async () => {
           const account = getMyAccount();
           if (!account || account === 'unknown') return [];
-
-          // 특정 컬렉션만 보고 싶으면 opts.contract에 주소 넣으세요.
-          const nfts: HeldNft[] = await fetchHeldNfts(account, {
-            // contract: '0x134590ACB661Da2B318BcdE6b39eF5cF8208E372',
-            // start: 0, end: 3332, limit: 50
-          });
-
+          const nfts: HeldNft[] = await fetchHeldNfts(account, {});
           return nfts.map(n => ({
             id: String(n.id),
             name: `${n.type ?? 'NFT'} #${n.id}`,
@@ -106,11 +103,19 @@ function createHomeView(): View & {
             raw: n,
           }));
         },
-        onSelected: async (godId: string) => {
+        onSelected: async (godId: string, selected?: { image?: string }) => {
           await setMainGod(godId);
-          // 선택 완료 후 UI 업데이트가 필요하면 여기서 갱신
-          const account = getMyAccount();
-          chatProfileService.preload([account]);
+
+          // (선택) 메인 God 이미지로 아바타 즉시 갱신
+          if (selected?.image && myAccount && myAccount !== 'unknown') {
+            const prev = chatProfileService.getCached(myAccount);
+            chatProfileService.setProfile(myAccount, prev?.nickname ?? undefined, selected.image);
+          }
+
+          // 서버값 동기화
+          if (myAccount && myAccount !== 'unknown') {
+            chatProfileService.preload([myAccount]);
+          }
         }
       });
       document.body.appendChild(modal);
@@ -118,10 +123,26 @@ function createHomeView(): View & {
     }
   });
 
+  /* ---------- 이름 변경 시: 채팅 닉네임 즉시 갱신(.gaia, @없음) ---------- */
+  const onGaiaNameUpdated = (e: any) => {
+    const newName = e?.detail?.name as string | undefined;
+    if (!newName) return;
+    if (!myAccount || myAccount === 'unknown') return;
+
+    const prev = chatProfileService.getCached(myAccount);
+    // 닉네임을 항상 "<name>.gaia" 형태로 저장
+    chatProfileService.setProfile(myAccount, `${newName}.gaia`, prev?.profileImage ?? undefined);
+
+    // (선택) 서버값으로 최종 보정
+    chatProfileService.preload([myAccount]);
+  };
+  window.addEventListener('gaiaName:updated', onGaiaNameUpdated as EventListener);
+
   return {
     el: page,
     scrollToBottom: chat.scrollToBottom,
     remove() {
+      window.removeEventListener('gaiaName:updated', onGaiaNameUpdated as EventListener);
       chat.remove();
       page.remove();
     },

@@ -3,6 +3,7 @@ import Navigo from 'navigo';
 import { createDashboardModal } from '../../modals/dashboard';
 import { createGodDetailModal } from '../../modals/god-detail';
 import { createMyGodsModal } from '../../modals/my-gods';
+import { createNameSettingsModal } from '../../modals/name-settings';
 import { createProfileModal } from '../../modals/profile';
 import { View } from '../view';
 
@@ -111,6 +112,7 @@ function createLayoutView(router: Navigo): View {
     createMyGodsModal(),
     createGodDetailModal(),
     createProfileModal(router),
+    createNameSettingsModal(),
   );
 
   // 라우터 연동: 상단에서 디스패치한 navigate 이벤트 수신

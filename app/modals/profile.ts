@@ -1,3 +1,4 @@
+import { chatProfileService } from "@gaiaprotocol/chat-client";
 import {
   createAddressAvatar,
   logout,
@@ -7,7 +8,6 @@ import {
 import { el } from "@webtaku/el";
 import Navigo from "navigo";
 import { getAddress } from "viem";
-import { chatProfileService } from "@gaiaprotocol/chat-client";
 
 function createInfoModal(title: string, message: string) {
   const modal = el("ion-modal");
@@ -27,27 +27,35 @@ function createInfoModal(title: string, message: string) {
 
   const content = el(
     "ion-content.ion-padding",
-    el(
-      "div",
-      {
-        style: `
-        text-align: center;
-      `,
-      },
-      message
-    )
+    el("div", { style: `text-align: center;` }, message)
   );
 
   modal.append(header, content);
   return modal;
 }
 
+function ensureHiddenNameTrigger() {
+  let btn = document.getElementById("open-name-settings");
+  if (!btn) {
+    btn = el("ion-button", { id: "open-name-settings", style: "display:none" });
+    document.body.appendChild(btn);
+  }
+  return btn;
+}
+
+// 표시명 규칙: nickname이 있으면 사용, .gaia가 없으면 덧붙임 / 없으면 축약주소
+function formatDisplayName(nickname: string | null | undefined, addr: string) {
+  if (nickname && nickname.trim()) {
+    const n = nickname.trim();
+    return n.endsWith('.gaia') ? n : `${n}.gaia`;
+  }
+  return shortenAddress(addr);
+}
+
 function createProfileModal(router: Navigo): HTMLElement {
   const myAddress = getAddress(tokenManager.getAddress() || "");
-
   let avatarContainer: HTMLElement;
 
-  // 기본 아바타 생성
   const makeFallbackAvatar = () => {
     const avatar = createAddressAvatar(myAddress);
     avatar.style.width = "64px";
@@ -57,16 +65,13 @@ function createProfileModal(router: Navigo): HTMLElement {
     return avatar;
   };
 
-  // 아바타 갱신 헬퍼
   const updateAvatar = (imageUrl?: string | null) => {
     avatarContainer.style.backgroundImage = "";
     avatarContainer.innerHTML = "";
-
     if (!imageUrl) {
       avatarContainer.append(makeFallbackAvatar());
       return;
     }
-
     const img = new Image();
     img.onload = () => {
       avatarContainer.style.backgroundImage = `url("${imageUrl}")`;
@@ -92,13 +97,13 @@ function createProfileModal(router: Navigo): HTMLElement {
         "ion-avatar",
         {
           style: `
-        width:64px;
-        height:64px;
-        margin:auto;
-        background-size: cover;
-        background-position: center;
-        border-radius: 50%;
-      `,
+            width:64px;
+            height:64px;
+            margin:auto;
+            background-size: cover;
+            background-position: center;
+            border-radius: 50%;
+          `,
         },
         makeFallbackAvatar()
       )),
@@ -137,26 +142,34 @@ function createProfileModal(router: Navigo): HTMLElement {
         : el("ion-icon", { name: "chevron-forward", slot: "end" })
     );
 
+  // 현재 Gaia Name 동적 subtitle
+  const cachedProfile = chatProfileService.getCached(myAddress);
+  const initialDisplay = formatDisplayName(cachedProfile?.nickname, myAddress);
+  let gaiaSubtitle = el("p", initialDisplay);
+
   const modalContent = el(
     "ion-content.ion-padding",
     profileCard,
     el(
       "ion-list",
       // Gaia Name
-      menuItem("sparkles", "Gaia Name", "Manage your Gaia Name", () => {
-        const infoModal = createInfoModal(
-          "Gaia Name",
-          "🚧 Gaia Name setting is under construction. 🚀"
-        );
-        document.body.appendChild(infoModal);
-        (infoModal as any).present();
+      menuItem("sparkles", "Gaia Name", initialDisplay, async () => {
+        // 1) 최신 프로필 강제 로드
+        await chatProfileService.preload([myAddress]);
+        const latest = await chatProfileService.resolve(myAddress);
+        const rawNick = latest?.nickname?.trim() || '';
+
+        // 2) 닉네임이 있을 때만 핸들로 전달 ('.gaia' 제거). 없으면 '' → 모달에서 Not set.
+        const handle = rawNick ? rawNick.replace(/\.gaia$/, '') : '';
+
+        // 3) 트리거 클릭
+        const btn = ensureHiddenNameTrigger();
+        btn.dataset.initialName = handle;
+        btn.click();
       }),
       // Persona
       menuItem("person-circle", "Persona", "Edit your persona details", () => {
-        const infoModal = createInfoModal(
-          "Persona",
-          "🚧 Persona setting is under construction. 🚀"
-        );
+        const infoModal = createInfoModal("Persona", "🚧 Persona setting is under construction. 🚀");
         document.body.appendChild(infoModal);
         (infoModal as any).present();
       }),
@@ -172,16 +185,24 @@ function createProfileModal(router: Navigo): HTMLElement {
     "ion-header",
     el(
       "ion-toolbar",
-      el('ion-buttons', { slot: 'start' },
-        el('ion-button', { onclick: () => modal.dismiss() },
-          el('ion-icon', { slot: 'icon-only', name: 'chevron-back' })
-        ),
+      el(
+        "ion-buttons",
+        { slot: "start" },
+        el(
+          "ion-button",
+          { onclick: () => modal.dismiss() },
+          el("ion-icon", { slot: "icon-only", name: "chevron-back" })
+        )
       ),
-      el('ion-title', { style: 'text-align: center;' }, 'Profile Settings'),
-      el('ion-buttons', { slot: 'end' },
-        el('ion-button', { style: 'visibility: hidden' },
-          el('ion-icon', { slot: 'icon-only', name: 'ellipsis-vertical' })
-        ),
+      el("ion-title", { style: "text-align: center;" }, "Profile Settings"),
+      el(
+        "ion-buttons",
+        { slot: "end" },
+        el(
+          "ion-button",
+          { style: "visibility: hidden" },
+          el("ion-icon", { slot: "icon-only", name: "ellipsis-vertical" })
+        )
       )
     )
   );
@@ -189,22 +210,40 @@ function createProfileModal(router: Navigo): HTMLElement {
   modal.append(modalHeader, modalContent);
 
   // 초기 이름/아바타
-  const cachedProfile = chatProfileService.getCached(myAddress);
-  nameSpan.textContent = cachedProfile?.nickname || shortenAddress(myAddress);
+  nameSpan.textContent = initialDisplay;
   updateAvatar(cachedProfile?.profileImage);
 
-  // 프로필 프리로드
+  // 프리로드
   chatProfileService.preload([myAddress]);
 
-  // 변경 이벤트 반영
+  // 채팅 프로필 변경 → 표시명/아바타 갱신
   chatProfileService.addEventListener("chatprofilechange", (e) => {
     const { account, profile } = (e as CustomEvent<any>).detail;
     if (getAddress(account) === myAddress) {
-      nameSpan.textContent = profile?.nickname || shortenAddress(myAddress);
+      const display = formatDisplayName(profile?.nickname, myAddress);
+      nameSpan.textContent = display;
+      gaiaSubtitle.textContent = display;
       updateAvatar(profile?.profileImage);
     }
   });
 
+  // Gaia Name 변경 → 표시명 갱신(.gaia, @없음)캐시 동기화
+  window.addEventListener("gaiaName:updated", (e: any) => {
+    const newName = e?.detail?.name as string | undefined;
+    if (!newName) return;
+    const display = `${newName}.gaia`;
+    nameSpan.textContent = display;
+    gaiaSubtitle.textContent = display;
+
+    // 내 캐시 즉시 업데이트 (닉네임만)
+    const prev = chatProfileService.getCached(myAddress);
+    chatProfileService.setProfile(myAddress, display, prev?.profileImage ?? undefined);
+
+    // 서버값으로 보정
+    chatProfileService.preload([myAddress]);
+  });
+
+  ensureHiddenNameTrigger();
   return modal;
 }
 
