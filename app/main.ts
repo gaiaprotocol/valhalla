@@ -87,8 +87,14 @@ chatProfileService.init(async (addresses) => {
     const nft = nftMap.get(addr) ?? null;
     const imageUrl = nft?.image ?? null;
 
+    // 닉네임이 있으면 항상 .gaia를 붙임
+    let nick = names[addr] ?? null;
+    if (nick && !nick.endsWith('.gaia')) {
+      nick = `${nick}.gaia`;
+    }
+
     result[addr] = {
-      nickname: names[addr] ?? null,
+      nickname: nick,
       profileImage: imageUrl,
     };
   }
