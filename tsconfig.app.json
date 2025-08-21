@@ -20,10 +20,12 @@
     "skipLibCheck": true,
     "strict": true,
     "rootDir": "./app",
-    "outDir": "dist"
+    "outDir": "dist",
+    "resolveJsonModule": true,
   },
   "include": [
     "./app",
+    "./app/data/*.json",
   ],
   "exclude": [
     "node_modules",

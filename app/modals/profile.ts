@@ -172,11 +172,16 @@ function createProfileModal(router: Navigo): HTMLElement {
     "ion-header",
     el(
       "ion-toolbar",
-      el("ion-title", "Profile Settings"),
-      el(
-        "ion-buttons",
-        { slot: "end" },
-        el("ion-button", { onclick: () => modal.dismiss() }, "Close")
+      el('ion-buttons', { slot: 'start' },
+        el('ion-button', { onclick: () => modal.dismiss() },
+          el('ion-icon', { slot: 'icon-only', name: 'chevron-back' })
+        ),
+      ),
+      el('ion-title', { style: 'text-align: center;' }, 'Profile Settings'),
+      el('ion-buttons', { slot: 'end' },
+        el('ion-button', { style: 'visibility: hidden' },
+          el('ion-icon', { slot: 'icon-only', name: 'ellipsis-vertical' })
+        ),
       )
     )
   );

@@ -15,9 +15,11 @@
     "@gaiaprotocol/chat-client": "^0.0.3",
     "@gaiaprotocol/client-common": "^0.0.8",
     "@gaiaprotocol/god-mode-client": "^0.0.1",
+    "@gaiaprotocol/god-mode-shared": "^0.0.4",
     "@ionic/core": "^8.7.2",
     "@webtaku/el": "^0.0.17",
     "firebase": "^12.1.0",
+    "kiwiengine": "^0.0.1-alpha",
     "marked": "^16.2.0",
     "navigo": "^8.11.1",
     "wagmi": "^2.16.4"
