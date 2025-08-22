@@ -31,7 +31,7 @@ function createHeader(): HTMLElement {
     el('ion-content',
       el('ion-list',
         // Dashboard
-        el('ion-item', {
+        /*el('ion-item', {
           button: true,
           detail: true,
           onclick: async () => {
@@ -49,7 +49,7 @@ function createHeader(): HTMLElement {
         },
           el('ion-icon', { slot: 'start', name: 'bar-chart-sharp' }),
           el('ion-label', 'Dashboard')
-        ),
+        ),*/
 
         // My Gods
         el('ion-item', {
