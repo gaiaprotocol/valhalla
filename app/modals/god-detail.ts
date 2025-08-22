@@ -81,6 +81,7 @@ function imagePanel(detail: NftDetail) {
     gender: detail.traits!.Gender as GenderType,
     parts: detail.parts as { [category: string]: string },
   });
+  viewer.style.borderRadius = '12px';
   card.append(viewer);
   return { card, viewerEl: viewer as unknown as HTMLElement };
 }
@@ -269,11 +270,13 @@ function createGodDetailModal(): HTMLElement {
           } else {
             // fallback: rebuild viewer
             leftCard.innerHTML = '';
-            leftCard.append(createGodViewer({
+            const viewer = createGodViewer({
               type: data?.traits?.Type as ElementType,
               gender: data?.traits?.Gender as GenderType,
               parts: data?.parts,
-            }));
+            });
+            viewer.style.borderRadius = '12px';
+            leftCard.append(viewer);
           }
         };
 
