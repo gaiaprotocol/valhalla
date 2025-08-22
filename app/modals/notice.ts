@@ -1,6 +1,6 @@
 import { el } from "@webtaku/el";
-import { Notice } from "../api/notice";
 import { marked } from "marked";
+import { Notice } from "../types/notice";
 
 const renderer = new marked.Renderer();
 renderer.link = ({ href, title, text }) => {
@@ -33,7 +33,7 @@ function createNoticeModal(notices: Notice[]): HTMLElement {
         },
           el('ion-label',
             el('h2', notice.title),
-            el('p', `${notice.created_at}`)
+            el('p', `${notice.createdAt}`)
           )
         )
       )
@@ -70,7 +70,7 @@ function createNoticeDetailModal(notice: Notice): HTMLIonModalElement {
     mdContainer.innerHTML = result;
   }
 
-  const date = el('p.notice-date', notice.created_at);
+  const date = el('p.notice-date', notice.createdAt);
 
   content.append(date, mdContainer);
 

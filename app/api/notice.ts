@@ -1,3 +1,5 @@
+import { Notice } from "../types/notice";
+
 declare const GAIA_API_BASE_URI: string;
 
 export async function fetchNotices(): Promise<Notice[]> {
@@ -5,11 +7,4 @@ export async function fetchNotices(): Promise<Notice[]> {
   if (!res.ok) throw new Error('Failed to fetch notices');
   const json = await res.json();
   return json.data;
-}
-
-export interface Notice {
-  id: number;
-  title: string;
-  content: string;
-  created_at: string;
 }
