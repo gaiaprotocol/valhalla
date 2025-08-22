@@ -12,9 +12,9 @@ function createHeader(): HTMLElement {
   const hiddenTriggers = el('div', {
     style: 'display:none'
   },
-    el('ion-button',
+    /*el('ion-button',
       { onclick: () => open('https://dashboard.gaiaprotocol.com/') }, //{ id: 'open-dashboard' },
-    ),
+    ),*/
     el('ion-button', { id: 'open-my-gods' }),
     el('ion-button', { id: 'open-profile' })
   );
