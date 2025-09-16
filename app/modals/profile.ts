@@ -86,25 +86,6 @@ function createProfileModal(router: Navigo): HTMLElement {
   const nameSpan = el("span", "Loading…");
   const addressSpan = el("span", myAddress);
 
-  // 초기 캐시값
-  const cachedProfile = chatProfileService.getCached(myAddress);
-  const initialDisplay = formatDisplayName(cachedProfile?.nickname, myAddress);
-  const initialBio = (cachedProfile?.bio ?? "").trim() || "No bio yet";
-
-  // bio 표시 요소
-  const bioSpan = el(
-    "p",
-    {
-      style: `
-        white-space: pre-wrap;
-        margin-top: 8px;
-        color: var(--ion-color-medium);
-        font-size: 14px;
-      `,
-    },
-    initialBio
-  );
-
   const modal = el("ion-modal", { trigger: "open-profile" });
 
   const profileCard = el(
@@ -128,12 +109,6 @@ function createProfileModal(router: Navigo): HTMLElement {
       )),
       el("ion-card-title", nameSpan),
       el("ion-card-subtitle", addressSpan)
-    ),
-    // ▼ Bio 카드 본문
-    el(
-      "ion-card-content",
-      el("ion-label", el("h3", "Bio")),
-      bioSpan
     ),
     el(
       "ion-button",
@@ -167,7 +142,9 @@ function createProfileModal(router: Navigo): HTMLElement {
         : el("ion-icon", { name: "chevron-forward", slot: "end" })
     );
 
-  // Gaia Name 동적 subtitle
+  // 현재 Gaia Name 동적 subtitle
+  const cachedProfile = chatProfileService.getCached(myAddress);
+  const initialDisplay = formatDisplayName(cachedProfile?.nickname, myAddress);
   let gaiaSubtitle = el("p", initialDisplay);
 
   const modalContent = el(
@@ -177,33 +154,25 @@ function createProfileModal(router: Navigo): HTMLElement {
       "ion-list",
       // Gaia Name
       menuItem("sparkles", "Gaia Name", initialDisplay, async () => {
-        // 최신 프로필 강제 로드
+        // 1) 최신 프로필 강제 로드
         await chatProfileService.preload([myAddress]);
         const latest = await chatProfileService.resolve(myAddress);
-        const rawNick = latest?.nickname?.trim() || "";
+        const rawNick = latest?.nickname?.trim() || '';
 
-        // 닉네임이 있을 때만 .gaia 제거하여 전달
-        const handle = rawNick ? rawNick.replace(/\.gaia$/, "") : "";
+        // 2) 닉네임이 있을 때만 핸들로 전달 ('.gaia' 제거). 없으면 '' → 모달에서 Not set.
+        const handle = rawNick ? rawNick.replace(/\.gaia$/, '') : '';
 
-        // 트리거 클릭
+        // 3) 트리거 클릭
         const btn = ensureHiddenNameTrigger();
         btn.dataset.initialName = handle;
         btn.click();
       }),
       // Persona
-      menuItem(
-        "person-circle",
-        "Persona",
-        "Edit your persona details",
-        () => {
-          const infoModal = createInfoModal(
-            "Persona",
-            "🚧 Persona setting is under construction. 🚀"
-          );
-          document.body.appendChild(infoModal);
-          (infoModal as any).present();
-        }
-      ),
+      menuItem("person-circle", "Persona", "Edit your persona details", () => {
+        const infoModal = createInfoModal("Persona", "🚧 Persona setting is under construction. 🚀");
+        document.body.appendChild(infoModal);
+        (infoModal as any).present();
+      }),
       // Logout
       menuItem("log-out", "Sign Out", "", async () => {
         await logout();
@@ -240,26 +209,14 @@ function createProfileModal(router: Navigo): HTMLElement {
 
   modal.append(modalHeader, modalContent);
 
-  // 초기 이름/아바타/bio
+  // 초기 이름/아바타
   nameSpan.textContent = initialDisplay;
   updateAvatar(cachedProfile?.profileImage);
-  bioSpan.textContent = initialBio;
 
-  // 프리로드 후 최신값으로 보정 (이벤트 기다리지 않고 즉시 반영)
-  chatProfileService
-    .preload([myAddress])
-    .then(() => chatProfileService.resolve(myAddress))
-    .then((p) => {
-      if (!p) return;
-      const display = formatDisplayName(p.nickname, myAddress);
-      nameSpan.textContent = display;
-      gaiaSubtitle.textContent = display;
-      updateAvatar(p.profileImage);
-      bioSpan.textContent = (p.bio ?? "").trim() || "No bio yet";
-    })
-    .catch(() => { /* ignore */ });
+  // 프리로드
+  chatProfileService.preload([myAddress]);
 
-  // 프로필 변경 이벤트 → 표시명/아바타/bio 갱신
+  // 채팅 프로필 변경 → 표시명/아바타 갱신
   chatProfileService.addEventListener("chatprofilechange", (e) => {
     const { account, profile } = (e as CustomEvent<any>).detail;
     if (getAddress(account) === myAddress) {
@@ -267,11 +224,10 @@ function createProfileModal(router: Navigo): HTMLElement {
       nameSpan.textContent = display;
       gaiaSubtitle.textContent = display;
       updateAvatar(profile?.profileImage);
-      bioSpan.textContent = (profile?.bio ?? "").trim() || "No bio yet";
     }
   });
 
-  // Gaia Name 변경 → 표시명 갱신(.gaia), bio는 변화 없음
+  // Gaia Name 변경 → 표시명 갱신(.gaia, @없음)캐시 동기화
   window.addEventListener("gaiaName:updated", (e: any) => {
     const newName = e?.detail?.name as string | undefined;
     if (!newName) return;
@@ -281,12 +237,7 @@ function createProfileModal(router: Navigo): HTMLElement {
 
     // 내 캐시 즉시 업데이트 (닉네임만)
     const prev = chatProfileService.getCached(myAddress);
-    chatProfileService.setProfile(
-      myAddress,
-      display,
-      prev?.profileImage ?? undefined,
-      prev?.bio ?? undefined // bio는 그대로 유지
-    );
+    chatProfileService.setProfile(myAddress, display, prev?.profileImage ?? undefined);
 
     // 서버값으로 보정
     chatProfileService.preload([myAddress]);
