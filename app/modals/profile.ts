@@ -1,4 +1,4 @@
-import { chatProfileService } from "@gaiaprotocol/chat-client";
+// profile-modal.ts
 import {
   createAddressAvatar,
   logout,
@@ -8,30 +8,16 @@ import {
 import { el } from "@webtaku/el";
 import Navigo from "navigo";
 import { getAddress } from "viem";
+import { fetchMyGaiaName } from "../api/gaia-name";
+import { fetchMyProfile, saveMyProfile } from "../api/profile";
 
-function createInfoModal(title: string, message: string) {
-  const modal = el("ion-modal");
-
-  const header = el(
-    "ion-header",
-    el(
-      "ion-toolbar",
-      el("ion-title", title),
-      el(
-        "ion-buttons",
-        { slot: "end" },
-        el("ion-button", { onclick: () => modal.dismiss() }, "Close")
-      )
-    )
-  );
-
-  const content = el(
-    "ion-content.ion-padding",
-    el("div", { style: `text-align: center;` }, message)
-  );
-
-  modal.append(header, content);
-  return modal;
+function getAuthToken(): string | null {
+  // @ts-ignore
+  if (typeof tokenManager.getToken === 'function') return tokenManager.getToken();
+  // @ts-ignore
+  if (typeof tokenManager.get === 'function') { const rec = tokenManager.get(); if (rec?.token) return rec.token; }
+  try { const raw = localStorage.getItem('gaia_auth_token'); if (raw) { const j = JSON.parse(raw); return j?.token ?? null; } } catch { }
+  return null;
 }
 
 function ensureHiddenNameTrigger() {
@@ -40,18 +26,142 @@ function ensureHiddenNameTrigger() {
     btn = el("ion-button", { id: "open-name-settings", style: "display:none" });
     document.body.appendChild(btn);
   }
-  return btn;
+  return btn as HTMLButtonElement;
 }
 
 // 표시명 규칙: nickname이 있으면 사용, .gaia가 없으면 덧붙임 / 없으면 축약주소
 function formatDisplayName(nickname: string | null | undefined, addr: string) {
   if (nickname && nickname.trim()) {
     const n = nickname.trim();
-    return n.endsWith('.gaia') ? n : `${n}.gaia`;
+    return n.endsWith(".gaia") ? n : `${n}.gaia`;
   }
   return shortenAddress(addr);
 }
 
+// ===== Persona(bio) 편집 모달 =====
+function openPersonaModal(currentBio: string, onSaved: (newBio: string) => void) {
+  const modal = el("ion-modal");
+
+  const title = "Persona";
+  const header = el(
+    "ion-header",
+    el(
+      "ion-toolbar",
+      el(
+        "ion-buttons",
+        { slot: "start" },
+        el(
+          "ion-button",
+          { onclick: () => (modal as any).dismiss() },
+          el("ion-icon", { slot: "icon-only", name: "chevron-back" }),
+        ),
+      ),
+      el("ion-title", title),
+      el(
+        "ion-buttons",
+        { slot: "end" },
+        el("ion-button", { id: "persona-save-btn", strong: true }, "Save"),
+      ),
+    ),
+  );
+
+  const info = el(
+    "p",
+    {
+      style: `
+        margin: 0 0 8px 0;
+        color: var(--ion-color-medium);
+        font-size: 14px;
+      `,
+    },
+    "Tell others about yourself. This shows up in your profile.",
+  );
+
+  const textarea = el("ion-textarea", {
+    autoGrow: true,
+    rows: 6,
+    placeholder: "Write your bio…",
+    style: "width:100%;",
+    value: (currentBio ?? "").toString(),
+  }) as HTMLIonTextareaElement;
+
+  const counter = el(
+    "div",
+    {
+      style: `
+        display:flex;justify-content: space-between;align-items:center;
+        margin-top: 6px;font-size: 12px;color: var(--ion-color-medium);
+      `,
+    },
+    el("span", "Bio"),
+    el("span", { id: "persona-counter" }, "0 / 1000"),
+  );
+
+  const errorBox = el(
+    "div",
+    { id: "persona-error", style: "color: var(--ion-color-danger); margin-top:8px; display:none;" },
+  );
+
+  const content = el("ion-content.ion-padding", info, textarea, counter, errorBox);
+  modal.append(header, content);
+  document.body.appendChild(modal);
+
+  const MAX_BIO_LEN = 1000;
+  const setCounter = (len: number) => {
+    const c = modal.querySelector("#persona-counter");
+    if (c) c.textContent = `${len} / ${MAX_BIO_LEN}`;
+  };
+  const setError = (msg?: string) => {
+    const box = modal.querySelector("#persona-error") as HTMLElement;
+    if (!box) return;
+    box.textContent = msg ?? "";
+    box.style.display = msg ? "block" : "none";
+  };
+
+  const getVal = () => ((textarea as any).value ?? "").toString();
+  const validate = (bio: string) => {
+    if (bio.length > MAX_BIO_LEN) return `Bio exceeds maximum length of ${MAX_BIO_LEN}.`;
+    if (bio !== bio.normalize("NFC")) return "Bio must be NFC-normalized.";
+    return null;
+  };
+
+  const refresh = () => {
+    const v = getVal();
+    setCounter(v.length);
+    setError(validate(v) ?? "");
+  };
+
+  (textarea as any).addEventListener("ionInput", refresh);
+  refresh();
+
+  (modal.querySelector("#persona-save-btn") as HTMLIonButtonElement)?.addEventListener(
+    "click",
+    async () => {
+      const bio = getVal().trim().normalize("NFC");
+      const err = validate(bio);
+      if (err) return setError(err);
+      try {
+        const token = getAuthToken(); if (!token) throw new Error('Missing authorization token.');
+        await saveMyProfile({ bio }, token);
+        (modal as any).dismiss();
+        onSaved(bio);
+
+        const toast = document.createElement("ion-toast");
+        toast.message = "Bio saved.";
+        toast.duration = 1600;
+        toast.position = "bottom";
+        document.body.appendChild(toast);
+        (toast as any).present();
+      } catch (e: any) {
+        setError(e?.message ?? "Failed to save bio.");
+      }
+    },
+  );
+
+  (modal as any).present();
+}
+
+// ===== 메인: 프로필 모달 =====
 function createProfileModal(router: Navigo): HTMLElement {
   const myAddress = getAddress(tokenManager.getAddress() || "");
   let avatarContainer: HTMLElement;
@@ -85,6 +195,18 @@ function createProfileModal(router: Navigo): HTMLElement {
 
   const nameSpan = el("span", "Loading…");
   const addressSpan = el("span", myAddress);
+  const bioSpan = el(
+    "p",
+    {
+      style: `
+        white-space: pre-wrap;
+        margin-top: 8px;
+        color: var(--ion-color-medium);
+        font-size: 14px;
+      `,
+    },
+    "No bio yet",
+  );
 
   const modal = el("ion-modal", { trigger: "open-profile" });
 
@@ -97,28 +219,26 @@ function createProfileModal(router: Navigo): HTMLElement {
         "ion-avatar",
         {
           style: `
-            width:64px;
-            height:64px;
-            margin:auto;
-            background-size: cover;
-            background-position: center;
-            border-radius: 50%;
+            width:64px;height:64px;margin:auto;
+            background-size: cover;background-position: center;border-radius: 50%;
           `,
         },
-        makeFallbackAvatar()
+        makeFallbackAvatar(),
       )),
       el("ion-card-title", nameSpan),
-      el("ion-card-subtitle", addressSpan)
+      el("ion-card-subtitle", addressSpan),
     ),
+    el("ion-card-content", el("ion-label", el("h3", "Bio")), bioSpan),
     el(
       "ion-button",
       {
         slot: "end",
         style: "position:absolute;right:16px;top:16px",
         fill: "clear",
+        title: "Change avatar (UI TBD)",
       },
-      el("ion-icon", { name: "camera" })
-    )
+      el("ion-icon", { name: "camera" }),
+    ),
   );
 
   const menuItem = (
@@ -126,26 +246,17 @@ function createProfileModal(router: Navigo): HTMLElement {
     title: string,
     subtitle = "",
     onClick?: () => void,
-    rightEl?: HTMLElement
+    rightEl?: HTMLElement,
   ) =>
     el(
       "ion-item",
       { button: !!onClick, onclick: onClick },
       el("ion-icon", { name: icon, slot: "start" }),
-      el(
-        "ion-label",
-        el("h2", title),
-        subtitle ? el("p", subtitle) : undefined
-      ),
-      rightEl
-        ? rightEl
-        : el("ion-icon", { name: "chevron-forward", slot: "end" })
+      el("ion-label", el("h2", title), subtitle ? el("p", subtitle) : undefined),
+      rightEl ? rightEl : el("ion-icon", { name: "chevron-forward", slot: "end" }),
     );
 
-  // 현재 Gaia Name 동적 subtitle
-  const cachedProfile = chatProfileService.getCached(myAddress);
-  const initialDisplay = formatDisplayName(cachedProfile?.nickname, myAddress);
-  let gaiaSubtitle = el("p", initialDisplay);
+  let gaiaSubtitle = el("p", ""); // 실제 텍스트는 로드 후 세팅
 
   const modalContent = el(
     "ion-content.ion-padding",
@@ -153,32 +264,28 @@ function createProfileModal(router: Navigo): HTMLElement {
     el(
       "ion-list",
       // Gaia Name
-      menuItem("sparkles", "Gaia Name", initialDisplay, async () => {
-        // 1) 최신 프로필 강제 로드
-        await chatProfileService.preload([myAddress]);
-        const latest = await chatProfileService.resolve(myAddress);
-        const rawNick = latest?.nickname?.trim() || '';
-
-        // 2) 닉네임이 있을 때만 핸들로 전달 ('.gaia' 제거). 없으면 '' → 모달에서 Not set.
-        const handle = rawNick ? rawNick.replace(/\.gaia$/, '') : '';
-
-        // 3) 트리거 클릭
+      menuItem("sparkles", "Gaia Name", "", async () => {
+        const token = getAuthToken(); if (!token) throw new Error('Missing authorization token.');
+        // 최신 내 Gaia Name을 불러서 핸들 모달에 초기값으로 전달(있으면 .gaia 제거)
+        const { name } = await fetchMyGaiaName(token);
+        const handle = name ? name.replace(/\.gaia$/, "") : "";
         const btn = ensureHiddenNameTrigger();
-        btn.dataset.initialName = handle;
+        if (handle) btn.dataset.initialName = handle;
         btn.click();
       }),
-      // Persona
-      menuItem("person-circle", "Persona", "Edit your persona details", () => {
-        const infoModal = createInfoModal("Persona", "🚧 Persona setting is under construction. 🚀");
-        document.body.appendChild(infoModal);
-        (infoModal as any).present();
+      // Persona (bio만 편집)
+      menuItem("person-circle", "Persona", "Edit your bio", () => {
+        const current = (bioSpan.textContent ?? "").trim();
+        openPersonaModal(current === "No bio yet" ? "" : current, (newBio) => {
+          bioSpan.textContent = newBio || "No bio yet";
+        });
       }),
       // Logout
       menuItem("log-out", "Sign Out", "", async () => {
         await logout();
         router.navigate("/login");
-      })
-    )
+      }),
+    ),
   );
 
   const modalHeader = el(
@@ -190,9 +297,9 @@ function createProfileModal(router: Navigo): HTMLElement {
         { slot: "start" },
         el(
           "ion-button",
-          { onclick: () => modal.dismiss() },
-          el("ion-icon", { slot: "icon-only", name: "chevron-back" })
-        )
+          { onclick: () => (modal as any).dismiss() },
+          el("ion-icon", { slot: "icon-only", name: "chevron-back" }),
+        ),
       ),
       el("ion-title", { style: "text-align: center;" }, "Profile Settings"),
       el(
@@ -201,49 +308,43 @@ function createProfileModal(router: Navigo): HTMLElement {
         el(
           "ion-button",
           { style: "visibility: hidden" },
-          el("ion-icon", { slot: "icon-only", name: "ellipsis-vertical" })
-        )
-      )
-    )
+          el("ion-icon", { slot: "icon-only", name: "ellipsis-vertical" }),
+        ),
+      ),
+    ),
   );
 
   modal.append(modalHeader, modalContent);
 
-  // 초기 이름/아바타
-  nameSpan.textContent = initialDisplay;
-  updateAvatar(cachedProfile?.profileImage);
-
-  // 프리로드
-  chatProfileService.preload([myAddress]);
-
-  // 채팅 프로필 변경 → 표시명/아바타 갱신
-  chatProfileService.addEventListener("chatprofilechange", (e) => {
-    const { account, profile } = (e as CustomEvent<any>).detail;
-    if (getAddress(account) === myAddress) {
-      const display = formatDisplayName(profile?.nickname, myAddress);
+  // ===== 초기 데이터 로드 (/my-profile & /my-name) =====
+  (async () => {
+    try {
+      const token = getAuthToken(); if (!token) throw new Error('Missing authorization token.');
+      const [profile, myName] = await Promise.all([fetchMyProfile(token), fetchMyGaiaName(token)]);
+      const display = formatDisplayName(profile.nickname ?? (myName?.name ?? ""), myAddress);
       nameSpan.textContent = display;
       gaiaSubtitle.textContent = display;
-      updateAvatar(profile?.profileImage);
+      updateAvatar(profile.profile_image);
+      bioSpan.textContent = (profile.bio ?? "").trim() || "No bio yet";
+    } catch (e) {
+      // 최소한 주소/기본 아바타는 보여주기
+      nameSpan.textContent = shortenAddress(myAddress);
+      bioSpan.textContent = "No bio yet";
     }
-  });
+  })();
 
-  // Gaia Name 변경 → 표시명 갱신(.gaia, @없음)캐시 동기화
+  // 외부 Gaia Name 모달에서 이름 변경 시 표시명만 즉시 갱신 (프로필 닉네임과는 별개)
   window.addEventListener("gaiaName:updated", (e: any) => {
     const newName = e?.detail?.name as string | undefined;
     if (!newName) return;
     const display = `${newName}.gaia`;
     nameSpan.textContent = display;
     gaiaSubtitle.textContent = display;
-
-    // 내 캐시 즉시 업데이트 (닉네임만)
-    const prev = chatProfileService.getCached(myAddress);
-    chatProfileService.setProfile(myAddress, display, prev?.profileImage ?? undefined);
-
-    // 서버값으로 보정
-    chatProfileService.preload([myAddress]);
   });
 
+  // 히든 트리거 보장
   ensureHiddenNameTrigger();
+
   return modal;
 }
 
