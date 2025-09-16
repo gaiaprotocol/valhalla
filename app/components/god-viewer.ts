@@ -1,6 +1,6 @@
 import { getSelectedParts, GodMetadata } from '@gaiaprotocol/god-mode-shared';
 import { el } from '@webtaku/el';
-import { preload, SpineObject, World } from 'kiwiengine';
+import { preload, Renderer, SpineNode } from 'kiwiengine';
 
 // Shoelace 스피너 유틸
 function createShoelaceSpinner() {
@@ -45,10 +45,7 @@ export function createGodViewer(metadata: GodMetadata) {
   const loading = createShoelaceSpinner();
   container.appendChild(loading);
 
-  const world = new World({ width: 1024, height: 1024 });
-  world.container.style.width = '100%';
-  world.container.style.height = '100%';
-  container.appendChild(world.container);
+  const renderer = new Renderer(container, { logicalWidth: 1024, logicalHeight: 1024 });
 
   const texture = metadata.type === 'Water'
     ? {
@@ -64,7 +61,7 @@ export function createGodViewer(metadata: GodMetadata) {
     ...(typeof texture === 'string' ? [texture] : Object.values(texture))
   ]).then(() => {
 
-    const spineObject = new SpineObject({
+    const spineNode = new SpineNode({
       json: `${path}.json`,
       atlas: `${path}.atlas`,
       texture,
@@ -72,16 +69,16 @@ export function createGodViewer(metadata: GodMetadata) {
       animation: 'animation',
     });
 
-    spineObject.on('load', () => loading.remove());
-    spineObject.on('animationend', () => {
-      if (spineObject) spineObject.animation = 'animation';
+    spineNode.on('load', () => loading.remove());
+    spineNode.on('animationend', () => {
+      if (spineNode) spineNode.animation = 'animation';
     });
 
-    world.add(spineObject);
+    renderer.add(spineNode);
 
     container.style.cursor = 'pointer';
     container.addEventListener('click', () => {
-      if (spineObject) spineObject.animation = 'touched';
+      if (spineNode) spineNode.animation = 'touched';
     });
   });
 

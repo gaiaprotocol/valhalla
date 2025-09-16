@@ -9,7 +9,7 @@ import { createGodViewer } from '../components/god-viewer';
 import fireManParts from '../data/fire-man-parts.json' with { type: 'json' };
 import fireWomanParts from '../data/fire-woman-parts.json' with { type: 'json' };
 import keyToFrame from '../data/key-to-frame.json' with { type: 'json' };
-import spritesheet from '../data/spritesheet.json' with { type: 'json' };
+import frames from '../data/frames.json' with { type: 'json' };
 import stoneManParts from '../data/stone-man-parts.json' with { type: 'json' };
 import stoneWomanParts from '../data/stone-woman-parts.json' with { type: 'json' };
 import waterManParts from '../data/water-man-parts.json' with { type: 'json' };
@@ -248,7 +248,7 @@ function createGodDetailModal(): HTMLElement {
             partOptions,
             baseData,
             keyToFrame,
-            spritesheet,
+            frames,
             spritesheetImagePath: '/spritesheet.png',
           });
           Object.assign(comp.el.style, { width: '100%', height: '100%' });
