@@ -5,6 +5,7 @@ import { fetchMainGod, setMainGod } from '../../api/main-god';
 import { fetchHeldNfts, HeldNft } from '../../api/nfts';
 import { fetchNotices } from '../../api/notice';
 import { createNoticeDetailModal, createNoticeModal } from '../../modals/notice';
+import { openUserProfileModal } from '../../modals/profile';
 import { createSelectMainGodModal } from '../../modals/select-main-god';
 import { View } from '../view';
 
@@ -79,6 +80,9 @@ function createHomeView(): View & { scrollToBottom: () => void } {
     roomId,
     myAccount,
     useAddressAvatar: true,
+    onProfileClick: (account, profile) => {
+      openUserProfileModal(account, profile);
+    },
   });
 
   page.append(chat.el);

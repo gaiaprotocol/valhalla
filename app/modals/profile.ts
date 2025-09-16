@@ -1,4 +1,5 @@
 // profile-modal.ts
+import { ChatProfile, chatProfileService } from "@gaiaprotocol/chat-client";
 import {
   createAddressAvatar,
   logout,
@@ -9,7 +10,7 @@ import { el } from "@webtaku/el";
 import Navigo from "navigo";
 import { getAddress } from "viem";
 import { fetchMyGaiaName } from "../api/gaia-name";
-import { fetchMyProfile, saveMyProfile } from "../api/profile";
+import { fetchMyProfile, fetchProfileByAccount, saveMyProfile } from "../api/profile";
 
 function getAuthToken(): string | null {
   // @ts-ignore
@@ -349,3 +350,166 @@ function createProfileModal(router: Navigo): HTMLElement {
 }
 
 export { createProfileModal };
+
+type CreateUserProfileModalOptions = {
+  /** personas 서비스에서 bio만 가져오는 함수(반드시 bio만!) */
+  loadPersonaBio: (account: string) => Promise<string | null | undefined>;
+  /** 추가 액션들(차단/신고 등) */
+  extraActions?: Array<{ label: string; icon?: string; onClick: (account: string) => void }>;
+  /** 모달 타이틀 */
+  title?: string;
+};
+
+function createUserProfileModal(accountRaw: string, profile: ChatProfile): HTMLElement {
+  const account = (() => {
+    try { return getAddress(accountRaw); } catch { return accountRaw; }
+  })();
+
+  let avatarContainer!: HTMLElement;
+
+  const makeFallbackAvatar = () => {
+    const avatar = createAddressAvatar(account);
+    avatar.style.width = "64px";
+    avatar.style.height = "64px";
+    avatar.style.margin = "auto";
+    avatar.classList.add("avatar");
+    return avatar;
+  };
+
+  const updateAvatar = (imageUrl?: string | null) => {
+    avatarContainer.style.backgroundImage = "";
+    avatarContainer.innerHTML = "";
+    if (!imageUrl) {
+      avatarContainer.append(makeFallbackAvatar());
+      return;
+    }
+    const img = new Image();
+    img.onload = () => {
+      avatarContainer.style.backgroundImage = `url("${imageUrl}")`;
+      avatarContainer.innerHTML = "";
+    };
+    img.onerror = () => {
+      avatarContainer.append(makeFallbackAvatar());
+    };
+    img.src = imageUrl;
+  };
+
+  const nameSpan = el("span", "Loading…");
+  const addressSpan = el("span", account);
+  const bioSpan = el(
+    "p",
+    {
+      style: `
+        white-space: pre-wrap;
+        margin-top: 8px;
+        color: var(--ion-color-medium);
+        font-size: 14px;
+      `,
+    },
+    "No bio yet",
+  );
+
+  const modal = el("ion-modal") as HTMLElement;
+
+  const profileCard = el(
+    "ion-card",
+    el(
+      "ion-card-header",
+      { style: `text-align: center;` },
+      (avatarContainer = el(
+        "ion-avatar",
+        {
+          style: `
+            width:64px;height:64px;margin:auto;
+            background-size: cover;background-position: center;border-radius: 50%;
+          `,
+        },
+        makeFallbackAvatar(),
+      )),
+      el("ion-card-title", nameSpan),
+      el("ion-card-subtitle", addressSpan),
+    ),
+    el("ion-card-content", el("ion-label", el("h3", "Bio")), bioSpan),
+  );
+
+  const modalContent = el("ion-content.ion-padding", profileCard);
+
+  const modalHeader = el(
+    "ion-header",
+    el(
+      "ion-toolbar",
+      el(
+        "ion-buttons",
+        { slot: "start" },
+        el(
+          "ion-button",
+          { onclick: () => (modal as any).dismiss?.() },
+          el("ion-icon", { slot: "icon-only", name: "chevron-back" }),
+        ),
+      ),
+      el("ion-title", { style: "text-align: center;" }, "Profile"),
+      el(
+        "ion-buttons",
+        { slot: "end" },
+        el(
+          "ion-button",
+          { style: "visibility: hidden" },
+          el("ion-icon", { slot: "icon-only", name: "ellipsis-vertical" }),
+        ),
+      ),
+    ),
+  );
+
+  modal.append(modalHeader, modalContent);
+
+  // ===== 1) 챗 프로필(닉네임/이미지) 로딩 — chat 서비스만 사용
+  (async () => {
+    try {
+      await chatProfileService.preload([account]);
+      const cached = chatProfileService.getCached(account);
+      const display = formatDisplayName(cached?.nickname ?? "", account);
+      nameSpan.textContent = display;
+      updateAvatar(cached?.profileImage ?? null);
+    } catch {
+      // 실패해도 최소 표시는 유지
+      nameSpan.textContent = shortenAddress(account);
+      updateAvatar(null);
+    }
+  })();
+
+  // ===== 2) bio 로딩 — personas 서비스만 사용
+  (async () => {
+    try {
+      const bio = (await fetchProfileByAccount(account))?.bio;
+      bioSpan.textContent = (bio ?? "").trim() || "No bio yet";
+    } catch {
+      bioSpan.textContent = "No bio yet";
+    }
+  })();
+
+  // (선택) 이름 변경 브로드캐스트에 반응해 즉시 갱신
+  const onGaiaNameUpdated = (e: any) => {
+    const { account: accFromEvent, name } = (e?.detail ?? {}) as { account?: string; name?: string };
+    if (!accFromEvent || accFromEvent.toLowerCase() !== account.toLowerCase()) return;
+    if (!name) return;
+    nameSpan.textContent = `${name}.gaia`;
+  };
+  window.addEventListener("gaiaName:updated", onGaiaNameUpdated as EventListener);
+
+  // 모달 제거 시 정리
+  (modal as any).addEventListener?.("ionModalDidDismiss", () => {
+    window.removeEventListener("gaiaName:updated", onGaiaNameUpdated as EventListener);
+  });
+
+  return modal;
+}
+
+/** 바로 띄우기 헬퍼 */
+function openUserProfileModal(account: string, profile: ChatProfile) {
+  const modal = createUserProfileModal(account, profile);
+  document.body.appendChild(modal);
+  (modal as any).present?.() || (modal as any).showModal?.();
+  return modal;
+}
+
+export { createUserProfileModal, openUserProfileModal };

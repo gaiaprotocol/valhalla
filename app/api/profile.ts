@@ -141,3 +141,28 @@ export async function fetchMyProfile(token: string): Promise<Profile> {
   return (await res.json()) as Profile;
 }
 
+/**
+ * 특정 계정의 프로필 조회: GET /profile?account=<EVM 주소>
+ */
+export async function fetchProfileByAccount(account: string): Promise<Profile> {
+  if (!account) throw new Error('Missing account address.');
+
+  const checksummedAccount = getAddress(account); // EVM 체크섬 주소 변환
+  const res = await fetch(`${GAIA_API_BASE_URI}/get-profile?account=${encodeURIComponent(checksummedAccount)}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!res.ok) {
+    let message = `Failed to fetch profile: ${res.status}`;
+    try {
+      const data = await res.json();
+      if (data?.error) message = data.error;
+    } catch { /* ignore */ }
+    throw new Error(message);
+  }
+
+  return (await res.json()) as Profile;
+}
