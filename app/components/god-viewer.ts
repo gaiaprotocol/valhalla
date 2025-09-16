@@ -60,6 +60,7 @@ export function createGodViewer(metadata: GodMetadata) {
     `${path}.atlas`,
     ...(typeof texture === 'string' ? [texture] : Object.values(texture))
   ]).then(() => {
+    loading.remove()
 
     const spineNode = new SpineNode({
       json: `${path}.json`,
@@ -69,7 +70,6 @@ export function createGodViewer(metadata: GodMetadata) {
       animation: 'animation',
     });
 
-    spineNode.on('load', () => loading.remove());
     spineNode.on('animationend', () => {
       if (spineNode) spineNode.animation = 'animation';
     });
