@@ -12,9 +12,7 @@ function createHeader(): HTMLElement {
   const hiddenTriggers = el('div', {
     style: 'display:none'
   },
-    /*el('ion-button',
-      { onclick: () => open('https://dashboard.gaiaprotocol.com/') }, //{ id: 'open-dashboard' },
-    ),*/
+    el('ion-button', { id: 'open-dashboard' }),
     el('ion-button', { id: 'open-my-gods' }),
     el('ion-button', { id: 'open-profile' })
   );
@@ -31,25 +29,18 @@ function createHeader(): HTMLElement {
     el('ion-content',
       el('ion-list',
         // Dashboard
-        /*el('ion-item', {
+        el('ion-item', {
           button: true,
           detail: true,
           onclick: async () => {
             const modalTrigger = document.getElementById('open-dashboard') as HTMLElement | null;
-            // 모달 트리거가 있는 경우: 모달 열기
-            if (modalTrigger) {
-              modalTrigger.click();
-            } else {
-              // 백업: 외부 대시보드 링크 열기
-              open('https://dashboard.gaiaprotocol.com/', '_blank');
-            }
-            // 팝오버 닫기
+            if (modalTrigger) modalTrigger.click();
             (popover as any).dismiss?.();
           }
         },
           el('ion-icon', { slot: 'start', name: 'bar-chart-sharp' }),
           el('ion-label', 'Dashboard')
-        ),*/
+        ),
 
         // My Gods
         el('ion-item', {

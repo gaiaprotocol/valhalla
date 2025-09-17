@@ -1,3 +1,4 @@
+import { createGaiaProtocolDashboard } from "@gaiaprotocol/god-mode-client";
 import { el } from "@webtaku/el";
 
 function createDashboardModal(): HTMLElement {
@@ -10,7 +11,7 @@ function createDashboardModal(): HTMLElement {
           el('ion-icon', { slot: 'icon-only', name: 'chevron-back' })
         ),
       ),
-      el('ion-title', { style: 'text-align: center;' }, 'Dashboard'),
+      el('ion-title', { style: 'text-align: center;' }, 'Gaia Protocol Dashboard'),
       el('ion-buttons', { slot: 'end' },
         el('ion-button', { style: 'visibility: hidden' },
           el('ion-icon', { slot: 'icon-only', name: 'ellipsis-vertical' })
@@ -19,7 +20,7 @@ function createDashboardModal(): HTMLElement {
     )
   );
 
-  modal.append(modalHeader);
+  modal.append(modalHeader, el('ion-content', createGaiaProtocolDashboard()));
 
   return modal;
 }
