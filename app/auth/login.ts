@@ -1,6 +1,8 @@
+declare const API_BASE_URI: string;
+
 async function requestLogin(address: `0x${string}`, signature: `0x${string}`): Promise<string> {
   const response = await fetch(
-    '/api/login',
+    `${API_BASE_URI}/login`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

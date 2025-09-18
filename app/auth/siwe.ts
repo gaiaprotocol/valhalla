@@ -3,19 +3,9 @@ import { signMessage as wagmiSignMessage } from '@wagmi/core';
 import { createSiweMessage as viemCreateSiweMessage } from 'viem/siwe';
 import { MESSAGE_FOR_WALLET_LOGIN } from '../vars';
 
+declare const API_BASE_URI: string;
+
 function createSiweMessage(address: `0x${string}`, nonce: string, issuedAt: string) {
-
-  console.log({
-    domain: location.host,
-    address,
-    statement: MESSAGE_FOR_WALLET_LOGIN,
-    uri: location.origin,
-    version: '1',
-    chainId: 1,
-    nonce,
-    issuedAt: new Date(issuedAt),
-  });
-
   return viemCreateSiweMessage({
     domain: location.host,
     address,
@@ -30,7 +20,7 @@ function createSiweMessage(address: `0x${string}`, nonce: string, issuedAt: stri
 
 async function signMessage(address: `0x${string}`): Promise<`0x${string}`> {
   const response = await fetch(
-    '/api/nonce',
+    `${API_BASE_URI}/nonce`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

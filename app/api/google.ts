@@ -1,9 +1,11 @@
-const GOOGLE_ME_PATH = '/api/google-me';
-const GOOGLE_ME_BY_WALLET_PATH = '/api/google-me-by-wallet';
-const GOOGLE_LOGOUT_PATH = '/api/google-logout';
-const LINK_WALLET_PATH = '/api/google-link-web3-wallet';
-const UNLINK_WALLET_PATH = '/api/google-unlink-web3-wallet';
-const GOOGLE_VERIFY_PATH = "/api/oauth2/verify";
+declare const API_BASE_URI: string;
+
+const GOOGLE_ME_PATH = `${API_BASE_URI}/google-me`;
+const GOOGLE_ME_BY_WALLET_PATH = `${API_BASE_URI}/google-me-by-wallet`;
+const GOOGLE_LOGOUT_PATH = `${API_BASE_URI}/google-logout`;
+const LINK_WALLET_PATH = `${API_BASE_URI}/google-link-web3-wallet`;
+const UNLINK_WALLET_PATH = `${API_BASE_URI}/google-unlink-web3-wallet`;
+const GOOGLE_VERIFY_PATH = `${API_BASE_URI}/oauth2/verify`;
 
 export type GoogleProfile = {
   sub?: string;

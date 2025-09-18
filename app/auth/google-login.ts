@@ -1,6 +1,8 @@
 const isWebView = new URLSearchParams(window.location.search).get('source') === 'webview';
 
-const GOOGLE_LOGIN_PATH = '/api/google-login';
+declare const API_BASE_URI: string;
+
+const GOOGLE_LOGIN_PATH = `${API_BASE_URI}/google-login`;
 
 export function googleLogin() {
   if (isWebView) {
@@ -14,7 +16,7 @@ if (isWebView) {
   window.addEventListener('googleSignInComplete', async (e: any) => {
     const { idToken, nonce } = e.detail
     // 서버에서 구글 공개키로 ID 토큰 검증 + nonce 검증 + aud(=WEB_CLIENT_ID) 검증 필수
-    await fetch('/api/oauth2/verify', {
+    await fetch(`${API_BASE_URI}/oauth2/verify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

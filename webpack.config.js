@@ -71,17 +71,5 @@ module.exports = {
       WALLET_CONNECT_PROJECT_ID: JSON.stringify('9a637488c787c2c68339c70e1319ac6a'),
     })
   ],
-  devServer: {
-    static: './public',
-    historyApiFallback: true,
-    client: {
-      overlay: false,
-      logging: 'none'
-    },
-    open: true,
-    devMiddleware: {
-      writeToDisk: false
-    }
-  },
   mode: 'development'
 };
