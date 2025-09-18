@@ -79,6 +79,9 @@ module.exports = {
       logging: 'none'
     },
     open: true,
+    devMiddleware: {
+      writeToDisk: false
+    }
   },
   mode: 'development'
 };

@@ -79,7 +79,6 @@ function initFirebaseAndMessaging() {
 }
 
 async function requestNotificationPermission(): Promise<NotificationPermission> {
-  // Modern browsers return a Promise. The callback signature is deprecated.
   try {
     return await Notification.requestPermission();
   } catch {
@@ -90,7 +89,7 @@ async function requestNotificationPermission(): Promise<NotificationPermission> 
   }
 }
 
-// Uncomment when you are ready to fetch FCM tokens
+// // Uncomment when you are ready to fetch FCM tokens
 // async function maybeEnablePush(messaging: ReturnType<typeof getMessaging>) {
 //   const permission = await requestNotificationPermission();
 //   if (permission === 'granted') {
@@ -148,7 +147,6 @@ const scrollBottomSoon = debounce(() => {
 }, 100);
 
 function mountContent(content: View) {
-  // If not mounted, create layout once
   if (!layoutView) {
     layoutView = createLayoutView(router);
     contentContainer = bySel<HTMLElement>(layoutView.el, '.content')!;
@@ -160,78 +158,153 @@ function mountContent(content: View) {
 }
 
 function showAuthed(content: View) {
-  // Remove any unauth view
   safeRemove(unauthView); unauthView = undefined;
   mountContent(content);
 }
 
 function showUnauthed(factory: () => View) {
-  // Tear down layout entirely
   if (layoutView) { safeRemove(layoutView); layoutView = undefined; contentContainer = undefined; }
   safeRemove(unauthView);
   unauthView = factory();
   document.body.appendChild(unauthView.el);
 }
 
-async function guardAuth(): Promise<'ok' | 'to-login' | 'to-link'> {
-  try {
-    const data = await fetchGoogleMe();
-    if (data.ok === true) {
-      if (data.token && data.wallet_address) {
-        tokenManager.set(data.token, data.wallet_address);
+// ------------------------------
+// Loading Overlay (ion-spinner)
+// ------------------------------
+let loadingEl: HTMLElement | null = null;
+
+function showLoading() {
+  if (loadingEl) return;
+  loadingEl = document.createElement('div');
+  loadingEl.setAttribute('data-loading-overlay', '');
+  Object.assign(loadingEl.style, {
+    position: 'fixed',
+    inset: '0',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'color-mix(in oklab, var(--ion-background-color, #fff) 70%, transparent)',
+    zIndex: '2147483647',
+  } as CSSStyleDeclaration);
+  loadingEl.innerHTML = `<ion-spinner name="crescent" style="width:48px;height:48px"></ion-spinner>`;
+  document.body.appendChild(loadingEl);
+}
+
+function hideLoading() {
+  try { loadingEl?.remove(); } catch { /* noop */ }
+  loadingEl = null;
+}
+
+// ------------------------------
+// Auth Helpers (single source of truth)
+// ------------------------------
+async function tryAutoLinkIfNeeded(googleMe: GoogleMe | null): Promise<'ok' | 'to-link' | 'skip'> {
+  const walletHasToken = tokenManager.has();
+
+  // (3) 구글 로그인 X && tokenManager X => 로그인 필요
+  if (!googleMe?.ok && !walletHasToken) return 'skip';
+
+  // (2) 구글 로그인 O && 링크 안됨 && tokenManager X => 링크 필요
+  if (googleMe?.ok && (!googleMe.wallet_address || !googleMe.token) && !walletHasToken) return 'to-link';
+
+  // (1) tokenManager O && 구글 로그인 O => 자동 링크 시도 가능
+  if (walletHasToken && googleMe?.ok) {
+    if (googleMe.wallet_address && googleMe.token) {
+      tokenManager.set(googleMe.token, googleMe.wallet_address);
+      return 'ok';
+    }
+    const authToken = tokenManager.getToken();
+    if (!authToken) return 'to-link';
+    try {
+      const linkRes = await linkGoogleWeb3Wallet(authToken);
+      if (linkRes?.ok) {
+        if (linkRes.token && linkRes.wallet_address) {
+          tokenManager.set(linkRes.token, linkRes.wallet_address);
+        } else {
+          const refreshed = await fetchGoogleMe();
+          if (refreshed.ok && refreshed.token && refreshed.wallet_address) {
+            tokenManager.set(refreshed.token, refreshed.wallet_address);
+          }
+        }
         return 'ok';
       }
-      tokenManager.clear();
+      return 'to-link';
+    } catch {
       return 'to-link';
     }
-    // If API says not ok but we already have a token, let routes try
-    return tokenManager.has() ? 'ok' : 'to-login';
-  } catch (e) {
-    // Network issues; fall back to token presence
-    return tokenManager.has() ? 'ok' : 'to-login';
   }
+
+  return 'skip';
 }
 
-async function hardValidateSession(): Promise<boolean> {
-  const ok = await validateToken();
-  if (!ok) tokenManager.clear();
-  return ok;
-}
+async function determineFlow(): Promise<'ok' | 'to-login' | 'to-link'> {
+  // 0) 현재 지갑 토큰/주소 상태
+  const walletHasToken = tokenManager.has();
 
-async function ensureGodMode(): Promise<boolean> {
+  // 1) Google 세션 상태
+  let googleMe: GoogleMe | null = null;
+  try { googleMe = await fetchGoogleMe(); } catch { googleMe = null; }
+
+  // 2) 자동 링크/분기
+  const linkResult = await tryAutoLinkIfNeeded(googleMe);
+  if (!googleMe?.ok && !walletHasToken) return 'to-login';
+  if (linkResult === 'to-link') return 'to-link';
+
+  // 3) 최종 세션 검증 + God Mode
+  const valid = await validateToken();
+  if (!valid) { tokenManager.clear(); return 'to-login'; }
+
   const address = tokenManager.getAddress();
-  if (!address) return false;
+  if (!address) { tokenManager.clear(); return 'to-login'; }
+
   const hasGodMode = await checkGodMode(address);
   if (!hasGodMode) {
     showGodModeRequirementDialog();
     tokenManager.clear();
-    return false;
+    return 'to-login';
   }
-  return true;
+
+  return 'ok';
 }
 
 // ------------------------------
-// Routes
+// Single Auth Flow (used by ROOT route)
+// ------------------------------
+async function runAuthFlow() {
+  showLoading();
+  try {
+    const next = await determineFlow();
+
+    if (next === 'to-login') {
+      router.navigate(ROUTES.LOGIN);
+      return;
+    }
+    if (next === 'to-link') {
+      router.navigate(ROUTES.LINK_WALLET);
+      return;
+    }
+
+    // ok
+    const view = createHomeView();
+    showAuthed(view);
+    // Scroll bottom twice (layout settle + content paint)
+    scrollBottomSoon();
+    window.setTimeout(scrollBottomSoon, 120);
+  } finally {
+    hideLoading();
+  }
+}
+
+// ------------------------------
+// Routes (thin handlers, no duplicated auth)
 // ------------------------------
 router.on(ROUTES.ROOT, async () => {
-  const gate = await guardAuth();
-  if (gate === 'to-login') return router.navigate(ROUTES.LOGIN);
-  if (gate === 'to-link') return router.navigate(ROUTES.LINK_WALLET);
-
-  // Deep validation (JWT + god mode)
-  const valid = await hardValidateSession();
-  if (!valid) return router.resolve();
-  if (!(await ensureGodMode())) return router.navigate(ROUTES.LOGIN);
-
-  const view = createHomeView();
-  showAuthed(view);
-  // Scroll bottom twice (layout settle + content paint)
-  scrollBottomSoon();
-  window.setTimeout(scrollBottomSoon, 120);
+  await runAuthFlow();
 });
 
 router.on(ROUTES.LOGIN, () => {
-  // If already authenticated, hop back to root
+  // 이미 인증 완료 상태면 루트로
   if (tokenManager.has()) return router.navigate(ROUTES.ROOT);
   showUnauthed(() => createLoginView(router));
 });
@@ -243,90 +316,4 @@ router.on(ROUTES.LINK_WALLET, () => {
 
 router.notFound(() => router.navigate(ROUTES.ROOT));
 
-// ------------------------------
-// Bootstrap
-// ------------------------------
-(async function bootstrap() {
-  // 0) 지갑 토큰/주소 존재 여부
-  const walletHasToken = tokenManager.has();
-
-  // 1) Google 세션 상태 확인
-  let googleMe: GoogleMe | null = null;
-  try {
-    googleMe = await fetchGoogleMe(); // 쿠키 세션 기반
-  } catch {
-    googleMe = null; // 네트워크/세션 문제 등은 null 취급
-  }
-
-  // ===== 분기 처리 =====
-
-  // (3) 구글 로그인 X && tokenManager X => 로그인 화면
-  if (!googleMe?.ok && !walletHasToken) {
-    router.navigate(ROUTES.LOGIN);
-    return;
-  }
-
-  // (2) 구글 로그인 O && 링크 안됨 && tokenManager X => 링크 화면
-  if (googleMe?.ok && (!googleMe.wallet_address || !googleMe.token) && !walletHasToken) {
-    router.navigate(ROUTES.LINK_WALLET);
-    return;
-  }
-
-  // (1) tokenManager O && 구글 로그인 O => 자동 링크 시도 후 진행
-  if (walletHasToken && googleMe?.ok) {
-    // 이미 링크되어 있으면 바로 진행
-    if (googleMe.wallet_address && googleMe.token) {
-      tokenManager.set(googleMe.token, googleMe.wallet_address);
-    } else {
-      // 자동 링크 수행
-      const authToken = tokenManager.getToken();
-      if (authToken) {
-        try {
-          // 서버는 Authorization: Bearer <wallet jwt> 를 요구
-          const linkRes = await linkGoogleWeb3Wallet(authToken)
-
-          // 링크 성공 시 최신 상태 반영
-          if (linkRes?.ok) {
-            // 응답에 token/wallet_address가 있으면 즉시 세팅,
-            // 없으면 google-me 재조회로 보강
-            if (linkRes.token && linkRes.wallet_address) {
-              tokenManager.set(linkRes.token, linkRes.wallet_address);
-            } else {
-              const refreshed = await fetchGoogleMe();
-              if (refreshed.ok && refreshed.token && refreshed.wallet_address) {
-                tokenManager.set(refreshed.token, refreshed.wallet_address);
-              }
-            }
-          }
-        } catch {
-          // 자동 링크 실패 시, 링크 화면으로 보냄
-          router.navigate(ROUTES.LINK_WALLET);
-          return;
-        }
-      } else {
-        // 지갑 토큰을 꺼낼 수 없으면 링크 화면으로
-        router.navigate(ROUTES.LINK_WALLET);
-        return;
-      }
-    }
-  }
-
-  // 여기까지 왔다면:
-  // - 이미 링크 완료 되었거나(토큰/주소 세팅됨)
-  // - 혹은 tokenManager 단독(=지갑 로그인만)으로라도 접근 허용할 케이스
-
-  // 최종 세션 검증 + God Mode 체크
-  const valid = await hardValidateSession();
-  if (!valid) { router.resolve(); return; }
-
-  const address = tokenManager.getAddress();
-  if (!address) { tokenManager.clear(); router.resolve(); return; }
-
-  if (!(await ensureGodMode())) {
-    router.navigate(ROUTES.LOGIN);
-    return;
-  }
-
-  // 메인 진입
-  router.resolve();
-})();
+router.resolve();
