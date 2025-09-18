@@ -11,6 +11,7 @@ import { handleGoogleMeByWallet } from './handlers/google-login/me-by-wallet';
 import { handleOAuth2Callback } from './handlers/google-login/oauth2-callback';
 import { handleUnlinkGoogleWeb3Wallet } from './handlers/google-login/unlink-web3-wallet';
 import { handleSetMainGod } from './handlers/set-main-god';
+import { handleGoogleLoginStartInApp } from './handlers/google-login/login-start';
 //import { EnhancedFcmMessage, FCM, FcmOptions } from 'fcm-cloudflare-workers';
 
 export { ChatRoom };
@@ -83,6 +84,7 @@ export default {
 
     // Google Login
     if (url.pathname === '/api/google-login') return handleGoogleLogin(request, env);
+    if (url.pathname === '/api/google-login-start-in-app') return handleGoogleLoginStartInApp(request, env);
     if (url.pathname === '/api/oauth2/callback') return handleOAuth2Callback(request, env);
     if (url.pathname === '/api/google-me') return handleGoogleMe(request, env);
     if (url.pathname === '/api/google-logout') return handleGoogleLogout(request, env);

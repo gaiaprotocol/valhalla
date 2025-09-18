@@ -78,7 +78,7 @@ module.exports = {
       overlay: false,
       logging: 'none'
     },
-    open: true
+    open: true,
   },
   mode: 'development'
 };

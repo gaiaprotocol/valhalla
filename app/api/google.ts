@@ -1,4 +1,6 @@
-export const GOOGLE_LOGIN_PATH = '/api/google-login';
+const isWebView = new URLSearchParams(window.location.search).get('source') === 'webview';
+
+export const GOOGLE_LOGIN_PATH = isWebView ? '/api/google-login-start-in-app' : '/api/google-login';
 
 const GOOGLE_ME_PATH = '/api/google-me';
 const GOOGLE_ME_BY_WALLET_PATH = '/api/google-me-by-wallet';
