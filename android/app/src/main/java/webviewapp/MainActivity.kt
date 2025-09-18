@@ -103,7 +103,7 @@ class MainActivity : ComponentActivity() {
             val token = task.result
             val msg = "FCM registration token: %s".format(token)
             Log.d("FCM", msg)
-            Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+            //Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
         })
 
         setContent {
