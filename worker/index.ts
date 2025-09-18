@@ -10,7 +10,8 @@ import { handleGoogleMe } from './handlers/google-login/me';
 import { handleGoogleMeByWallet } from './handlers/google-login/me-by-wallet';
 import { handleOAuth2Callback } from './handlers/google-login/oauth2-callback';
 import { handleOAuth2Verify } from './handlers/google-login/oauth2-verify';
-import { handleUnlinkGoogleWeb3Wallet } from './handlers/google-login/unlink-web3-wallet';
+import { handleUnlinkGoogleWeb3WalletBySession } from './handlers/google-login/unlink-web3-wallet-by-session';
+import { handleUnlinkGoogleWeb3WalletByToken } from './handlers/google-login/unlink-web3-wallet-by-token';
 import { handleSetMainGod } from './handlers/set-main-god';
 //import { EnhancedFcmMessage, FCM, FcmOptions } from 'fcm-cloudflare-workers';
 
@@ -89,7 +90,8 @@ export default {
     if (url.pathname === '/api/google-me') return handleGoogleMe(request, env);
     if (url.pathname === '/api/google-logout') return handleGoogleLogout(request, env);
     if (url.pathname === '/api/google-link-web3-wallet' && request.method === 'POST') return handleLinkGoogleWeb3Wallet(request, env);
-    if (url.pathname === '/api/google-unlink-web3-wallet' && request.method === 'POST') return handleUnlinkGoogleWeb3Wallet(request, env);
+    if (url.pathname === '/api/google-unlink-web3-wallet-by-token' && request.method === 'POST') return handleUnlinkGoogleWeb3WalletByToken(request, env);
+    if (url.pathname === '/api/google-unlink-web3-wallet-by-session' && request.method === 'POST') return handleUnlinkGoogleWeb3WalletBySession(request, env);
     if (url.pathname === '/api/google-me-by-wallet') return handleGoogleMeByWallet(request, env);
 
     const chatMatch = url.pathname.match(/^\/api\/chat\/([^/]+)\/(stream|send)$/);

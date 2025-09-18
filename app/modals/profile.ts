@@ -10,7 +10,7 @@ import { el } from "@webtaku/el";
 import Navigo from "navigo";
 import { getAddress } from "viem";
 import { fetchMyGaiaName } from "../api/gaia-name";
-import { fetchGoogleMeByWallet, logoutGoogle, unlinkGoogleWeb3Wallet } from "../api/google";
+import { fetchGoogleMeByWallet, logoutGoogle, unlinkGoogleWeb3WalletByToken } from "../api/google";
 import { fetchMyProfile, fetchProfileByAccount, saveMyProfile } from "../api/profile";
 import { googleLogin } from "../auth/google-login";
 
@@ -304,7 +304,7 @@ function createProfileModal(router: Navigo): HTMLElement {
         async () => {
           try {
             const token = tokenManager.getToken(); if (!token) throw new Error('Missing authorization token.');
-            await unlinkGoogleWeb3Wallet(token);
+            await unlinkGoogleWeb3WalletByToken(token);
             await logoutGoogle()
             await refreshGoogleLinkState();
             await showToast("Google account unlinked.");

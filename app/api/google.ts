@@ -4,7 +4,8 @@ const GOOGLE_ME_PATH = `${API_BASE_URI}/google-me`;
 const GOOGLE_ME_BY_WALLET_PATH = `${API_BASE_URI}/google-me-by-wallet`;
 const GOOGLE_LOGOUT_PATH = `${API_BASE_URI}/google-logout`;
 const LINK_WALLET_PATH = `${API_BASE_URI}/google-link-web3-wallet`;
-const UNLINK_WALLET_PATH = `${API_BASE_URI}/google-unlink-web3-wallet`;
+const UNLINK_WALLET_BY_TOKEN_PATH = `${API_BASE_URI}/google-unlink-web3-wallet-by-token`;
+const UNLINK_WALLET_BY_SESSION_PATH = `${API_BASE_URI}/google-unlink-web3-wallet-by-session`;
 const GOOGLE_VERIFY_PATH = `${API_BASE_URI}/oauth2/verify`;
 
 export type GoogleProfile = {
@@ -134,8 +135,13 @@ export async function linkGoogleWeb3Wallet(authToken: string): Promise<LinkWalle
 }
 
 /** 지갑 JWT 기반: 링크 해제 */
-export async function unlinkGoogleWeb3Wallet(authToken: string): Promise<UnlinkWalletResult> {
-  return await postJsonAuth<UnlinkWalletResult>(UNLINK_WALLET_PATH, authToken, {});
+export async function unlinkGoogleWeb3WalletByToken(authToken: string): Promise<UnlinkWalletResult> {
+  return await postJsonAuth<UnlinkWalletResult>(UNLINK_WALLET_BY_TOKEN_PATH, authToken, {});
+}
+
+/** 쿠키 세션 기반: 링크 해제 */
+export async function unlinkGoogleWeb3WalletBySession(): Promise<UnlinkWalletResult> {
+  return await postJson<UnlinkWalletResult>(UNLINK_WALLET_BY_SESSION_PATH);
 }
 
 export type VerifyPayload = {

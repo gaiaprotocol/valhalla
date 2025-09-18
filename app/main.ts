@@ -7,7 +7,7 @@ import { getMessaging /*, getToken*/ } from 'firebase/messaging';
 import Navigo from 'navigo';
 import { getAddress } from 'viem';
 import { fetchGaiaNames } from './api/gaia-name';
-import { fetchGoogleMe, GoogleMe, linkGoogleWeb3Wallet } from './api/google';
+import { fetchGoogleMe, GoogleMe, linkGoogleWeb3Wallet, unlinkGoogleWeb3WalletBySession } from './api/google';
 import { fetchMainGodsWithNfts } from './api/main-gods-with-nfts';
 import { validateToken } from './auth/validate';
 import { showGodModeRequirementDialog } from './components/god-mode-req-alert';
@@ -253,7 +253,14 @@ async function determineFlow(): Promise<'ok' | 'to-login' | 'to-link'> {
 
   // 3) 최종 세션 검증 + God Mode
   const valid = await validateToken();
-  if (!valid) { tokenManager.clear(); return 'to-login'; }
+  if (!valid) {
+    // googleMe가 존재하지만 토큰이 유효하지 않은 경우 언링크
+    if (googleMe?.ok) {
+      try { await unlinkGoogleWeb3WalletBySession(); } catch (err) { console.error(err); }
+    }
+    tokenManager.clear();
+    return 'to-login';
+  }
 
   const address = tokenManager.getAddress();
   if (!address) { tokenManager.clear(); return 'to-login'; }
