@@ -87,32 +87,26 @@ export function createLoginView(router: Navigo): View {
     '2. Sign Message'
   ) as SlButton;
 
-  // ---- 추가: 구분선 & 또는(OR) 텍스트
-  const orDivider = el('.login-or',
+  const orDivider = el(
+    '.login-or',
     el('span.login-or-line'),
-    el('span.login-or-text', 'OR'),
+    el(
+      'span.login-or-text',
+      'Use Google if your wallet is already linked, or to link it after login'
+    ),
     el('span.login-or-line'),
   );
 
-  // ---- 추가: Google 로그인 버튼
   const googleButton = el(
     'sl-button.login-button.google',
     {
       variant: 'default',
-      // size: 'large', // 필요 시
-      onclick: async () => {
-        (googleButton as SlButton).loading = true;
-        try {
-          //TODO
-        } finally {
-          (googleButton as SlButton).loading = false;
-        }
-      }
+      'aria-label': 'Continue with Google',
+      href: '/api/google-login'
     },
     el('.login-google-content',
-      // 아이콘은 CSS background 또는 <img>로
-      el('span.login-google-icon'),
-      el('span', 'Continue with Google')
+      el('.login-google-icon'),
+      el('span.login-google-text', 'Continue with Google')
     )
   ) as SlButton;
 
