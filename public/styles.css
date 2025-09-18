@@ -5739,14 +5739,27 @@ sl-spinner {
   \*******************************************************************************************************************/
 .login-wrapper {
   display: flex;
-  box-sizing: border-box;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-height: 100%;
-  font-family: Arial, sans-serif;
+
   gap: 12px;
   padding: 20px;
+  padding-bottom: 50px;
+  box-sizing: border-box;
+
+  height: 100dvh;
+  /* 모바일 주소창 변동 대응 */
+  overflow-y: auto;
+  /* 필요할 때 스크롤 */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 여분 공간이 있을 때만 수직 가운데 정렬을 만들어주는 스페이서 */
+.login-wrapper::before,
+.login-wrapper::after {
+  content: "";
+  flex: 1 0 0;
+  /* 남는 공간을 양쪽에서 동일하게 먹음 */
 }
 
 .login-logo {
