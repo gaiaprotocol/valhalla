@@ -4,7 +4,7 @@ import { googleAuthURL, makePkce } from "./google"
  * 쿠키 대신 KV(예: env.STATE_KV)에 state/code_verifier를 저장하고,
  * Google Authorization URL로 302 리다이렉트합니다.
  */
-export async function handleGoogleLoginStartInApp(_request: Request, env: Env) {
+export async function handleWebviewGoogleLogin(_request: Request, env: Env) {
   // 1) PKCE 생성
   const { state, codeVerifier, challenge } = await makePkce()
 
@@ -20,7 +20,7 @@ export async function handleGoogleLoginStartInApp(_request: Request, env: Env) {
   // 3) Google Auth URL 구성 (state, code_challenge 포함)
   const redirectTo = googleAuthURL({
     clientId: env.GOOGLE_CLIENT_ID,
-    redirectUri: env.GOOGLE_REDIRECT_URI_INAPP,   // 예: valhalla://oauth2redirect
+    redirectUri: env.GOOGLE_REDIRECT_URI_WEBVIEW,
     scope: 'openid email profile',
     codeChallenge: challenge,                     // PKCE: S256 code_challenge
     state,                                        // KV에 저장한 state

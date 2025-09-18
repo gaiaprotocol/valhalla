@@ -57,7 +57,7 @@
 		"MESSAGE_FOR_WALLET_LOGIN": "Please sign this message to log in to Valhalla.",
 		"GOOGLE_CLIENT_ID": "797829770593-kv6v54u6gdebc4j4jhedjiql34ugg2fo.apps.googleusercontent.com",
 		"GOOGLE_REDIRECT_URI": "https://valhalla.gaia.cc/api/oauth2/callback",
-		"GOOGLE_REDIRECT_URI_INAPP": "valhalla://oauth2redirect",
+		"GOOGLE_REDIRECT_URI_WEBVIEW": "https://valhalla.gaia.cc/api/oauth2/callback-webview",
 		"SESSION_TTL_DAYS": "7"
 	},
 	"services": [
@@ -104,7 +104,7 @@
 				"MESSAGE_FOR_WALLET_LOGIN": "Please sign this message to log in to Valhalla.",
 				"GOOGLE_CLIENT_ID": "797829770593-kv6v54u6gdebc4j4jhedjiql34ugg2fo.apps.googleusercontent.com",
 				"GOOGLE_REDIRECT_URI": "http://localhost:8081/api/oauth2/callback",
-				"GOOGLE_REDIRECT_URI_INAPP": "valhalla://oauth2redirect",
+				"GOOGLE_REDIRECT_URI_WEBVIEW": "http://localhost:8081/api/oauth2/callback-webview",
 				"SESSION_TTL_DAYS": "7"
 			},
 			"services": [
