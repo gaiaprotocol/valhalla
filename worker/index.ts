@@ -8,7 +8,7 @@ import { handleGoogleLogin } from './handlers/google-login/login';
 import { handleGoogleLogout } from './handlers/google-login/logout';
 import { handleGoogleMe } from './handlers/google-login/me';
 import { handleGoogleMeByWallet } from './handlers/google-login/me-by-wallet';
-import { handleOAuthCallback } from './handlers/google-login/oauth2-callback';
+import { handleOAuth2Callback } from './handlers/google-login/oauth2-callback';
 import { handleUnlinkGoogleWeb3Wallet } from './handlers/google-login/unlink-web3-wallet';
 import { handleSetMainGod } from './handlers/set-main-god';
 //import { EnhancedFcmMessage, FCM, FcmOptions } from 'fcm-cloudflare-workers';
@@ -83,7 +83,7 @@ export default {
 
     // Google Login
     if (url.pathname === '/api/google-login') return handleGoogleLogin(request, env);
-    if (url.pathname === '/api/oauth2/callback') return handleOAuthCallback(request, env);
+    if (url.pathname === '/api/oauth2/callback') return handleOAuth2Callback(request, env);
     if (url.pathname === '/api/google-me') return handleGoogleMe(request, env);
     if (url.pathname === '/api/google-logout') return handleGoogleLogout(request, env);
     if (url.pathname === '/api/google-link-web3-wallet' && request.method === 'POST') return handleLinkGoogleWeb3Wallet(request, env);
