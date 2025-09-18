@@ -50,7 +50,10 @@
 	"vars": {
 		"ALLOWED_DOMAIN": "valhalla.gaia.cc",
 		"ALLOWED_URI": "https://valhalla.gaia.cc",
-		"MESSAGE_FOR_WALLET_LOGIN": "Please sign this message to log in to Valhalla."
+		"MESSAGE_FOR_WALLET_LOGIN": "Please sign this message to log in to Valhalla.",
+		"GOOGLE_CLIENT_ID": "797829770593-kv6v54u6gdebc4j4jhedjiql34ugg2fo.apps.googleusercontent.com",
+		"GOOGLE_REDIRECT_URI": "https://valhalla.gaia.cc/api/oauth2/callback",
+		"SESSION_TTL_DAYS": "7"
 	},
 	"services": [
 		{
@@ -89,7 +92,10 @@
 			"vars": {
 				"ALLOWED_DOMAIN": "localhost:8081",
 				"ALLOWED_URI": "http://localhost:8081",
-				"MESSAGE_FOR_WALLET_LOGIN": "Please sign this message to log in to Valhalla."
+				"MESSAGE_FOR_WALLET_LOGIN": "Please sign this message to log in to Valhalla.",
+				"GOOGLE_CLIENT_ID": "797829770593-kv6v54u6gdebc4j4jhedjiql34ugg2fo.apps.googleusercontent.com",
+				"GOOGLE_REDIRECT_URI": "http://localhost:8081/api/oauth2/callback",
+				"SESSION_TTL_DAYS": "7"
 			},
 			"services": [
 				{

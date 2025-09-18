@@ -3,6 +3,10 @@ import { handleLogin, handleNonce, handleUploadImage, handleValidateToken } from
 import { ChatRoom } from './do/chat-room';
 import { handleGetMainGodsWithNfts } from './handlers/get-main-gods-with-nfts';
 import { handleGetMyMainGod } from './handlers/get-my-main-god';
+import { handleGoogleLogin } from './handlers/google-login/login';
+import { handleGoogleLogout } from './handlers/google-login/logout';
+import { handleGoogleMe } from './handlers/google-login/me';
+import { handleOAuthCallback } from './handlers/google-login/oauth2-callback';
 import { handleSetMainGod } from './handlers/set-main-god';
 //import { EnhancedFcmMessage, FCM, FcmOptions } from 'fcm-cloudflare-workers';
 
@@ -73,6 +77,12 @@ export default {
     if (url.pathname === '/api/set-main-god' && request.method === 'POST') return handleSetMainGod(request, env);
     if (url.pathname === '/api/get-my-main-god' && request.method === 'GET') return handleGetMyMainGod(request, env);
     if (url.pathname === '/api/get-main-gods-with-nfts') return handleGetMainGodsWithNfts(request, env);
+
+    // Google Login
+    if (url.pathname === '/api/google-login') return handleGoogleLogin(request, env);
+    if (url.pathname === '/api/oauth2/callback') return handleOAuthCallback(request, env);
+    if (url.pathname === '/api/google-me') return handleGoogleMe(request, env);
+    if (url.pathname === '/api/google-logout' && request.method === 'POST') return handleGoogleLogout(request, env);
 
     const chatMatch = url.pathname.match(/^\/api\/chat\/([^/]+)\/(stream|send)$/);
     if (chatMatch) {
