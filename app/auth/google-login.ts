@@ -27,7 +27,7 @@ if (isWebView) {
     console.warn('Google sign-in failed', e.detail)
 
     const toast = document.createElement("ion-toast");
-    toast.message = "Google sign-in failed.";
+    toast.message = `Google sign-in failed. ${e.detail.message}`;
     toast.duration = 1600;
     toast.position = "bottom";
     document.body.appendChild(toast);
