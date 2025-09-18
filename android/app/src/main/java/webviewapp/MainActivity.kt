@@ -70,6 +70,8 @@ class MainActivity : ComponentActivity() {
             fileCallback = null
         }
 
+    private var webViewRef: WebView? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -109,10 +111,30 @@ class MainActivity : ComponentActivity() {
                             } catch (e: ActivityNotFoundException) {
                                 fileCallback = null
                             }
-                        }
+                        },
+                        onWebViewReady = { wv -> webViewRef = wv }
                     )
                 }
             }
+        }
+
+        handleAuthRedirect(intent)
+    }
+
+    private fun handleAuthRedirect(intent: Intent?) {
+        val data = intent?.data ?: return
+        if (data.scheme == "valhalla" && data.host == "oauth2redirect") {
+            // 1) 여기서 code/state를 꺼내 서버로 교환하거나,
+            // 2) WebView의 프론트엔드가 처리하도록 전달합니다.
+
+            val query = data.query ?: "" // code=...&state=...
+            // (A) 프론트엔드로 넘기는 방식: 특정 URL로 로드
+            //     예: https://valhalla.gaia.cc/auth/callback#code=...&state=...
+            val resumeUrl = "https://valhalla.gaia.cc/api/oauth2/callback#$query"
+            webViewRef?.loadUrl(resumeUrl)
+
+            // (대안) JS Bridge로 전달하고 싶다면 evaluateJavascript 사용:
+            // webViewRef?.evaluateJavascript("window.__onOAuthCallback(${JSONObject.quote(query)})", null)
         }
     }
 
@@ -152,7 +174,8 @@ class MainActivity : ComponentActivity() {
 fun WebViewScreen(
     url: String,
     modifier: Modifier = Modifier,
-    onFileChooser: ((ValueCallback<Array<Uri>>, Intent) -> Unit)? = null
+    onFileChooser: ((ValueCallback<Array<Uri>>, Intent) -> Unit)? = null,
+    onWebViewReady: ((WebView) -> Unit)? = null
 ) {
     var webView: WebView? by remember { mutableStateOf(null) }
     var progress by remember { mutableStateOf(0) }
@@ -178,15 +201,31 @@ fun WebViewScreen(
                             view: WebView,
                             request: WebResourceRequest
                         ): Boolean {
-                            val requestedUrl = request.url.toString()
-                            return if (requestedUrl.startsWith("http://") || requestedUrl.startsWith("https://")) {
-                                false
-                            } else {
-                                try {
-                                    val intent = Intent(Intent.ACTION_VIEW, request.url)
+                            val u = request.url
+                            val url = u.toString()
+
+                            // http/https 아닌 스킴은 외부 앱으로
+                            if (!(url.startsWith("http://") || url.startsWith("https://"))) {
+                                return try {
+                                    val intent = Intent(Intent.ACTION_VIEW, u)
                                     view.context.startActivity(intent)
-                                } catch (_: Exception) {}
+                                    true
+                                } catch (_: Exception) {
+                                    true
+                                }
+                            }
+
+                            // === (중요) 구글 로그인/계정 관련 URL이면 시스템 브라우저로 ===
+                            val isGoogleAccountFlow =
+                                u.host?.endsWith("accounts.google.com") == true ||
+                                        url.contains("/o/oauth2/") || url.contains("/oauth2/") ||
+                                        url.contains("signin") || url.contains("chooseaccount")
+
+                            return if (isGoogleAccountFlow) {
+                                launchInCustomTab(view.context, u)
                                 true
+                            } else {
+                                false // 일반 페이지는 WebView에서 계속
                             }
                         }
                     }
@@ -233,6 +272,7 @@ fun WebViewScreen(
 
                     loadUrl(url)
                     webView = this
+                    onWebViewReady?.invoke(this)
                 }
             },
             modifier = Modifier.fillMaxSize()
