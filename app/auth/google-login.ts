@@ -22,7 +22,7 @@ if (isWebView) {
       credentials: 'include',
       body: JSON.stringify({ provider: 'google', idToken, nonce })
     })
-    location.href = '/';
+    location.href = '/?platform=android&source=webview';
   })
 
   window.addEventListener('googleSignInFailed', (e: any) => {
