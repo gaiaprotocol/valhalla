@@ -10,8 +10,9 @@ import { el } from "@webtaku/el";
 import Navigo from "navigo";
 import { getAddress } from "viem";
 import { fetchMyGaiaName } from "../api/gaia-name";
-import { fetchGoogleMeByWallet, GOOGLE_LOGIN_PATH, linkGoogleWeb3Wallet, logoutGoogle, unlinkGoogleWeb3Wallet } from "../api/google";
+import { fetchGoogleMeByWallet, logoutGoogle, unlinkGoogleWeb3Wallet } from "../api/google";
 import { fetchMyProfile, fetchProfileByAccount, saveMyProfile } from "../api/profile";
+import { googleLogin } from "../auth/google-login";
 
 function ensureHiddenNameTrigger() {
   let btn = document.getElementById("open-name-settings");
@@ -293,7 +294,7 @@ function createProfileModal(router: Navigo): HTMLElement {
         "logo-google",
         "Link Google Account",
         "Connect your Google account",
-        () => location.href = GOOGLE_LOGIN_PATH
+        () => googleLogin()
       )),
 
       (unlinkItemEl = menuItem(

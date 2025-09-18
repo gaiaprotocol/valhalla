@@ -1,12 +1,9 @@
-const isWebView = new URLSearchParams(window.location.search).get('source') === 'webview';
-
-export const GOOGLE_LOGIN_PATH = isWebView ? '/api/webview-google-login' : '/api/google-login';
-
 const GOOGLE_ME_PATH = '/api/google-me';
 const GOOGLE_ME_BY_WALLET_PATH = '/api/google-me-by-wallet';
 const GOOGLE_LOGOUT_PATH = '/api/google-logout';
 const LINK_WALLET_PATH = '/api/google-link-web3-wallet';
 const UNLINK_WALLET_PATH = '/api/google-unlink-web3-wallet';
+const GOOGLE_VERIFY_PATH = "/api/oauth2/verify";
 
 export type GoogleProfile = {
   sub?: string;
@@ -137,4 +134,36 @@ export async function linkGoogleWeb3Wallet(authToken: string): Promise<LinkWalle
 /** 지갑 JWT 기반: 링크 해제 */
 export async function unlinkGoogleWeb3Wallet(authToken: string): Promise<UnlinkWalletResult> {
   return await postJsonAuth<UnlinkWalletResult>(UNLINK_WALLET_PATH, authToken, {});
+}
+
+export type VerifyPayload = {
+  provider: "google";
+  idToken: string;
+  nonce: string;
+};
+
+export type VerifyResult = {
+  ok?: boolean;
+  // 서버가 로그인과 동시에 세션/토큰을 내려줄 수도 있음
+  token?: string;
+  profile?: GoogleProfile;
+  wallet_address?: `0x${string}` | null;
+  error?: string;
+};
+
+async function postJsonWithCreds<T>(url: string, body?: unknown, credentials: RequestCredentials = "include"): Promise<T> {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) await parseError(res, `POST ${url} failed`);
+  try { return (await res.json()) as T; } catch { return {} as T; }
+}
+
+/** ID 토큰 검증 전담: 서버가 ID 토큰/nonce 검증 및 세션 수립 */
+export async function verifyGoogleLogin(payload: VerifyPayload): Promise<VerifyResult> {
+  // 보안/쿠키 세팅 목적상 credentials: 'include' 유지
+  return await postJsonWithCreds<VerifyResult>(GOOGLE_VERIFY_PATH, payload, "include");
 }

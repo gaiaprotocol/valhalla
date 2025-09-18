@@ -3,6 +3,7 @@ import { SlButton } from '@shoelace-style/shoelace';
 import { disconnect, getAccount, watchAccount } from '@wagmi/core';
 import { el } from '@webtaku/el';
 import Navigo from 'navigo';
+import { googleLogin } from '../../auth/google-login';
 import { requestLogin } from '../../auth/login';
 import { signMessage } from '../../auth/siwe';
 import { showErrorAlert } from '../../components/alert';
@@ -11,7 +12,6 @@ import { checkGodMode } from '../../services/god-mode';
 import { View } from '../view';
 import './login.css';
 import logoImage from './logo.png';
-import { GOOGLE_LOGIN_PATH } from '../../api/google';
 
 async function ensureWalletConnected(): Promise<`0x${string}`> {
   const account = getAccount(wagmiConfig);
@@ -103,7 +103,7 @@ export function createLoginView(router: Navigo): View {
     {
       variant: 'default',
       'aria-label': 'Continue with Google',
-      href: GOOGLE_LOGIN_PATH
+      onclick: () => googleLogin()
     },
     el('.login-google-content',
       el('.login-google-icon'),
