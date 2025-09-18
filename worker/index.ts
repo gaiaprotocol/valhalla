@@ -7,6 +7,7 @@ import { handleLinkGoogleWeb3Wallet } from './handlers/google-login/link-web3-wa
 import { handleGoogleLogin } from './handlers/google-login/login';
 import { handleGoogleLogout } from './handlers/google-login/logout';
 import { handleGoogleMe } from './handlers/google-login/me';
+import { handleGoogleMeByWallet } from './handlers/google-login/me-by-wallet';
 import { handleOAuthCallback } from './handlers/google-login/oauth2-callback';
 import { handleUnlinkGoogleWeb3Wallet } from './handlers/google-login/unlink-web3-wallet';
 import { handleSetMainGod } from './handlers/set-main-god';
@@ -85,8 +86,9 @@ export default {
     if (url.pathname === '/api/oauth2/callback') return handleOAuthCallback(request, env);
     if (url.pathname === '/api/google-me') return handleGoogleMe(request, env);
     if (url.pathname === '/api/google-logout') return handleGoogleLogout(request, env);
-    if (url.pathname === '/api/google-link-web3-wallet' && request.method === 'POST') return handleLinkGoogleWeb3Wallet(request, 1, env);
+    if (url.pathname === '/api/google-link-web3-wallet' && request.method === 'POST') return handleLinkGoogleWeb3Wallet(request, env);
     if (url.pathname === '/api/google-unlink-web3-wallet' && request.method === 'POST') return handleUnlinkGoogleWeb3Wallet(request, env);
+    if (url.pathname === '/api/google-me-by-wallet') return handleGoogleMeByWallet(request, env);
 
     const chatMatch = url.pathname.match(/^\/api\/chat\/([^/]+)\/(stream|send)$/);
     if (chatMatch) {

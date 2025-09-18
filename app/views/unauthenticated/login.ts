@@ -11,6 +11,7 @@ import { checkGodMode } from '../../services/god-mode';
 import { View } from '../view';
 import './login.css';
 import logoImage from './logo.png';
+import { GOOGLE_LOGIN_PATH } from '../../api/google';
 
 async function ensureWalletConnected(): Promise<`0x${string}`> {
   const account = getAccount(wagmiConfig);
@@ -102,7 +103,7 @@ export function createLoginView(router: Navigo): View {
     {
       variant: 'default',
       'aria-label': 'Continue with Google',
-      href: '/api/google-login'
+      href: GOOGLE_LOGIN_PATH
     },
     el('.login-google-content',
       el('.login-google-icon'),

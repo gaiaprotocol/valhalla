@@ -23,14 +23,6 @@ function validateName(raw: string) {
   if (!NAME_RE.test(name)) return { ok: false, reason: 'Only a–z, 0–9, hyphen; cannot start/end with hyphen.' };
   return { ok: true, name };
 }
-function getAuthToken(): string | null {
-  // @ts-ignore
-  if (typeof tokenManager.getToken === 'function') return tokenManager.getToken();
-  // @ts-ignore
-  if (typeof tokenManager.get === 'function') { const rec = tokenManager.get(); if (rec?.token) return rec.token; }
-  try { const raw = localStorage.getItem('gaia_auth_token'); if (raw) { const j = JSON.parse(raw); return j?.token ?? null; } } catch { }
-  return null;
-}
 
 export function createNameSettingsModal(): HTMLElement {
   // 트리거 버튼
@@ -159,7 +151,7 @@ export function createNameSettingsModal(): HTMLElement {
     try {
       (saveBtn as any).loading = true; (saveBtn as any).disabled = true;
       if (!tokenManager.has()) throw new Error('Please sign in first.');
-      const token = getAuthToken(); if (!token) throw new Error('Missing authorization token.');
+      const token = tokenManager.getToken(); if (!token) throw new Error('Missing authorization token.');
 
       const raw = (input as any).value || '';
       const v = validateName(raw); if (!v.ok) throw new Error(v.reason);

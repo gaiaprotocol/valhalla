@@ -10,16 +10,8 @@ import { el } from "@webtaku/el";
 import Navigo from "navigo";
 import { getAddress } from "viem";
 import { fetchMyGaiaName } from "../api/gaia-name";
+import { fetchGoogleMeByWallet, GOOGLE_LOGIN_PATH, linkGoogleWeb3Wallet, logoutGoogle, unlinkGoogleWeb3Wallet } from "../api/google";
 import { fetchMyProfile, fetchProfileByAccount, saveMyProfile } from "../api/profile";
-
-function getAuthToken(): string | null {
-  // @ts-ignore
-  if (typeof tokenManager.getToken === 'function') return tokenManager.getToken();
-  // @ts-ignore
-  if (typeof tokenManager.get === 'function') { const rec = tokenManager.get(); if (rec?.token) return rec.token; }
-  try { const raw = localStorage.getItem('gaia_auth_token'); if (raw) { const j = JSON.parse(raw); return j?.token ?? null; } } catch { }
-  return null;
-}
 
 function ensureHiddenNameTrigger() {
   let btn = document.getElementById("open-name-settings");
@@ -142,7 +134,7 @@ function openPersonaModal(currentBio: string, onSaved: (newBio: string) => void)
       const err = validate(bio);
       if (err) return setError(err);
       try {
-        const token = getAuthToken(); if (!token) throw new Error('Missing authorization token.');
+        const token = tokenManager.getToken(); if (!token) throw new Error('Missing authorization token.');
         await saveMyProfile({ bio }, token);
         (modal as any).dismiss();
         onSaved(bio);
@@ -259,6 +251,19 @@ function createProfileModal(router: Navigo): HTMLElement {
 
   let gaiaSubtitle = el("p", ""); // 실제 텍스트는 로드 후 세팅
 
+  // 간단 토스트 헬퍼
+  const showToast = async (message: string) => {
+    const t = document.createElement("ion-toast");
+    t.message = message;
+    t.duration = 1600;
+    t.position = "bottom";
+    document.body.appendChild(t);
+    await (t as any).present?.();
+  };
+
+  let linkItemEl: HTMLElement;
+  let unlinkItemEl: HTMLElement;
+
   const modalContent = el(
     "ion-content.ion-padding",
     profileCard,
@@ -266,14 +271,14 @@ function createProfileModal(router: Navigo): HTMLElement {
       "ion-list",
       // Gaia Name
       menuItem("sparkles", "Gaia Name", "", async () => {
-        const token = getAuthToken(); if (!token) throw new Error('Missing authorization token.');
-        // 최신 내 Gaia Name을 불러서 핸들 모달에 초기값으로 전달(있으면 .gaia 제거)
+        const token = tokenManager.getToken(); if (!token) throw new Error('Missing authorization token.');
         const { name } = await fetchMyGaiaName(token);
         const handle = name ? name.replace(/\.gaia$/, "") : "";
         const btn = ensureHiddenNameTrigger();
         if (handle) btn.dataset.initialName = handle;
         btn.click();
       }),
+
       // Persona (bio만 편집)
       menuItem("person-circle", "Persona", "Edit your bio", () => {
         const current = (bioSpan.textContent ?? "").trim();
@@ -281,13 +286,77 @@ function createProfileModal(router: Navigo): HTMLElement {
           bioSpan.textContent = newBio || "No bio yet";
         });
       }),
-      // Logout
+
+      // ─────────────────────────────────────────────────────────────
+      // Google 연동 관리 — 상태에 따라 Link/Unlink 토글
+      (linkItemEl = menuItem(
+        "logo-google",
+        "Link Google Account",
+        "Connect your Google account",
+        () => location.href = GOOGLE_LOGIN_PATH
+      )),
+
+      (unlinkItemEl = menuItem(
+        "logo-google",
+        "Unlink Google Account",
+        "Disconnect your Google account from this wallet",
+        async () => {
+          try {
+            const token = tokenManager.getToken(); if (!token) throw new Error('Missing authorization token.');
+            await unlinkGoogleWeb3Wallet(token);
+            await logoutGoogle()
+            await refreshGoogleLinkState();
+            await showToast("Google account unlinked.");
+          } catch (e: any) {
+            await showToast(e?.message ?? "Failed to unlink Google account.");
+          }
+        },
+      )),
+
+      // Logout (앱 로그아웃)
       menuItem("log-out", "Sign Out", "", async () => {
         await logout();
+        await logoutGoogle()
         router.navigate("/login");
       }),
     ),
   );
+
+  // 연동 상태 갱신 함수
+  const refreshGoogleLinkState = async () => {
+    // 기본값: 미연동 → Link 표시, Unlink 숨김
+    const showLinked = (linked: boolean) => {
+      if (linkItemEl) linkItemEl.style.display = linked ? "none" : "";
+      if (unlinkItemEl) unlinkItemEl.style.display = linked ? "" : "none";
+    };
+
+    try {
+      const token = tokenManager.getToken();
+      if (!token) {
+        showLinked(false);
+        return;
+      }
+      // Authorization: Bearer <token> 필요
+      const result = await fetchGoogleMeByWallet(token);
+      // ok=true && google_sub 존재 시 연동으로 판단
+      const linked = !!(result?.ok && result?.google_sub);
+      showLinked(linked);
+
+      // (선택) Unlink subtitle에 어느 계정인지 힌트 주기
+      if (unlinkItemEl) {
+        const label = unlinkItemEl.querySelector("ion-label > p");
+        if (label) {
+          const sub = result?.google_sub
+            ? `Linked as ${result.profile?.email}`
+            : "Disconnect your Google account from this wallet";
+          (label as HTMLElement).textContent = sub;
+        }
+      }
+    } catch {
+      // 401/404 등 조회 실패는 미연동으로 간주
+      showLinked(false);
+    }
+  };
 
   const modalHeader = el(
     "ion-header",
@@ -320,17 +389,19 @@ function createProfileModal(router: Navigo): HTMLElement {
   // ===== 초기 데이터 로드 (/my-profile & /my-name) =====
   (async () => {
     try {
-      const token = getAuthToken(); if (!token) throw new Error('Missing authorization token.');
+      const token = tokenManager.getToken(); if (!token) throw new Error('Missing authorization token.');
       const [profile, myName] = await Promise.all([fetchMyProfile(token), fetchMyGaiaName(token)]);
       const display = formatDisplayName(profile.nickname ?? (myName?.name ?? ""), myAddress);
       nameSpan.textContent = display;
       gaiaSubtitle.textContent = display;
       updateAvatar(profile.profile_image);
       bioSpan.textContent = (profile.bio ?? "").trim() || "No bio yet";
-    } catch (e) {
-      // 최소한 주소/기본 아바타는 보여주기
+    } catch {
       nameSpan.textContent = shortenAddress(myAddress);
       bioSpan.textContent = "No bio yet";
+    } finally {
+      // 프로필 초기 로드 후, Google 연동 상태 갱신
+      refreshGoogleLinkState();
     }
   })();
 

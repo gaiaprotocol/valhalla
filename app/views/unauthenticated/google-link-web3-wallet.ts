@@ -3,8 +3,12 @@ import { SlButton } from '@shoelace-style/shoelace';
 import { disconnect, getAccount, watchAccount } from '@wagmi/core';
 import { el } from "@webtaku/el";
 import Navigo from "navigo";
+import { logoutGoogle } from '../../api/google';
+import { requestLogin } from '../../auth/login';
 import { signMessage } from '../../auth/siwe';
 import { showErrorAlert } from '../../components/alert';
+import { showGodModeRequirementDialog } from '../../components/god-mode-req-alert';
+import { checkGodMode } from '../../services/god-mode';
 import { View } from "../view";
 import './login.css';
 
@@ -14,6 +18,26 @@ async function ensureWalletConnected(): Promise<`0x${string}`> {
     throw new Error('No wallet connected');
   }
   return account.address;
+}
+
+async function handleLoginClick(router: Navigo) {
+  try {
+    const address = await ensureWalletConnected();
+    const signature = await signMessage(address);
+    const token = await requestLogin(address, signature);
+
+    const godMode = await checkGodMode(address);
+    if (!godMode) {
+      showGodModeRequirementDialog();
+      return;
+    }
+
+    tokenManager.set(token, address);
+    location.href = '/';
+  } catch (err) {
+    console.error(err);
+    showErrorAlert('Error', err instanceof Error ? err.message : String(err));
+  }
 }
 
 export function createGoogleLinkWeb3WalletView(router: Navigo): View {
@@ -27,11 +51,7 @@ export function createGoogleLinkWeb3WalletView(router: Navigo): View {
   const handleGoogleLogout = async () => {
     try {
       // 서버 세션 종료
-      const res = await fetch('/api/google-logout', { method: 'POST' });
-      if (!res.ok) {
-        const msg = await res.text().catch(() => 'Failed to logout');
-        throw new Error(msg || 'Failed to logout');
-      }
+      await logoutGoogle()
 
       // 토큰/지갑 상태 정리
       try {
@@ -76,24 +96,7 @@ export function createGoogleLinkWeb3WalletView(router: Navigo): View {
       onclick: async () => {
         linkButton.loading = true;
         try {
-          const address = await ensureWalletConnected();
-          const signature = await signMessage(address);
-
-          const res = await fetch('/api/google-link-web3-wallet', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ address, signature })
-          });
-
-          if (!res.ok) {
-            const msg = await res.text().catch(() => 'Failed to link wallet');
-            throw new Error(msg || 'Failed to link wallet');
-          }
-
-          router.navigate('/');
-        } catch (err) {
-          console.error(err);
-          showErrorAlert('Link failed', err instanceof Error ? err.message : String(err));
+          await handleLoginClick(router);
         } finally {
           linkButton.loading = false;
         }

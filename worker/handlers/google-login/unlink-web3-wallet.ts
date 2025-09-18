@@ -1,30 +1,37 @@
-import { readSession } from './utils'
+import { verifyToken } from '@gaiaprotocol/worker-common'
+import { getAddress } from 'viem'
 
 export async function handleUnlinkGoogleWeb3Wallet(
   request: Request,
   env: Env
 ): Promise<Response> {
   try {
-    const me = await readSession(env, request)
-    if (!me?.sub) {
-      return Response.json({ error: 'not_logged_in' }, { status: 401 })
+    const auth = request.headers.get('authorization');
+    if (!auth?.startsWith('Bearer ')) {
+      return new Response('Unauthorized', { status: 401 });
     }
 
-    // DB에서 해당 사용자의 지갑 연동 정보 삭제
-    const result = await env.DB.prepare(`
-      DELETE FROM google_web3_accounts
-      WHERE google_sub = ?
-    `)
-      .bind(me.sub)
-      .run()
+    const token = auth.slice(7);
+    const payload = await verifyToken(token, env);
+    if (!payload?.sub) {
+      return new Response('Unauthorized', { status: 401 });
+    }
 
-    // 삭제된 row 수 반환 (선택)
-    return Response.json({ ok: true, deleted: result.meta.changes ?? 0 })
+    const normalizedAddress = getAddress(payload.sub);
+
+    const result = await env.DB.prepare(
+      `DELETE FROM google_web3_accounts
+       WHERE wallet_address = ?`
+    )
+      .bind(normalizedAddress)
+      .run();
+
+    return Response.json({ ok: true, deleted: result.meta.changes ?? 0 });
   } catch (err) {
-    console.error(err)
+    console.error(err);
     return Response.json(
       { error: err instanceof Error ? err.message : String(err) },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
