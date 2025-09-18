@@ -1,31 +1,28 @@
-import { generateToken, jsonWithCors, validateSiwe } from '@gaiaprotocol/worker-common'
+import { generateToken, validateSiwe } from '@gaiaprotocol/worker-common'
 import { getAddress } from 'viem'
 import { z } from 'zod'
 import { readSession } from './utils'
 
-// address + signature를 받아 토큰을 직접 생성하는 스키마
 const linkSchema = z.object({
   address: z.string().regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum address'),
   signature: z.string().regex(/^0x[a-fA-F0-9]+$/, 'Invalid signature'),
 })
 
-// Body: { address, signature }
-// 1) 세션 확인 → 2) SIWE 검증 → 3) 토큰 생성 → 4) google_web3_accounts 업서트
 export async function handleLinkGoogleWeb3Wallet(
   request: Request,
-  chainId: number,     // handleLogin과 동일하게 체인ID 인자로 받게 구성
+  chainId: number,
   env: Env
 ): Promise<Response> {
   try {
     const me = await readSession(env, request)
     if (!me?.sub) {
-      return jsonWithCors({ error: 'not_logged_in' }, 401)
+      return Response.json({ error: 'not_logged_in' }, { status: 401 })
     }
 
     const body = await request.json()
     const parsed = linkSchema.safeParse(body)
     if (!parsed.success) {
-      return jsonWithCors({ error: parsed.error.message }, 400)
+      return Response.json({ error: parsed.error.message }, { status: 400 })
     }
 
     // 1) 주소 정규화
@@ -39,7 +36,7 @@ export async function handleLinkGoogleWeb3Wallet(
       env
     )
     if (!valid) {
-      return jsonWithCors('Invalid signature or nonce', 401)
+      return Response.json({ error: 'Invalid signature or nonce' }, { status: 401 })
     }
 
     // 3) 토큰 생성 (주소 기반)
@@ -59,12 +56,12 @@ export async function handleLinkGoogleWeb3Wallet(
       .run()
 
     // 클라이언트에서도 바로 쓰게 토큰과 주소를 반환
-    return jsonWithCors({ ok: true, wallet_address: normalizedAddress, token })
+    return Response.json({ ok: true, wallet_address: normalizedAddress, token })
   } catch (err) {
     console.error(err)
-    return jsonWithCors(
+    return Response.json(
       { error: err instanceof Error ? err.message : String(err) },
-      500
+      { status: 500 }
     )
   }
 }

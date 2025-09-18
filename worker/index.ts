@@ -3,6 +3,7 @@ import { handleLogin, handleNonce, handleUploadImage, handleValidateToken } from
 import { ChatRoom } from './do/chat-room';
 import { handleGetMainGodsWithNfts } from './handlers/get-main-gods-with-nfts';
 import { handleGetMyMainGod } from './handlers/get-my-main-god';
+import { handleLinkGoogleWeb3Wallet } from './handlers/google-login/link-web3-wallet';
 import { handleGoogleLogin } from './handlers/google-login/login';
 import { handleGoogleLogout } from './handlers/google-login/logout';
 import { handleGoogleMe } from './handlers/google-login/me';
@@ -82,7 +83,8 @@ export default {
     if (url.pathname === '/api/google-login') return handleGoogleLogin(request, env);
     if (url.pathname === '/api/oauth2/callback') return handleOAuthCallback(request, env);
     if (url.pathname === '/api/google-me') return handleGoogleMe(request, env);
-    if (url.pathname === '/api/google-logout' && request.method === 'POST') return handleGoogleLogout(request, env);
+    if (url.pathname === '/api/google-logout') return handleGoogleLogout(request, env);
+    if (url.pathname === '/api/google-link-web3-wallet' && request.method === 'POST') return handleLinkGoogleWeb3Wallet(request, 1, env);
 
     const chatMatch = url.pathname.match(/^\/api\/chat\/([^/]+)\/(stream|send)$/);
     if (chatMatch) {

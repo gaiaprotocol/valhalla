@@ -5,17 +5,18 @@ import { defineCustomElements } from '@ionic/core/loader';
 import { initializeApp } from 'firebase/app';
 import { getMessaging } from 'firebase/messaging';
 import Navigo from 'navigo';
+import { getAddress } from 'viem';
 import { fetchGaiaNames } from './api/gaia-name';
+import { fetchMainGodsWithNfts } from './api/main-gods-with-nfts';
 import { validateToken } from './auth/validate';
 import { showGodModeRequirementDialog } from './components/god-mode-req-alert';
 import './main.css';
 import { checkGodMode } from './services/god-mode';
 import { createHomeView } from './views/authenticated/home';
 import { createLayoutView } from './views/authenticated/layout';
+import { createGoogleLinkWeb3WalletView } from './views/unauthenticated/google-link-web3-wallet';
 import { createLoginView } from './views/unauthenticated/login';
 import { View } from './views/view';
-import { fetchMainGodsWithNfts } from './api/main-gods-with-nfts';
-import { getAddress } from 'viem';
 
 setupConfig({
   hardwareBackButton: true,
@@ -107,14 +108,30 @@ const router = new Navigo('/');
 let layoutView: View | undefined;
 let contentContainer: HTMLElement | undefined;
 let loginView: View | undefined;
+let googleLinkWeb3WalletView: View | undefined;
 
 function removeLoginView() {
   loginView?.remove();
   loginView = undefined;
 }
 
-function requireAuth(next: () => void) {
-  if (!tokenManager.has()) {
+function removeGoogleLinkWeb3WalletView() {
+  googleLinkWeb3WalletView?.remove();
+  googleLinkWeb3WalletView = undefined;
+}
+
+async function requireAuth(next: () => void) {
+  const res = await fetch('/api/google-me')
+  const data = await res.json()
+  if (data.ok === true) {
+    if (data.token && data.wallet_address) {
+      tokenManager.set(data.token, data.wallet_address)
+      next()
+    } else {
+      tokenManager.clear()
+      router.navigate('/google-link-web3-wallet');
+    }
+  } else if (!tokenManager.has()) {
     router.navigate('/login');
   } else {
     next();
@@ -153,6 +170,18 @@ function renderLogin() {
   document.body.appendChild(loginView.el);
 }
 
+function renderGoogleLinkWeb3Wallet() {
+  if (layoutView) {
+    layoutView.remove();
+    layoutView = undefined;
+    contentContainer = undefined;
+  }
+  removeGoogleLinkWeb3WalletView();
+
+  googleLinkWeb3WalletView = createGoogleLinkWeb3WalletView(router);
+  document.body.appendChild(googleLinkWeb3WalletView.el);
+}
+
 router.on('/', () => {
   removeLoginView();
   requireAuth(() => {
@@ -170,10 +199,34 @@ router.on('/login', () => {
     contentContainer = undefined;
   }
 
+  if (googleLinkWeb3WalletView) {
+    googleLinkWeb3WalletView.remove();
+    googleLinkWeb3WalletView = undefined;
+  }
+
   if (tokenManager.has()) {
     router.navigate('/');
   } else {
     renderLogin();
+  }
+});
+
+router.on('/google-link-web3-wallet', () => {
+  if (loginView) {
+    loginView.remove();
+    loginView = undefined;
+  }
+
+  if (layoutView) {
+    layoutView.remove();
+    layoutView = undefined;
+    contentContainer = undefined;
+  }
+
+  if (tokenManager.has()) {
+    router.navigate('/');
+  } else {
+    renderGoogleLinkWeb3Wallet();
   }
 });
 
