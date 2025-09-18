@@ -26,7 +26,7 @@ export async function handleWebviewOAuth2Callback(request: Request, env: Env) {
     code: parsed.data.code,
     clientId: env.GOOGLE_CLIENT_ID,
     clientSecret: env.GOOGLE_CLIENT_SECRET,
-    redirectUri: env.GOOGLE_REDIRECT_URI,
+    redirectUri: env.GOOGLE_REDIRECT_URI_WEBVIEW,
     codeVerifier: tmp.code_verifier,
   }).catch((e: any) => ({ error: e?.message || 'exchange_failed' }))
 
