@@ -1,4 +1,4 @@
-"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[6548],{24167:(l,C,e)=>{e.r(C),e.d(C,{arrowBottomCircleSvg:()=>a});const a=e(36946).JW`<svg
+"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[6548],{46548:(l,C,e)=>{e.r(C),e.d(C,{arrowBottomCircleSvg:()=>a});const a=e(36946).JW`<svg
   fill="none"
   viewBox="0 0 21 20"
 >
