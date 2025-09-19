@@ -12,6 +12,7 @@ import { fetchMainGodsWithNfts } from './api/main-gods-with-nfts';
 import { validateToken } from './auth/validate';
 import { showGodModeRequirementDialog } from './components/god-mode-req-alert';
 import './main.css';
+import { isWebView } from './platform';
 import { checkGodMode } from './services/god-mode';
 import { createHomeView } from './views/authenticated/home';
 import { createLayoutView } from './views/authenticated/layout';
@@ -37,8 +38,6 @@ const ROUTES = {
   LOGIN: '/login',
   LINK_WALLET: '/google-link-web3-wallet'
 } as const;
-
-const isWebView = new URLSearchParams(window.location.search).get('source') === 'webview';
 
 function safeRemove(view?: View) {
   try { view?.remove(); } catch { /* noop */ }

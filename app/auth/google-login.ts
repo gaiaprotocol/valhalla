@@ -1,4 +1,4 @@
-const isWebView = new URLSearchParams(window.location.search).get('source') === 'webview';
+import { isWebView, platform } from "../platform";
 
 declare const API_BASE_URI: string;
 
@@ -22,7 +22,7 @@ if (isWebView) {
       credentials: 'include',
       body: JSON.stringify({ provider: 'google', idToken, nonce })
     })
-    location.href = '/?platform=android&source=webview';
+    location.href = `/?platform=${platform}&source=webview`;
   })
 
   window.addEventListener('googleSignInFailed', (e: any) => {
