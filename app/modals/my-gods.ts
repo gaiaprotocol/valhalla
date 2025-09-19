@@ -20,14 +20,14 @@ function createHeader(address: `0x${string}` | null, count: number) {
   });
 
   const left = el('div', { style: 'display:flex; align-items:center; gap:10px;' });
-  const title = el('h1', 'My Gods', { style: { fontSize: '18px', fontWeight: '700', margin: '0' } });
+  const title = el('h1', 'My Gods', { style: { flexShrink: "0", fontSize: '18px', fontWeight: '700', margin: '0' } });
   left.append(title);
 
   if (address) {
     const addrWrap = el('div', { style: 'display:flex; align-items:center; gap:8px; opacity:.9;' });
     const avatar = createAddressAvatar(address);
     Object.assign(avatar.style, { width: '20px', height: '20px', borderRadius: '9999px' });
-    addrWrap.append(avatar, el('span', shortenAddress(address)));
+    addrWrap.append(avatar, el('span', shortenAddress(address), { style: { flexShrink: "0" } }));
     left.append(addrWrap);
   }
 
@@ -44,19 +44,31 @@ function createGrid() {
   const grid = el('div', {
     style: `
       display:grid; padding:0 12px 12px;
-      grid-template-columns: repeat(1, minmax(0, 1fr));
+      /* 기본: 모바일에서도 2열 */
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap:12px;
     `
   }) as HTMLDivElement;
 
-  const mq = window.matchMedia('(min-width:640px)');
-  const mq2 = window.matchMedia('(min-width:1024px)');
+  const mqTiny = window.matchMedia('(max-width:359px)');   // 아주 작은 화면
+  const mq = window.matchMedia('(min-width:640px)');       // 기존 sm
+  const mq2 = window.matchMedia('(min-width:1024px)');     // 기존 lg
+
   const applyCols = () => {
-    if (mq2.matches) grid.style.gridTemplateColumns = 'repeat(4, minmax(0, 1fr))';
-    else if (mq.matches) grid.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))';
-    else grid.style.gridTemplateColumns = 'repeat(1, minmax(0, 1fr))';
+    if (mq2.matches) {
+      grid.style.gridTemplateColumns = 'repeat(4, minmax(0, 1fr))';
+    } else if (mq.matches) {
+      grid.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))';
+    } else if (mqTiny.matches) {
+      grid.style.gridTemplateColumns = 'repeat(1, minmax(0, 1fr))';
+    } else {
+      // 기본 모바일: 2열
+      grid.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))';
+    }
   };
+
   applyCols();
+  mqTiny.addEventListener?.('change', applyCols);
   mq.addEventListener?.('change', applyCols);
   mq2.addEventListener?.('change', applyCols);
 

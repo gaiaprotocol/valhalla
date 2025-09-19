@@ -32,7 +32,11 @@ export function createSelectMainGodModal(options: SelectMainGodOptions) {
     ),
   );
 
-  const content = el('ion-content.ion-padding');
+  const content = el('ion-content.ion-padding', {
+    style: `
+      --padding-bottom: 88px; /* 푸터 높이만큼 여유를 둬서 겹침 방지 */
+    `
+  });
 
   const desc = el('p', { style: 'margin-bottom:12px;color:var(--ion-color-medium)' }, description);
 
@@ -47,16 +51,24 @@ export function createSelectMainGodModal(options: SelectMainGodOptions) {
   });
 
   const footer = el('div', {
-    style: 'display:flex;gap:8px;justify-content:flex-end'
+    slot: 'fixed', // ✨ 핵심: 고정 푸터
+    style: `
+      display:flex;
+      gap:8px;
+      justify-content:flex-end;
+      padding: 12px;
+      border-top: 1px solid var(--ion-color-step-150, rgba(0,0,0,.08));
+      background: var(--ion-background-color, #fff);
+      box-shadow: 0 -4px 12px rgba(0,0,0,.08);
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    `
   });
-
   const cancelBtn = el('ion-button', { fill: 'outline', onclick: () => modal.dismiss() }, 'Cancel');
   const confirmBtn = el('ion-button', { disabled: true }, 'Confirm');
-
   footer.append(cancelBtn, confirmBtn);
 
-  content.append(desc, grid, footer);
-  modal.append(header, content);
+  content.append(desc, grid);
+  modal.append(header, content, footer);
 
   // 내부 상태
   let selectedId: string | null = null;
