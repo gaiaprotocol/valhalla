@@ -5212,6 +5212,7 @@ ion-modal ion-content {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  margin: 0;
 }
 
 .notice-bar button {

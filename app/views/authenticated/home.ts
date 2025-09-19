@@ -3,10 +3,10 @@ import { tokenManager } from '@gaiaprotocol/client-common';
 import { el } from '@webtaku/el';
 import { fetchMainGod, setMainGod } from '../../api/main-god';
 import { fetchHeldNfts, HeldNft } from '../../api/nfts';
-import { fetchNotices } from '../../api/notice';
 import { createNoticeDetailModal, createNoticeModal } from '../../modals/notice';
 import { openUserProfileModal } from '../../modals/profile';
 import { createSelectMainGodModal } from '../../modals/select-main-god';
+import { loadLocalizedNotices } from '../../services/notice';
 import { View } from '../view';
 
 const roomId = 'test';
@@ -35,8 +35,10 @@ function toImageUrl(img?: string | null) {
 function createHomeView(): View & { scrollToBottom: () => void } {
   const page = el('div', { className: 'page flex flex-col h-screen p-4 gap-2' }, { style: { height: '100%' } });
 
-  fetchNotices().then(notices => {
+  loadLocalizedNotices().then(notices => {
     const latestNotice = notices[0];
+    if (!latestNotice) return;
+
     const noticeBar = el(
       'div',
       {
@@ -59,12 +61,7 @@ function createHomeView(): View & { scrollToBottom: () => void } {
           className: 'text-blue-600 text-xs underline',
           onclick: (e: Event) => {
             e.stopPropagation();
-            let noticeModal = document.querySelector('ion-modal[trigger="open-notice"]');
-            if (!noticeModal) {
-              noticeModal = createNoticeModal(notices);
-              document.body.appendChild(noticeModal);
-            }
-            (noticeModal as any).present?.() || (noticeModal as any).showModal?.();
+            document.getElementById('open-notice')?.click();
           }
         },
         'All Notices'

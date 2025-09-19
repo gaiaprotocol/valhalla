@@ -4,7 +4,9 @@ import { createDashboardModal } from '../../modals/dashboard';
 import { createGodDetailModal } from '../../modals/god-detail';
 import { createMyGodsModal } from '../../modals/my-gods';
 import { createNameSettingsModal } from '../../modals/name-settings';
+import { createNoticeModal } from '../../modals/notice';
 import { createProfileModal } from '../../modals/profile';
+import { loadLocalizedNotices } from '../../services/notice';
 import { View } from '../view';
 
 function createHeader(): HTMLElement {
@@ -13,6 +15,7 @@ function createHeader(): HTMLElement {
     style: 'display:none'
   },
     el('ion-button', { id: 'open-dashboard' }),
+    el('ion-button', { id: 'open-notice' }),
     el('ion-button', { id: 'open-my-gods' }),
     el('ion-button', { id: 'open-profile' })
   );
@@ -40,6 +43,21 @@ function createHeader(): HTMLElement {
         },
           el('ion-icon', { slot: 'start', name: 'bar-chart-sharp' }),
           el('ion-label', 'Dashboard')
+        ),
+
+        // Notices
+        el(
+          'ion-item',
+          {
+            button: true,
+            detail: true,
+            onclick: () => {
+              document.getElementById('open-notice')?.click();
+              (popover as any).dismiss?.();
+            }
+          },
+          el('ion-icon', { slot: 'start', name: 'notifications' }),
+          el('ion-label', 'Notices')
         ),
 
         // My Gods
@@ -100,6 +118,7 @@ function createLayoutView(router: Navigo): View {
     el('ion-content', { className: 'content' }),
     // 기존 모달 유지(트리거는 숨겨둔 버튼이 담당)
     createDashboardModal(),
+    createNoticeModal({ load: loadLocalizedNotices }),
     createMyGodsModal(),
     createGodDetailModal(),
     createProfileModal(router),
