@@ -13,9 +13,11 @@ export function googleLogin() {
   }
 }
 
+let signOutResolve: (() => void) | undefined;
 export async function googleLogout() {
   if (isWebView && (window as any).Android?.signOutFromGoogle) {
     (window as any).Android.signOutFromGoogle()
+    return new Promise<void>(resolve => signOutResolve = resolve)
   } else {
     await logoutGoogle()
   }
@@ -46,7 +48,7 @@ if (isWebView) {
   })
 
   window.addEventListener('googleSignOutComplete', () => {
-    // 클라이언트 상태 초기화, 로그인 버튼 표시 등
+    signOutResolve?.()
   });
 
   window.addEventListener('googleSignOutFailed', (e: any) => {
