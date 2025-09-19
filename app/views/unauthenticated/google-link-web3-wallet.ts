@@ -8,6 +8,7 @@ import { requestLogin } from '../../auth/login';
 import { signMessage } from '../../auth/siwe';
 import { showErrorAlert } from '../../components/alert';
 import { showGodModeRequirementDialog } from '../../components/god-mode-req-alert';
+import { hideLoading, showLoading } from '../../components/loading';
 import { isWebView, platform } from '../../platform';
 import { checkGodMode } from '../../services/god-mode';
 import { View } from "../view";
@@ -57,6 +58,7 @@ export function createGoogleLinkWeb3WalletView(router: Navigo): View {
 
   // ── 구글 로그아웃 핸들러 ─────────────────────────────────────────────
   const handleGoogleLogout = async () => {
+    showLoading();
     try {
       // 서버 세션 종료
       await googleLogout()
@@ -74,6 +76,8 @@ export function createGoogleLinkWeb3WalletView(router: Navigo): View {
     } catch (err) {
       console.error(err);
       showErrorAlert('Logout failed', err instanceof Error ? err.message : String(err));
+    } finally {
+      hideLoading();
     }
   };
 
