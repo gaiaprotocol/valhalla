@@ -60,20 +60,6 @@ function createHeader(): HTMLElement {
           el('ion-label', 'Notices')
         ),
 
-        // My Gods
-        el('ion-item', {
-          button: true,
-          detail: true,
-          onclick: () => {
-            const modalTrigger = document.getElementById('open-my-gods') as HTMLElement | null;
-            if (modalTrigger) modalTrigger.click();
-            (popover as any).dismiss?.();
-          }
-        },
-          el('ion-icon', { slot: 'start', name: 'sparkles' }),
-          el('ion-label', 'My Gods')
-        ),
-
         // Profile
         el('ion-item', {
           button: true,
@@ -86,6 +72,20 @@ function createHeader(): HTMLElement {
         },
           el('ion-icon', { slot: 'start', name: 'person-circle' }),
           el('ion-label', 'Profile')
+        ),
+
+        // My Gods
+        el('ion-item', {
+          button: true,
+          detail: true,
+          onclick: () => {
+            const modalTrigger = document.getElementById('open-my-gods') as HTMLElement | null;
+            if (modalTrigger) modalTrigger.click();
+            (popover as any).dismiss?.();
+          }
+        },
+          el('ion-icon', { slot: 'start', name: 'sparkles' }),
+          el('ion-label', 'My Gods')
         ),
       )
     )

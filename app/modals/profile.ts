@@ -11,9 +11,12 @@ import Navigo from "navigo";
 import { getAddress } from "viem";
 import { fetchMyGaiaName } from "../api/gaia-name";
 import { fetchGoogleMeByWallet, unlinkGoogleWeb3WalletByToken } from "../api/google";
+import { fetchMainGod, setMainGod } from "../api/main-god";
+import { fetchHeldNfts, fetchNftsByIds, HeldNft } from "../api/nfts";
 import { fetchMyProfile, fetchProfileByAccount, saveMyProfile } from "../api/profile";
 import { googleLogin, googleLogout } from "../auth/google-login";
 import { hideLoading, showLoading } from "../components/loading";
+import { createSelectMainGodModal } from "./select-main-god";
 
 function ensureHiddenNameTrigger() {
   let btn = document.getElementById("open-name-settings");
@@ -31,6 +34,16 @@ function formatDisplayName(nickname: string | null | undefined, addr: string) {
     return n.endsWith(".gaia") ? n : `${n}.gaia`;
   }
   return shortenAddress(addr);
+}
+
+// 상대 경로 이미지 보정
+function toImageUrl(img?: string | null) {
+  if (!img) return '';
+  try {
+    return new URL(img).href;
+  } catch {
+    return `https://god-images.gaia.cc/${img}`;
+  }
 }
 
 // ===== Persona(bio) 편집 모달 =====
@@ -188,6 +201,48 @@ function createProfileModal(router: Navigo): HTMLElement {
     img.src = imageUrl;
   };
 
+  // 모달 오픈 핸들러 추가
+  async function openMainGodSelector() {
+    const modal = createSelectMainGodModal({
+      loadGods: async () => {
+        try {
+          const nfts = await fetchHeldNfts(myAddress, {});
+          return nfts.map(n => ({
+            id: String(n.id),
+            name: `${n.type ?? "NFT"} #${n.id}`,
+            image: toImageUrl(n.image),
+            raw: n,
+          }));
+        } catch {
+          return [];
+        }
+      },
+      onSelected: async (godId: string, selected?: { image?: string }) => {
+        await setMainGod(godId);
+
+        // (선택) 메인 갓 이미지로 아바타 즉시 갱신
+        if (selected?.image) {
+          updateAvatar(toImageUrl(selected.image));
+        }
+
+        // (선택) 내 챗 프로필 이미지도 맞춰서 즉시 반영
+        try {
+          const prev = chatProfileService.getCached(myAddress);
+          chatProfileService.setProfile(
+            myAddress,
+            prev?.nickname ?? undefined,
+            (selected?.image ? toImageUrl(selected.image) : prev?.profileImage) ?? undefined
+          );
+          // 서버값으로 최종 보정
+          chatProfileService.preload([myAddress]);
+        } catch { }
+      },
+    });
+
+    document.body.appendChild(modal);
+    (modal as any).present?.() || (modal as any).showModal?.();
+  }
+
   const nameSpan = el("span", "Loading…");
   const addressSpan = el("span", myAddress);
   const bioSpan = el(
@@ -272,7 +327,7 @@ function createProfileModal(router: Navigo): HTMLElement {
     el(
       "ion-list",
       // Gaia Name
-      menuItem("sparkles", "Gaia Name", "", async () => {
+      menuItem("sparkles", "Gaia Name", "Set your Gaia Name", async () => {
         const token = tokenManager.getToken(); if (!token) throw new Error('Missing authorization token.');
         const { name } = await fetchMyGaiaName(token);
         const handle = name ? name.replace(/\.gaia$/, "") : "";
@@ -280,6 +335,8 @@ function createProfileModal(router: Navigo): HTMLElement {
         if (handle) btn.dataset.initialName = handle;
         btn.click();
       }),
+
+      menuItem("planet", "Main God", "Select your profile God", openMainGodSelector),
 
       // Persona (bio만 편집)
       menuItem("person-circle", "Persona", "Edit your bio", () => {
@@ -400,22 +457,50 @@ function createProfileModal(router: Navigo): HTMLElement {
 
   // ===== 초기 데이터 로드 (/my-profile & /my-name) =====
   (async () => {
+    let profile: Awaited<ReturnType<typeof fetchMyProfile>> | null = null;
+    let myName: Awaited<ReturnType<typeof fetchMyGaiaName>> | null = null;
+
+    // 1) 각각 독립적으로 요청
     try {
-      const token = tokenManager.getToken(); if (!token) throw new Error('Missing authorization token.');
-      const [profile, myName] = await Promise.all([fetchMyProfile(token), fetchMyGaiaName(token)]);
-      const display = formatDisplayName(profile.nickname ?? (myName?.name ?? ""), myAddress);
-      nameSpan.textContent = display;
-      gaiaSubtitle.textContent = display;
-      updateAvatar(profile.profile_image);
-      bioSpan.textContent = (profile.bio ?? "").trim() || "No bio yet";
+      const token = tokenManager.getToken(); if (!token) throw new Error("Missing authorization token.");
+      profile = await fetchMyProfile(token);
+    } catch { }
+    try {
+      const token = tokenManager.getToken(); if (!token) throw new Error("Missing authorization token.");
+      myName = await fetchMyGaiaName(token);
+    } catch { }
+
+    // 2) 표기명: 프로필 닉네임 → 가이아 네임 → 축약주소
+    const nickname = (profile?.nickname ?? "").trim();
+    const gaia = (myName?.name ?? "").trim(); // 이미 .gaia 일 수도 있음
+    const baseName = nickname || gaia || "";
+
+    const display = formatDisplayName(baseName, myAddress);
+    nameSpan.textContent = display;
+    gaiaSubtitle.textContent = display;
+
+    // 3) 아바타: 기본(프로필 이미지) → 메인 갓(있으면 덮어쓰기)
+    updateAvatar(profile?.profile_image ?? null);
+    bioSpan.textContent = (profile?.bio ?? "").trim() || "No bio yet";
+
+    // 4) 메인 갓이 있으면, 소유 NFT 중 해당 갓의 이미지로 아바타 대체
+    try {
+      const mainGod = await fetchMainGod();
+      if (mainGod?.god_id) {
+        const nfts: { [id: string]: HeldNft } = await fetchNftsByIds([`gaia-protocol-gods:${mainGod.god_id}`]);
+        const match = nfts[`gaia-protocol-gods:${mainGod.god_id}`];
+        if (match?.image) {
+          updateAvatar(toImageUrl(match.image));
+        }
+      }
     } catch {
-      nameSpan.textContent = shortenAddress(myAddress);
-      bioSpan.textContent = "No bio yet";
-    } finally {
-      // 프로필 초기 로드 후, Google 연동 상태 갱신
-      refreshGoogleLinkState();
+      // 실패해도 무시
     }
+
+    // 5) 마지막으로 Google 연동 상태 갱신
+    await refreshGoogleLinkState();
   })();
+
 
   // 외부 Gaia Name 모달에서 이름 변경 시 표시명만 즉시 갱신 (프로필 닉네임과는 별개)
   window.addEventListener("gaiaName:updated", (e: any) => {

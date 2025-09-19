@@ -1,5 +1,5 @@
-import { getAddress } from 'viem';
 import { NftData } from '@gaiaprotocol/nft-attribute-editor';
+import { getAddress } from 'viem';
 
 declare const GAIA_API_BASE_URI: string;
 
@@ -59,20 +59,13 @@ export async function fetchHeldNfts(
 }
 
 /** 선택적으로 토큰 id 목록으로 상세를 받아와야 할 때 (백엔드에 /nfts/by-ids 존재) */
-export async function fetchNftsByIds(params: {
-  nft_address: string;
-  token_ids: (number | string)[];
-}): Promise<HeldNft[]> {
-  const body = {
-    nft_address: getAddress(params.nft_address),
-    token_ids: params.token_ids.map(id => Number(id)),
-  };
+export async function fetchNftsByIds(ids: string[]): Promise<{ id: HeldNft }> {
+  const body = { ids };
 
   const res = await fetch(`${GAIA_API_BASE_URI}/nfts/by-ids`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
-    credentials: 'include',
   });
 
   if (!res.ok) {
@@ -81,8 +74,7 @@ export async function fetchNftsByIds(params: {
     throw new Error(`Failed to fetch NFTs by ids: ${res.status}`);
   }
 
-  const items: HeldNft[] = await res.json();
-  return items;
+  return (await res.json()).results;
 }
 
 export type NftDetail = {
