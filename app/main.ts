@@ -201,18 +201,20 @@ function hideLoading() {
 async function tryAutoLinkIfNeeded(googleMe: GoogleMe | null): Promise<'ok' | 'to-link' | 'skip'> {
   const walletHasToken = tokenManager.has();
 
-  // (3) 구글 로그인 X && tokenManager X => 로그인 필요
-  if (!googleMe?.ok && !walletHasToken) return 'skip';
+  // 1) 구글 세션이 완전하면 즉시 주입 (지갑 토큰 보유 여부와 무관)
+  if (googleMe?.ok && googleMe.wallet_address && googleMe.token) {
+    tokenManager.set(googleMe.token, googleMe.wallet_address);
+    return 'ok';
+  }
 
-  // (2) 구글 로그인 O && 링크 안됨 && tokenManager X => 링크 필요
-  if (googleMe?.ok && (!googleMe.wallet_address || !googleMe.token) && !walletHasToken) return 'to-link';
+  // 2) 구글 로그인 O, 그런데 링크/토큰 없음
+  if (googleMe?.ok && !walletHasToken) {
+    // 지갑 토큰도 없으니 링크 화면으로
+    return 'to-link';
+  }
 
-  // (1) tokenManager O && 구글 로그인 O => 자동 링크 시도 가능
+  // 3) 지갑 토큰 O + 구글 로그인 O 이지만 구글 쪽 정보가 불완전 → 지갑 토큰으로 링크 시도
   if (walletHasToken && googleMe?.ok) {
-    if (googleMe.wallet_address && googleMe.token) {
-      tokenManager.set(googleMe.token, googleMe.wallet_address);
-      return 'ok';
-    }
     const authToken = tokenManager.getToken();
     if (!authToken) return 'to-link';
     try {
@@ -234,27 +236,27 @@ async function tryAutoLinkIfNeeded(googleMe: GoogleMe | null): Promise<'ok' | 't
     }
   }
 
+  // 4) (구글 X, 지갑 X) 등 기타 케이스
   return 'skip';
 }
 
 async function determineFlow(): Promise<'ok' | 'to-login' | 'to-link'> {
-  // 0) 현재 지갑 토큰/주소 상태
-  const walletHasToken = tokenManager.has();
+  let walletHasToken = tokenManager.has();
 
-  // 1) Google 세션 상태
   let googleMe: GoogleMe | null = null;
   try { googleMe = await fetchGoogleMe(); } catch { googleMe = null; }
 
-  // 2) 자동 링크/분기
   const linkResult = await tryAutoLinkIfNeeded(googleMe);
+
+  // tryAutoLink에서 tokenManager가 바뀌었을 수 있으니 갱신
+  walletHasToken = tokenManager.has();
+
   if (!googleMe?.ok && !walletHasToken) return 'to-login';
   if (linkResult === 'to-link') return 'to-link';
 
-  // 3) 최종 세션 검증 + God Mode
   const valid = await validateToken();
   if (!valid) {
-    // googleMe가 존재하지만 토큰이 유효하지 않은 경우 언링크
-    if (tokenManager.has() && googleMe?.ok) {
+    if (walletHasToken && googleMe?.ok) {
       try { await unlinkGoogleWeb3WalletBySession(); } catch (err) { console.error(err); }
     }
     tokenManager.clear();

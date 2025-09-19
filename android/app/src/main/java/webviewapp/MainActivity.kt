@@ -45,12 +45,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import androidx.credentials.ClearCredentialStateRequest
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
 import java.security.SecureRandom
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
+import androidx.credentials.exceptions.ClearCredentialException
 import androidx.credentials.exceptions.GetCredentialException
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -126,7 +128,8 @@ class MainActivity : ComponentActivity() {
                             }
                         },
                         onWebViewReady = { wv -> webViewRef = wv },
-                        startGoogleSignIn = { launchSignInWithGoogle() }
+                        startGoogleSignIn = { launchSignInWithGoogle() },
+                        startGoogleSignOut = { launchSignOutFromGoogle() }
                     )
                 }
             }
@@ -157,6 +160,60 @@ class MainActivity : ComponentActivity() {
                     null
                 )
             }
+        }
+    }
+
+    /** 구글 로그아웃 실행 */
+    private fun launchSignOutFromGoogle() {
+        lifecycleScope.launch {
+            try {
+                // 1) Credential Manager에서 현재 자격 상태 제거 (앱 레벨의 '로그아웃')
+                credentialManager.clearCredentialState(
+                    ClearCredentialStateRequest()
+                )
+
+                // 2) WebView 세션(쿠키/DOM 스토리지)도 정리
+                clearWebViewSession()
+
+                // 3) 웹에 알림 이벤트 전송 (필요 시)
+                webViewRef?.evaluateJavascript(
+                    "window.dispatchEvent(new CustomEvent('googleSignOutComplete'))",
+                    null
+                )
+            } catch (e: ClearCredentialException) {
+                Log.e("SIWG", "clearCredentialState failed", e)
+                webViewRef?.evaluateJavascript(
+                    "window.dispatchEvent(new CustomEvent('googleSignOutFailed', {detail:{message:'${e::class.java.simpleName}'}}))",
+                    null
+                )
+            } catch (t: Throwable) {
+                Log.e("SIWG", "Unexpected sign-out error", t)
+                webViewRef?.evaluateJavascript(
+                    "window.dispatchEvent(new CustomEvent('googleSignOutFailed', {detail:{message:'Unexpected'}}))",
+                    null
+                )
+            }
+        }
+    }
+
+    /** WebView 쿠키/스토리지 정리 */
+    private fun clearWebViewSession() {
+        try {
+            // 쿠키 삭제
+            android.webkit.CookieManager.getInstance().apply {
+                removeAllCookies(null)
+                flush()
+            }
+            // DOMStorage / IndexedDB 등 삭제
+            android.webkit.WebStorage.getInstance().deleteAllData()
+
+            // 캐시/히스토리 정리(선택)
+            webViewRef?.apply {
+                clearCache(true)
+                clearHistory()
+            }
+        } catch (_: Throwable) {
+            // 무시: 기기별 차이
         }
     }
 
@@ -222,7 +279,8 @@ fun WebViewScreen(
     modifier: Modifier = Modifier,
     onFileChooser: ((ValueCallback<Array<android.net.Uri>>, Intent) -> Unit)? = null,
     onWebViewReady: ((WebView) -> Unit)? = null,
-    startGoogleSignIn: () -> Unit
+    startGoogleSignIn: () -> Unit,
+    startGoogleSignOut: () -> Unit
 ) {
     var webView: WebView? by remember { mutableStateOf(null) }
     var progress by remember { mutableStateOf(0) }
@@ -308,7 +366,10 @@ fun WebViewScreen(
 
                     // JS → Android 브리지: window.Android.signInWithGoogle()
                     addJavascriptInterface(
-                        JsBridge { startGoogleSignIn() },
+                        JsBridge(
+                            startGoogleSignIn = { startGoogleSignIn() },
+                            startGoogleSignOut = { startGoogleSignOut() }
+                        ),
                         "Android"
                     )
 
@@ -342,10 +403,16 @@ fun WebViewScreen(
 }
 
 class JsBridge(
-    private val startGoogleSignIn: () -> Unit
+    private val startGoogleSignIn: () -> Unit,
+    private val startGoogleSignOut: () -> Unit
 ) {
     @android.webkit.JavascriptInterface
     fun signInWithGoogle() {
         startGoogleSignIn()
+    }
+
+    @android.webkit.JavascriptInterface
+    fun signOutFromGoogle() {
+        startGoogleSignOut()
     }
 }

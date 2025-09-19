@@ -1,3 +1,4 @@
+import { logoutGoogle } from "../api/google";
 import { isWebView, platform } from "../platform";
 
 declare const API_BASE_URI: string;
@@ -5,10 +6,18 @@ declare const API_BASE_URI: string;
 const GOOGLE_LOGIN_PATH = `${API_BASE_URI}/google-login`;
 
 export function googleLogin() {
-  if (isWebView) {
+  if (isWebView && (window as any).Android?.signInWithGoogle) {
     (window as any).Android.signInWithGoogle()
   } else {
     location.href = GOOGLE_LOGIN_PATH
+  }
+}
+
+export async function googleLogout() {
+  if (isWebView && (window as any).Android?.signOutFromGoogle) {
+    (window as any).Android.signOutFromGoogle()
+  } else {
+    await logoutGoogle()
   }
 }
 
@@ -35,4 +44,19 @@ if (isWebView) {
     document.body.appendChild(toast);
     (toast as any).present();
   })
+
+  window.addEventListener('googleSignOutComplete', () => {
+    // 클라이언트 상태 초기화, 로그인 버튼 표시 등
+  });
+
+  window.addEventListener('googleSignOutFailed', (e: any) => {
+    console.error('Sign-out failed:', e.detail?.message);
+
+    const toast = document.createElement("ion-toast");
+    toast.message = `Google sign-out failed. ${e.detail.message}`;
+    toast.duration = 1600;
+    toast.position = "bottom";
+    document.body.appendChild(toast);
+    (toast as any).present();
+  });
 }

@@ -10,9 +10,9 @@ import { el } from "@webtaku/el";
 import Navigo from "navigo";
 import { getAddress } from "viem";
 import { fetchMyGaiaName } from "../api/gaia-name";
-import { fetchGoogleMeByWallet, logoutGoogle, unlinkGoogleWeb3WalletByToken } from "../api/google";
+import { fetchGoogleMeByWallet, unlinkGoogleWeb3WalletByToken } from "../api/google";
 import { fetchMyProfile, fetchProfileByAccount, saveMyProfile } from "../api/profile";
-import { googleLogin } from "../auth/google-login";
+import { googleLogin, googleLogout } from "../auth/google-login";
 
 function ensureHiddenNameTrigger() {
   let btn = document.getElementById("open-name-settings");
@@ -305,7 +305,7 @@ function createProfileModal(router: Navigo): HTMLElement {
           try {
             const token = tokenManager.getToken(); if (!token) throw new Error('Missing authorization token.');
             await unlinkGoogleWeb3WalletByToken(token);
-            await logoutGoogle()
+            await googleLogout()
             await refreshGoogleLinkState();
             await showToast("Google account unlinked.");
           } catch (e: any) {
@@ -317,7 +317,7 @@ function createProfileModal(router: Navigo): HTMLElement {
       // Logout (앱 로그아웃)
       menuItem("log-out", "Sign Out", "", async () => {
         await logout();
-        await logoutGoogle()
+        await googleLogout()
         router.navigate("/login");
       }),
     ),

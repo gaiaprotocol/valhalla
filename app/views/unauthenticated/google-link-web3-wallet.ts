@@ -3,7 +3,7 @@ import { SlButton } from '@shoelace-style/shoelace';
 import { disconnect, getAccount, watchAccount } from '@wagmi/core';
 import { el } from "@webtaku/el";
 import Navigo from "navigo";
-import { logoutGoogle } from '../../api/google';
+import { googleLogout } from '../../auth/google-login';
 import { requestLogin } from '../../auth/login';
 import { signMessage } from '../../auth/siwe';
 import { showErrorAlert } from '../../components/alert';
@@ -59,7 +59,7 @@ export function createGoogleLinkWeb3WalletView(router: Navigo): View {
   const handleGoogleLogout = async () => {
     try {
       // 서버 세션 종료
-      await logoutGoogle()
+      await googleLogout()
 
       // 토큰/지갑 상태 정리
       try {
