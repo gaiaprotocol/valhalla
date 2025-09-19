@@ -62,9 +62,17 @@ function debounce<T extends (...args: any[]) => void>(fn: T, ms = 100) {
 // ------------------------------
 setupConfig({ hardwareBackButton: true, experimentalCloseWatcher: true });
 
-document.addEventListener('ionBackButton' as any, (event: BackButtonEvent) => {
-  event.detail.register(0, () => window.history.back());
-});
+const backHandler = (event: BackButtonEvent) => {
+  event.detail.register(0, () => {
+    const hasHistory = window.history.length > 1;
+    const isFromExternal = document.referrer && !document.referrer.startsWith(window.location.origin);
+    if (!hasHistory || isFromExternal) {
+      document.removeEventListener('ionBackButton' as any, backHandler);
+    }
+    window.history.back();
+  });
+};
+document.addEventListener('ionBackButton' as any, backHandler);
 
 defineCustomElements(window);
 document.body.appendChild(createRainbowKit());
