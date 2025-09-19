@@ -291,6 +291,7 @@ fun WebViewScreen(
                         javaScriptEnabled = true
                         domStorageEnabled = true
                         setSupportMultipleWindows(true)
+                        javaScriptCanOpenWindowsAutomatically = true
                     }
 
                     webViewClient = object : WebViewClient() {
@@ -333,20 +334,36 @@ fun WebViewScreen(
                             resultMsg: Message
                         ): Boolean {
                             val ctx = view.context
-                            val newWebView = WebView(ctx).apply {
+
+                            // 1) hitTestResult로 바로 열 수 있으면 즉시 외부 브라우저로
+                            val result = view.hitTestResult
+                            val urlFromHitTest = result.extra
+                            if (!urlFromHitTest.isNullOrBlank()) {
+                                try {
+                                    ctx.startActivity(Intent(Intent.ACTION_VIEW, urlFromHitTest.toUri()))
+                                    return false // 새 창 불필요
+                                } catch (_: Exception) { /* fallback 아래로 */ }
+                            }
+
+                            // 2) fallback: 임시 WebView를 만들어 shouldOverrideUrlLoading에서 외부 브라우저로 넘김
+                            val tmp = WebView(ctx).apply {
                                 settings.javaScriptEnabled = true
                                 webViewClient = object : WebViewClient() {
-                                    override fun onPageStarted(
-                                        view: WebView?, url: String?, favicon: android.graphics.Bitmap?
-                                    ) {
-                                        if (url != null) ctx.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
-                                        destroy()
+                                    override fun shouldOverrideUrlLoading(
+                                        v: WebView,
+                                        req: WebResourceRequest
+                                    ): Boolean {
+                                        return try {
+                                            ctx.startActivity(Intent(Intent.ACTION_VIEW, req.url))
+                                            true
+                                        } catch (_: Exception) {
+                                            true
+                                        }
                                     }
                                 }
                             }
-                            (resultMsg.obj as WebView.WebViewTransport).apply {
-                                webView = newWebView
-                            }
+
+                            (resultMsg.obj as WebView.WebViewTransport).webView = tmp
                             resultMsg.sendToTarget()
                             return true
                         }

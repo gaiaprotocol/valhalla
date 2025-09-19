@@ -10,7 +10,7 @@ type SelectMainGodOptions = {
   title?: string;
   description?: string;
   loadGods: () => Promise<GodItem[]>;
-  onSelected: (godId: string) => Promise<void> | void;
+  onSelected: (godId: string, selected?: GodItem) => Promise<void> | void; // ← 변경
 };
 
 export function createSelectMainGodModal(options: SelectMainGodOptions) {
@@ -72,6 +72,7 @@ export function createSelectMainGodModal(options: SelectMainGodOptions) {
 
   // 내부 상태
   let selectedId: string | null = null;
+  let gods: GodItem[] = []; // ← 추가
 
   function renderGodItem(item: GodItem) {
     const card = el('ion-card', {
@@ -81,7 +82,6 @@ export function createSelectMainGodModal(options: SelectMainGodOptions) {
         border:2px solid transparent;
       `,
       onclick: () => {
-        // 선택 표시 업데이트
         selectedId = item.id;
         confirmBtn.disabled = false;
         Array.from(grid.children).forEach((c: any) => {
@@ -113,7 +113,7 @@ export function createSelectMainGodModal(options: SelectMainGodOptions) {
   // 데이터 로드
   (async () => {
     try {
-      const gods = await loadGods();
+      gods = await loadGods(); // ← gods 보관
       if (!gods || gods.length === 0) {
         grid.append(
           el('div', {
@@ -138,12 +138,12 @@ export function createSelectMainGodModal(options: SelectMainGodOptions) {
     if (!selectedId) return;
     (confirmBtn as any).disabled = true;
     try {
-      await onSelected(selectedId);
+      const selectedGod = gods.find(g => g.id === selectedId); // ← 선택 객체 찾기
+      await onSelected(selectedId, selectedGod);               // ← 함께 전달
       await (modal as any).dismiss?.();
     } catch (e) {
       console.error('Failed to set main god', e);
       (confirmBtn as any).disabled = false;
-      // 간단한 에러 표기
       content.append(
         el('p', { style: 'color:var(--ion-color-danger)' }, 'Failed to set Main God. Please try again.')
       );
