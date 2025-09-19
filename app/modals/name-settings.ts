@@ -61,20 +61,22 @@ export function createNameSettingsModal(): HTMLElement {
     { style: 'color:#9CA3AF; font-size:13px;' }
   );
 
-  const field = el('div', { style: 'display:flex; gap:8px; align-items:center;' },
-    el('span', '', { style: 'opacity:.85;' }) // (좌측 프리픽스 없음, @ 제거)
-  ) as HTMLDivElement;
+  // field 생성부
+  const field = el('div', { style: 'display:flex; gap:8px; align-items:center; width:100%;' }) as HTMLDivElement;
 
   const input = el('sl-input', {
     placeholder: 'your-name',
     clearable: true,
     pill: true,
     size: 'large',
-    style: 'flex:1;'
+    // flex 수축 허용
+    style: 'flex:1 1 0%; min-width:0; width:0;'
   }) as any;
 
-  const suffix = el('span', '.gaia', { style: 'opacity:.85;' });
-  field.append(input, suffix);
+  // <-- 기존의 외부 suffix 스팬 제거하고, 내부 슬롯으로 이동
+  input.append(el('span', '.gaia', { slot: 'suffix', style: 'opacity:.85;' }));
+
+  field.append(input);
 
   const statusRow = el('div', { style: 'display:flex; align-items:center; gap:8px; min-height:22px;' });
   const statusBadge = el('sl-badge', 'Type a name', { variant: 'neutral', pill: true }) as HTMLElement;
