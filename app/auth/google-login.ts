@@ -17,12 +17,12 @@ let signOutResolve: (() => void) | undefined;
 export async function googleLogout() {
   await Promise.all([
     logoutGoogle(),
-    () => {
+    (() => {
       if (isWebView && (window as any).Android?.signOutFromGoogle) {
         (window as any).Android.signOutFromGoogle()
         return new Promise<void>(resolve => signOutResolve = resolve)
       }
-    }
+    })()
   ])
 }
 
