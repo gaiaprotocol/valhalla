@@ -19,6 +19,7 @@ import { createLayoutView } from './views/authenticated/layout';
 import { createGoogleLinkWeb3WalletView } from './views/unauthenticated/google-link-web3-wallet';
 import { createLoginView } from './views/unauthenticated/login';
 import { View } from './views/view';
+import { hideLoading, showLoading } from './components/loading';
 
 // ------------------------------
 // Constants & Utilities
@@ -166,33 +167,6 @@ function showUnauthed(factory: () => View) {
   safeRemove(unauthView);
   unauthView = factory();
   document.body.appendChild(unauthView.el);
-}
-
-// ------------------------------
-// Loading Overlay (ion-spinner)
-// ------------------------------
-let loadingEl: HTMLElement | null = null;
-
-function showLoading() {
-  if (loadingEl) return;
-  loadingEl = document.createElement('div');
-  loadingEl.setAttribute('data-loading-overlay', '');
-  Object.assign(loadingEl.style, {
-    position: 'fixed',
-    inset: '0',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: 'color-mix(in oklab, var(--ion-background-color, #fff) 70%, transparent)',
-    zIndex: '2147483647',
-  } as CSSStyleDeclaration);
-  loadingEl.innerHTML = `<ion-spinner name="crescent" style="width:48px;height:48px"></ion-spinner>`;
-  document.body.appendChild(loadingEl);
-}
-
-function hideLoading() {
-  try { loadingEl?.remove(); } catch { /* noop */ }
-  loadingEl = null;
 }
 
 // ------------------------------

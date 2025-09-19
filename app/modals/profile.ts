@@ -13,6 +13,7 @@ import { fetchMyGaiaName } from "../api/gaia-name";
 import { fetchGoogleMeByWallet, unlinkGoogleWeb3WalletByToken } from "../api/google";
 import { fetchMyProfile, fetchProfileByAccount, saveMyProfile } from "../api/profile";
 import { googleLogin, googleLogout } from "../auth/google-login";
+import { hideLoading, showLoading } from "../components/loading";
 
 function ensureHiddenNameTrigger() {
   let btn = document.getElementById("open-name-settings");
@@ -302,6 +303,7 @@ function createProfileModal(router: Navigo): HTMLElement {
         "Unlink Google Account",
         "Disconnect your Google account from this wallet",
         async () => {
+          showLoading();
           try {
             const token = tokenManager.getToken(); if (!token) throw new Error('Missing authorization token.');
             await unlinkGoogleWeb3WalletByToken(token);
@@ -310,15 +312,24 @@ function createProfileModal(router: Navigo): HTMLElement {
             await showToast("Google account unlinked.");
           } catch (e: any) {
             await showToast(e?.message ?? "Failed to unlink Google account.");
+          } finally {
+            hideLoading();
           }
         },
       )),
 
       // Logout (앱 로그아웃)
       menuItem("log-out", "Sign Out", "", async () => {
-        await logout();
-        await googleLogout()
-        router.navigate("/login");
+        showLoading();
+        try {
+          await logout();
+          await googleLogout()
+          router.navigate("/login");
+        } catch (e: any) {
+          await showToast(e?.message ?? "Failed to sign out.");
+        } finally {
+          hideLoading();
+        }
       }),
     ),
   );
