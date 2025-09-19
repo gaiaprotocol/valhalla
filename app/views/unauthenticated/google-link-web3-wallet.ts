@@ -8,6 +8,7 @@ import { requestLogin } from '../../auth/login';
 import { signMessage } from '../../auth/siwe';
 import { showErrorAlert } from '../../components/alert';
 import { showGodModeRequirementDialog } from '../../components/god-mode-req-alert';
+import { isWebView, platform } from '../../platform';
 import { checkGodMode } from '../../services/god-mode';
 import { View } from "../view";
 import './login.css';
@@ -33,7 +34,14 @@ async function handleLoginClick(router: Navigo) {
     }
 
     tokenManager.set(token, address);
-    location.href = '/';
+
+    let href = '/'
+    if (platform) {
+      href = `/?platform=${platform}`
+      if (isWebView) href += '&source=webview'
+    } else if (isWebView) href = '/?source=webview'
+    location.href = href;
+
   } catch (err) {
     console.error(err);
     showErrorAlert('Error', err instanceof Error ? err.message : String(err));

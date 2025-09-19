@@ -254,7 +254,7 @@ async function determineFlow(): Promise<'ok' | 'to-login' | 'to-link'> {
   const valid = await validateToken();
   if (!valid) {
     // googleMe가 존재하지만 토큰이 유효하지 않은 경우 언링크
-    if (googleMe?.ok) {
+    if (tokenManager.has() && googleMe?.ok) {
       try { await unlinkGoogleWeb3WalletBySession(); } catch (err) { console.error(err); }
     }
     tokenManager.clear();
