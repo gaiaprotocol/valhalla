@@ -172,10 +172,7 @@ class MainActivity : ComponentActivity() {
                     ClearCredentialStateRequest()
                 )
 
-                // 2) WebView 세션(쿠키/DOM 스토리지)도 정리
-                clearWebViewSession()
-
-                // 3) 웹에 알림 이벤트 전송 (필요 시)
+                // 2) 웹에 알림 이벤트 전송 (필요 시)
                 webViewRef?.evaluateJavascript(
                     "window.dispatchEvent(new CustomEvent('googleSignOutComplete'))",
                     null
@@ -193,27 +190,6 @@ class MainActivity : ComponentActivity() {
                     null
                 )
             }
-        }
-    }
-
-    /** WebView 쿠키/스토리지 정리 */
-    private fun clearWebViewSession() {
-        try {
-            // 쿠키 삭제
-            android.webkit.CookieManager.getInstance().apply {
-                removeAllCookies(null)
-                flush()
-            }
-            // DOMStorage / IndexedDB 등 삭제
-            android.webkit.WebStorage.getInstance().deleteAllData()
-
-            // 캐시/히스토리 정리(선택)
-            webViewRef?.apply {
-                clearCache(true)
-                clearHistory()
-            }
-        } catch (_: Throwable) {
-            // 무시: 기기별 차이
         }
     }
 

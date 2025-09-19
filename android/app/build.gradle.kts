@@ -13,8 +13,8 @@ android {
         applicationId = "com.gaiaprotocol.valhalla"
         minSdk = 24
         targetSdk = 36
-        versionCode = 3
-        versionName = "0.3"
+        versionCode = 4
+        versionName = "0.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
