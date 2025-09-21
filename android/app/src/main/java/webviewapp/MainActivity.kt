@@ -382,6 +382,15 @@ fun WebViewScreen(
                         "Android"
                     )
 
+                    // JS → Android 브리지: window.Native.signInWithGoogle()
+                    addJavascriptInterface(
+                        JsBridge(
+                            startGoogleSignIn = { startGoogleSignIn() },
+                            startGoogleSignOut = { startGoogleSignOut() }
+                        ),
+                        "Native"
+                    )
+
                     loadUrl(url)
                     webView = this
                     onWebViewReady?.invoke(this)

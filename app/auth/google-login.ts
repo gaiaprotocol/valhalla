@@ -6,7 +6,9 @@ declare const API_BASE_URI: string;
 const GOOGLE_LOGIN_PATH = `${API_BASE_URI}/google-login`;
 
 export function googleLogin() {
-  if (isWebView && (window as any).Android?.signInWithGoogle) {
+  if (isWebView && (window as any).Native?.signInWithGoogle) {
+    (window as any).Native.signInWithGoogle()
+  } else if (isWebView && (window as any).Android?.signInWithGoogle) {
     (window as any).Android.signInWithGoogle()
   } else {
     location.href = GOOGLE_LOGIN_PATH
@@ -15,7 +17,10 @@ export function googleLogin() {
 
 let signOutResolve: (() => void) | undefined;
 export async function googleLogout() {
-  if (isWebView && (window as any).Android?.signOutFromGoogle) {
+  if (isWebView && (window as any).Native?.signOutFromGoogle) {
+    (window as any).Native.signOutFromGoogle()
+    return new Promise<void>(resolve => signOutResolve = resolve)
+  } else if (isWebView && (window as any).Android?.signOutFromGoogle) {
     (window as any).Android.signOutFromGoogle()
     return new Promise<void>(resolve => signOutResolve = resolve)
   } else {

@@ -7,5 +7,14 @@
 		<string>metamask</string>
 		<string>rainbow</string>
 	</array>
+    <key>CFBundleURLTypes</key>
+    <array>
+      <dict>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>com.googleusercontent.apps.797829770593-dlm0rhi8icjpgqenu196i8kfnm8r3d75</string>
+        </array>
+      </dict>
+    </array>
 </dict>
 </plist>
