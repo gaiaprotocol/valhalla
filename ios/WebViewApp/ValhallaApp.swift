@@ -2,6 +2,7 @@ import SwiftUI
 import WebKit
 import GoogleSignIn
 
+// MARK: - OAuth Client IDs
 let IOS_CLIENT_ID   = "797829770593-dlm0rhi8icjpgqenu196i8kfnm8r3d75.apps.googleusercontent.com"
 let WEB_CLIENT_ID   = "797829770593-kv6v54u6gdebc4j4jhedjiql34ugg2fo.apps.googleusercontent.com"
 let mainURL = URL(string: "https://valhalla.gaia.cc/?platform=ios&source=webview")!
@@ -11,18 +12,17 @@ func generateNonce(_ count: Int = 16) -> String {
     var bytes = [UInt8](repeating: 0, count: count)
     _ = SecRandomCopyBytes(kSecRandomDefault, count, &bytes)
     let data = Data(bytes)
-    return data.base64EncodedString(options: [.endLineWithLineFeed])
+    return data.base64EncodedString()
         .replacingOccurrences(of: "=", with: "")
         .replacingOccurrences(of: "+", with: "-")
         .replacingOccurrences(of: "/", with: "_")
 }
 
+// MARK: - JS bridge (platform-neutral)
 fileprivate func makeNativeShimScript() -> WKUserScript {
     let js = """
     (function(){
-      if (!window.Native) {
-        window.Native = {};
-      }
+      if (!window.Native) { window.Native = {}; }
       window.Native.signInWithGoogle = function(){
         if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.signInWithGoogle) {
           window.webkit.messageHandlers.signInWithGoogle.postMessage(null);
@@ -38,10 +38,9 @@ fileprivate func makeNativeShimScript() -> WKUserScript {
     return WKUserScript(source: js, injectionTime: .atDocumentStart, forMainFrameOnly: true)
 }
 
-// MARK: - Script message names
 enum NativeBridge: String { case signInWithGoogle, signOutFromGoogle }
 
-// MARK: - Main WebView wrapper (unchanged pieces kept, plus bridge + progress)
+// MARK: - Main WebView wrapper
 struct WebView: UIViewRepresentable {
     let url: URL
     @Binding var popupWebView: WKWebView?
@@ -70,7 +69,7 @@ struct WebView: UIViewRepresentable {
         webView.load(URLRequest(url: url))
 
         // KVO for progress
-        context.coordinator.progressObs = webView.observe(\._estimatedProgress, options: [.new]) { _, change in
+        context.coordinator.progressObs = webView.observe(\.estimatedProgress, options: [.new]) { _, change in
             DispatchQueue.main.async { self.progress = change.newValue ?? 0 }
         }
         return webView
@@ -129,40 +128,40 @@ struct WebView: UIViewRepresentable {
             }
         }
 
-        // MARK: - Google Sign-In → ID token for your web backend (WEB_CLIENT_ID)
+        // MARK: - Google Sign-In (v7+) → ID token for your backend (WEB_CLIENT_ID)
         private func signIn() {
             guard let rootVC = UIApplication.shared.connectedScenes
-                    .compactMap({ ($0 as? UIWindowScene)?.keyWindow })
-                    .first?.rootViewController else {
+                .compactMap({ ($0 as? UIWindowScene)?.keyWindow })
+                .first?.rootViewController else {
                 self.dispatchToWeb(event: "googleSignInFailed", payload: ["message": "NoRootVC"])
                 return
             }
 
-            // Refresh nonce per attempt
+            // Refresh nonce per attempt (if your backend validates it)
             lastNonce = generateNonce()
 
-            // Configure: iOS clientID is required; serverClientID requests an ID token for your Web client
+            // Configure audience: iOS client + server(Web) client for ID token
             let config = GIDConfiguration(clientID: IOS_CLIENT_ID, serverClientID: WEB_CLIENT_ID)
+            GIDSignIn.sharedInstance.configuration = config
 
-            GIDSignIn.sharedInstance.signIn(with: config, presenting: rootVC) { user, err in
-                if let err = err {
-                    self.dispatchToWeb(event: "googleSignInFailed", payload: ["message": String(describing: type(of: err))])
+            GIDSignIn.sharedInstance.signIn(withPresenting: rootVC) { result, error in
+                if let error = error {
+                    self.dispatchToWeb(event: "googleSignInFailed", payload: ["message": "\(error)"])
                     return
                 }
-                guard let user = user else {
+                guard let user = result?.user else {
                     self.dispatchToWeb(event: "googleSignInFailed", payload: ["message": "NoUser"])
                     return
                 }
-                user.authentication.do { auth, err in
-                    if let _ = err {
-                        self.dispatchToWeb(event: "googleSignInFailed", payload: ["message": "AuthError"])
-                        return
-                    }
-                    guard let idToken = auth?.idToken else {
-                        self.dispatchToWeb(event: "googleSignInFailed", payload: ["message": "NoIDToken"])
-                        return
-                    }
-                    self.dispatchToWeb(event: "googleSignInComplete", payload: ["idToken": idToken, "nonce": self.lastNonce])
+
+                // v7: token is directly on user.idToken
+                if let idToken = user.idToken?.tokenString {
+                    self.dispatchToWeb(
+                        event: "googleSignInComplete",
+                        payload: ["idToken": idToken, "nonce": self.lastNonce]
+                    )
+                } else {
+                    self.dispatchToWeb(event: "googleSignInFailed", payload: ["message": "NoIDToken"])
                 }
             }
         }
@@ -171,7 +170,13 @@ struct WebView: UIViewRepresentable {
             // 1) Google SDK sign out (local)
             GIDSignIn.sharedInstance.signOut()
             // 2) Clear WKWebView cookies/session
-            let dataTypes: Set<String> = [WKWebsiteDataTypeCookies, WKWebsiteDataTypeSessionStorage, WKWebsiteDataTypeLocalStorage, WKWebsiteDataTypeIndexedDBDatabases, WKWebsiteDataTypeWebSQLDatabases]
+            let dataTypes: Set<String> = [
+                WKWebsiteDataTypeCookies,
+                WKWebsiteDataTypeSessionStorage,
+                WKWebsiteDataTypeLocalStorage,
+                WKWebsiteDataTypeIndexedDBDatabases,
+                WKWebsiteDataTypeWebSQLDatabases
+            ]
             WKWebsiteDataStore.default().fetchDataRecords(ofTypes: dataTypes) { records in
                 WKWebsiteDataStore.default().removeData(ofTypes: dataTypes, for: records) {
                     self.dispatchToWeb(event: "googleSignOutComplete", payload: [:])
@@ -184,12 +189,7 @@ struct WebView: UIViewRepresentable {
             let jsonData = try? JSONSerialization.data(withJSONObject: payload, options: [])
             let json = String(data: jsonData ?? Data("{}".utf8), encoding: .utf8) ?? "{}"
             let js = "window.dispatchEvent(new CustomEvent('" + event + "', {detail: " + json + "}));"
-            (self.parent.popupWebView ?? self.activeWebView())?.evaluateJavaScript(js, completionHandler: nil)
-        }
-
-        private func activeWebView() -> WKWebView? {
-            // Try to find an active WKWebView in the view hierarchy if needed
-            return parent.popupWebView
+            (self.parent.popupWebView)?.evaluateJavaScript(js, completionHandler: nil)
         }
     }
 }
@@ -201,14 +201,25 @@ struct ValhallaApp: App {
         WindowGroup {
             ContentView()
                 .onOpenURL { url in
-                    // Forward the callback URL to GoogleSignIn
                     _ = GIDSignIn.sharedInstance.handle(url)
                 }
         }
     }
 }
 
-// MARK: - Your ContentView (from your snippet), unchanged except bindings
+// Swift 6: add @retroactive to silence the warning about Identifiable conformance
+@available(iOS 13.0, *)
+extension WKWebView: @retroactive Identifiable {
+    public var id: ObjectIdentifier { ObjectIdentifier(self) }
+}
+
+struct WebViewRepresentable: UIViewRepresentable {
+    let webView: WKWebView
+    func makeUIView(context: Context) -> WKWebView { webView }
+    func updateUIView(_ uiView: WKWebView, context: Context) {}
+}
+
+// MARK: - ContentView
 struct ContentView: View {
     @State private var popupWebView: WKWebView?
     @State private var progress: Double = 0.0
@@ -222,7 +233,7 @@ struct ContentView: View {
                 progress: $progress,
                 isLoading: $isLoading
             )
-            .edgesIgnoringSafeArea(.all)
+            .ignoresSafeArea()
             .sheet(item: $popupWebView) { webView in
                 WebViewRepresentable(webView: webView)
             }
@@ -240,7 +251,6 @@ struct ContentView: View {
     }
 }
 
-// Simple helper reused
 fileprivate extension Comparable {
     func clamped(to range: ClosedRange<Self>) -> Self { min(max(self, range.lowerBound), range.upperBound) }
 }
