@@ -183,6 +183,6 @@ pnpm-lock.yaml
 npm-debug.log*
 
 # Firebase config
-google-services.json
+android/google-services.json
 firebase-debug.log
 ios/GoogleService-Info.plist
