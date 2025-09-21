@@ -373,15 +373,6 @@ fun WebViewScreen(
                         }
                     }
 
-                    // JS → Android 브리지: window.Android.signInWithGoogle()
-                    addJavascriptInterface(
-                        JsBridge(
-                            startGoogleSignIn = { startGoogleSignIn() },
-                            startGoogleSignOut = { startGoogleSignOut() }
-                        ),
-                        "Android"
-                    )
-
                     // JS → Android 브리지: window.Native.signInWithGoogle()
                     addJavascriptInterface(
                         JsBridge(
