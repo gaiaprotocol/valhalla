@@ -1,4 +1,4 @@
-import { logoutGoogle } from "../api/google";
+import { logoutGoogle, verifyGoogleLogin } from "../api/google";
 import { isWebView, platform } from "../platform";
 
 declare const API_BASE_URI: string;
@@ -32,13 +32,16 @@ if (isWebView) {
   window.addEventListener('googleSignInComplete', async (e: any) => {
     const { idToken, nonce } = e.detail
     // 서버에서 구글 공개키로 ID 토큰 검증 + nonce 검증 + aud(=WEB_CLIENT_ID) 검증 필수
-    await fetch(`${API_BASE_URI}/oauth2/verify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ provider: 'google', idToken, nonce })
-    })
-    location.href = `/?platform=${platform}&source=webview`;
+    const { ok } = await verifyGoogleLogin({ provider: 'google', idToken, nonce })
+    if (ok) location.href = `/?platform=${platform}&source=webview`;
+    else {
+      const toast = document.createElement("ion-toast");
+      toast.message = `Google sign-in failed. ${e.detail.message}`;
+      toast.duration = 1600;
+      toast.position = "bottom";
+      document.body.appendChild(toast);
+      (toast as any).present();
+    }
   })
 
   window.addEventListener('googleSignInFailed', (e: any) => {
