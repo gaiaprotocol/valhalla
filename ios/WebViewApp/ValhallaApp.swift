@@ -7,7 +7,7 @@ let IOS_CLIENT_ID   = "797829770593-dlm0rhi8icjpgqenu196i8kfnm8r3d75.apps.google
 let WEB_CLIENT_ID   = "797829770593-kv6v54u6gdebc4j4jhedjiql34ugg2fo.apps.googleusercontent.com"
 let mainURL = URL(string: "https://valhalla.gaia.cc/?platform=ios&source=webview")!
 
-// MARK: - Nonce helper (URL-safe base64, no padding)
+// MARK: - Nonce helper
 func generateNonce(_ count: Int = 16) -> String {
     var bytes = [UInt8](repeating: 0, count: count)
     _ = SecRandomCopyBytes(kSecRandomDefault, count, &bytes)
@@ -18,18 +18,18 @@ func generateNonce(_ count: Int = 16) -> String {
         .replacingOccurrences(of: "/", with: "_")
 }
 
-// MARK: - JS bridge (platform-neutral)
+// MARK: - JS bridge script
 fileprivate func makeNativeShimScript() -> WKUserScript {
     let js = """
     (function(){
-      if (!window.Native) { window.Native = {}; }
+      if (!window.Native) window.Native = {};
       window.Native.signInWithGoogle = function(){
-        if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.signInWithGoogle) {
+        if (window.webkit?.messageHandlers?.signInWithGoogle) {
           window.webkit.messageHandlers.signInWithGoogle.postMessage(null);
         }
       };
       window.Native.signOutFromGoogle = function(){
-        if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.signOutFromGoogle) {
+        if (window.webkit?.messageHandlers?.signOutFromGoogle) {
           window.webkit.messageHandlers.signOutFromGoogle.postMessage(null);
         }
       };
@@ -55,7 +55,6 @@ struct WebView: UIViewRepresentable {
         config.preferences = preferences
         config.websiteDataStore = .default()
 
-        // Bridge
         let ucc = WKUserContentController()
         ucc.addUserScript(makeNativeShimScript())
         ucc.add(context.coordinator, name: NativeBridge.signInWithGoogle.rawValue)
@@ -63,12 +62,12 @@ struct WebView: UIViewRepresentable {
         config.userContentController = ucc
 
         let webView = WKWebView(frame: .zero, configuration: config)
+        context.coordinator.mainWebView = webView
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
         webView.isInspectable = true
         webView.load(URLRequest(url: url))
 
-        // KVO for progress
         context.coordinator.progressObs = webView.observe(\.estimatedProgress, options: [.new]) { _, change in
             DispatchQueue.main.async { self.progress = change.newValue ?? 0 }
         }
@@ -76,13 +75,13 @@ struct WebView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: WKWebView, context: Context) {}
-
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
-    // MARK: - Coordinator implements sign-in/out and popup handling
+    // MARK: - Coordinator
     final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
         var parent: WebView
         var progressObs: NSKeyValueObservation?
+        weak var mainWebView: WKWebView?
         private var lastNonce: String = generateNonce()
 
         init(_ parent: WebView) { self.parent = parent }
@@ -102,16 +101,18 @@ struct WebView: UIViewRepresentable {
             DispatchQueue.main.async { self.parent.isLoading = false }
         }
 
-        // Deep links: external schemes → open outside
-        func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        // External links
+        func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
+                     decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
             if let u = navigationAction.request.url, !(u.scheme == "http" || u.scheme == "https") {
                 if UIApplication.shared.canOpenURL(u) { UIApplication.shared.open(u); decisionHandler(.cancel); return }
             }
             decisionHandler(.allow)
         }
 
-        // Popups → provide temp webview, shown by SwiftUI .sheet
-        func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+        // Popups
+        func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration,
+                     for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
             let popup = WKWebView(frame: .zero, configuration: configuration)
             popup.navigationDelegate = self
             popup.uiDelegate = self
@@ -119,7 +120,7 @@ struct WebView: UIViewRepresentable {
             return popup
         }
 
-        // MARK: - JS → Native bridge
+        // JS → Native
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
             switch NativeBridge(rawValue: message.name) {
             case .signInWithGoogle?: signIn()
@@ -128,21 +129,18 @@ struct WebView: UIViewRepresentable {
             }
         }
 
-        // MARK: - Google Sign-In (v7+) → ID token for your backend (WEB_CLIENT_ID)
+        // Google Sign-In (v7)
         private func signIn() {
             guard let rootVC = UIApplication.shared.connectedScenes
                 .compactMap({ ($0 as? UIWindowScene)?.keyWindow })
                 .first?.rootViewController else {
-                self.dispatchToWeb(event: "googleSignInFailed", payload: ["message": "NoRootVC"])
+                dispatchToWeb(event: "googleSignInFailed", payload: ["message": "NoRootVC"])
                 return
             }
 
-            // Refresh nonce per attempt (if your backend validates it)
             lastNonce = generateNonce()
-
-            // Configure audience: iOS client + server(Web) client for ID token
-            let config = GIDConfiguration(clientID: IOS_CLIENT_ID, serverClientID: WEB_CLIENT_ID)
-            GIDSignIn.sharedInstance.configuration = config
+            GIDSignIn.sharedInstance.configuration =
+                GIDConfiguration(clientID: IOS_CLIENT_ID, serverClientID: WEB_CLIENT_ID)
 
             GIDSignIn.sharedInstance.signIn(withPresenting: rootVC) { result, error in
                 if let error = error {
@@ -154,7 +152,6 @@ struct WebView: UIViewRepresentable {
                     return
                 }
 
-                // v7: token is directly on user.idToken
                 if let idToken = user.idToken?.tokenString {
                     self.dispatchToWeb(
                         event: "googleSignInComplete",
@@ -167,9 +164,7 @@ struct WebView: UIViewRepresentable {
         }
 
         private func signOut() {
-            // 1) Google SDK sign out (local)
             GIDSignIn.sharedInstance.signOut()
-            // 2) Clear WKWebView cookies/session
             let dataTypes: Set<String> = [
                 WKWebsiteDataTypeCookies,
                 WKWebsiteDataTypeSessionStorage,
@@ -184,30 +179,28 @@ struct WebView: UIViewRepresentable {
             }
         }
 
-        // MARK: - Helper: dispatch CustomEvent to the page
+        // Dispatch event to main/popup webviews
         private func dispatchToWeb(event: String, payload: [String: Any]) {
             let jsonData = try? JSONSerialization.data(withJSONObject: payload, options: [])
             let json = String(data: jsonData ?? Data("{}".utf8), encoding: .utf8) ?? "{}"
-            let js = "window.dispatchEvent(new CustomEvent('" + event + "', {detail: " + json + "}));"
-            (self.parent.popupWebView)?.evaluateJavaScript(js, completionHandler: nil)
+            let js = "window.dispatchEvent(new CustomEvent('\(event)', {detail: \(json)}));"
+            mainWebView?.evaluateJavaScript(js, completionHandler: nil)
+            parent.popupWebView?.evaluateJavaScript(js, completionHandler: nil)
         }
     }
 }
 
-// MARK: - App entry (SwiftUI) with onOpenURL handler for GoogleSignIn
+// MARK: - App entry
 @main
 struct ValhallaApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .onOpenURL { url in
-                    _ = GIDSignIn.sharedInstance.handle(url)
-                }
+                .onOpenURL { url in _ = GIDSignIn.sharedInstance.handle(url) }
         }
     }
 }
 
-// Swift 6: add @retroactive to silence the warning about Identifiable conformance
 @available(iOS 13.0, *)
 extension WKWebView: @retroactive Identifiable {
     public var id: ObjectIdentifier { ObjectIdentifier(self) }
@@ -227,16 +220,12 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            WebView(
-                url: mainURL,
-                popupWebView: $popupWebView,
-                progress: $progress,
-                isLoading: $isLoading
-            )
+            WebView(url: mainURL,
+                    popupWebView: $popupWebView,
+                    progress: $progress,
+                    isLoading: $isLoading)
             .ignoresSafeArea()
-            .sheet(item: $popupWebView) { webView in
-                WebViewRepresentable(webView: webView)
-            }
+            .sheet(item: $popupWebView) { WebViewRepresentable(webView: $0) }
 
             if isLoading || progress < 1.0 {
                 Color.black.opacity(0.4).ignoresSafeArea()
@@ -252,5 +241,7 @@ struct ContentView: View {
 }
 
 fileprivate extension Comparable {
-    func clamped(to range: ClosedRange<Self>) -> Self { min(max(self, range.lowerBound), range.upperBound) }
+    func clamped(to range: ClosedRange<Self>) -> Self {
+        min(max(self, range.lowerBound), range.upperBound)
+    }
 }
