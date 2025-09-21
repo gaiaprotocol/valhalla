@@ -198,6 +198,8 @@ struct WebView: UIViewRepresentable {
 // MARK: - App entry
 @main
 struct ValhallaApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
     var body: some Scene {
         WindowGroup {
             ContentView()
