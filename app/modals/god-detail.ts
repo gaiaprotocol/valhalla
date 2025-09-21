@@ -187,7 +187,7 @@ function createGodDetailModal(): HTMLElement {
             ),
             el('ion-title', { style: 'text-align:center;' }, `God #${detail.id}`),
             el('ion-buttons', { slot: 'end' },
-              el('ion-button', { onclick: () => window.open(`https://etherscan.io/nft/0x134590acb661da2b318bcde6b39ef5cf8208e372/${detail.id}`, '_blank', 'noopener') },
+              el('ion-button', { onclick: () => window.open(`https://opensea.io/item/ethereum/0x134590acb661da2b318bcde6b39ef5cf8208e372/${detail.id}`, '_blank', 'noopener') },
                 el('ion-icon', { slot: 'icon-only', name: 'open' })
               )
             )

@@ -1,4 +1,4 @@
-"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[3350],{10969:(C,l,e)=>{e.r(l),e.d(l,{cardSvg:()=>a});const a=e(36946).JW`<svg
+"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[3350],{33350:(C,l,e)=>{e.r(l),e.d(l,{cardSvg:()=>a});const a=e(36946).JW`<svg
   xmlns="http://www.w3.org/2000/svg"
   width="12"
   height="13"
