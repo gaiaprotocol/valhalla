@@ -142,7 +142,12 @@ struct WebView: UIViewRepresentable {
             GIDSignIn.sharedInstance.configuration =
                 GIDConfiguration(clientID: IOS_CLIENT_ID, serverClientID: WEB_CLIENT_ID)
 
-            GIDSignIn.sharedInstance.signIn(withPresenting: rootVC) { result, error in
+            GIDSignIn.sharedInstance.signIn(
+                withPresenting: rootVC,
+                hint: nil,
+                additionalScopes: nil,
+                nonce: lastNonce
+            ) { result, error in
                 if let error = error {
                     self.dispatchToWeb(event: "googleSignInFailed", payload: ["message": "\(error)"])
                     return
