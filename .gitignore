@@ -185,4 +185,4 @@ npm-debug.log*
 # Firebase config
 google-services.json
 firebase-debug.log
-GoogleService-Info.plist
+ios/GoogleService-Info.plist
