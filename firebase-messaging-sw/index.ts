@@ -11,4 +11,9 @@ const firebaseApp = initializeApp({
   measurementId: 'G-GP4SH06LSL'
 });
 
-getMessaging(firebaseApp);
+let messaging;
+try {
+  messaging = getMessaging(firebaseApp);
+} catch (err) {
+  console.error('Failed to initialize Firebase Messaging', err);
+}

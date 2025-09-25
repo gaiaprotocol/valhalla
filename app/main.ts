@@ -11,6 +11,7 @@ import { fetchGoogleMe, GoogleMe, linkGoogleWeb3Wallet, unlinkGoogleWeb3WalletBy
 import { fetchMainGodsWithNfts } from './api/main-gods-with-nfts';
 import { validateToken } from './auth/validate';
 import { showGodModeRequirementDialog } from './components/god-mode-req-alert';
+import { hideLoading, showLoading } from './components/loading';
 import './main.css';
 import { isWebView } from './platform';
 import { checkGodMode } from './services/god-mode';
@@ -19,7 +20,6 @@ import { createLayoutView } from './views/authenticated/layout';
 import { createGoogleLinkWeb3WalletView } from './views/unauthenticated/google-link-web3-wallet';
 import { createLoginView } from './views/unauthenticated/login';
 import { View } from './views/view';
-import { hideLoading, showLoading } from './components/loading';
 
 // ------------------------------
 // Constants & Utilities
@@ -82,7 +82,12 @@ document.body.appendChild(createRainbowKit());
 // ------------------------------
 function initFirebaseAndMessaging() {
   const app = initializeApp(FIREBASE_CONFIG);
-  const messaging = getMessaging(app);
+  let messaging;
+  try {
+    messaging = getMessaging();
+  } catch (err) {
+    console.error('Failed to initialize Firebase Messaging', err);
+  }
   return { app, messaging };
 }
 
