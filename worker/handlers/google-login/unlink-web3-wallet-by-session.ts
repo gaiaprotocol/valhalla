@@ -1,4 +1,4 @@
-import { readSession } from './utils'
+import { readSession } from '../utils'
 
 export async function handleUnlinkGoogleWeb3WalletBySession(
   request: Request,

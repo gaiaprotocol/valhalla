@@ -1,4 +1,4 @@
-import { b64urlEncode, sha256 } from './utils'
+import { b64urlEncode, sha256 } from '../utils'
 
 export function googleAuthURL({ clientId, redirectUri, scope, codeChallenge, state, accessType, prompt }: {
   clientId: string

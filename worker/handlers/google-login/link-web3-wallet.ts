@@ -1,6 +1,6 @@
 import { verifyToken } from '@gaiaprotocol/worker-common';
 import { getAddress } from 'viem';
-import { readSession } from './utils';
+import { readSession } from '../utils';
 
 export async function handleLinkGoogleWeb3Wallet(
   request: Request,

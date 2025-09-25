@@ -1,5 +1,5 @@
 import { googleAuthURL, makePkce } from './google'
-import { hmacSign, makeCookie } from './utils'
+import { hmacSign, makeCookie } from '../utils'
 
 function b64UrlJson(obj: any) {
   return btoa(JSON.stringify(obj)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')

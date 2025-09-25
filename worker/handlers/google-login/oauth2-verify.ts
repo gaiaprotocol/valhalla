@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { decodeJwtPayload } from './google'
-import { makeSessionCookie, headersWithCookies } from './utils'
+import { makeSessionCookie, headersWithCookies } from '../utils'
 
 /**
  * Google OpenID Connect JWKS endpoint

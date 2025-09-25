@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { decodeJwtPayload, exchangeCodeForTokens } from './google'
-import { hmacVerify, makeCookie, makeSessionCookie, parseCookies, headersWithCookies } from './utils'
+import { hmacVerify, makeCookie, makeSessionCookie, parseCookies, headersWithCookies } from '../utils'
 
 export async function handleOAuth2Callback(request: Request, env: Env) {
   const url = new URL(request.url)

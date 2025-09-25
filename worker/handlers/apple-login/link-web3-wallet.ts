@@ -1,0 +1,57 @@
+import { verifyToken } from '@gaiaprotocol/worker-common'
+import { getAddress } from 'viem'
+import { readSession } from '../utils'
+
+export async function handleLinkAppleWeb3Wallet(request: Request, env: Env): Promise<Response> {
+  try {
+    const auth = request.headers.get('authorization')
+    if (!auth?.startsWith('Bearer ')) return new Response('Unauthorized', { status: 401 })
+
+    const token = auth.slice(7)
+    const payload = await verifyToken(token, env)
+    if (!payload?.sub) return new Response('Unauthorized', { status: 401 })
+
+    const normalizedAddress = getAddress(payload.sub)
+
+    const me = await readSession(env, request)
+    if (!me?.sub) return Response.json({ error: 'not_logged_in' }, { status: 401 })
+
+    // 동일 지갑 선제 제거
+    await env.DB.prepare(
+      `DELETE FROM apple_web3_accounts WHERE LOWER(wallet_address) = LOWER(?)`
+    ).bind(normalizedAddress).run()
+
+    const now = Math.floor(Date.now() / 1000)
+    await env.DB.prepare(`
+      INSERT INTO apple_web3_accounts
+        (apple_sub, wallet_address, token, linked_at, email, name, picture)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(apple_sub) DO UPDATE SET
+        wallet_address = excluded.wallet_address,
+        token          = excluded.token,
+        linked_at      = excluded.linked_at,
+        email          = excluded.email,
+        name           = excluded.name,
+        picture        = excluded.picture
+    `).bind(
+      me.sub,
+      normalizedAddress,
+      token,
+      now,
+      me.email ?? null,
+      me.name ?? null,
+      me.picture ?? null,
+    ).run()
+
+    return Response.json({
+      ok: true,
+      wallet_address: normalizedAddress,
+      token,
+      profile: { sub: me.sub, email: me.email ?? null, name: me.name ?? null, picture: me.picture ?? null },
+      linked_at: now,
+    })
+  } catch (err) {
+    console.error(err)
+    return Response.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 })
+  }
+}
