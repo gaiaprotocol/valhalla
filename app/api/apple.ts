@@ -1,5 +1,3 @@
-// src/api/apple.ts
-
 declare const API_BASE_URI: string;
 
 const APPLE_ME_PATH = `${API_BASE_URI}/apple-me`;
