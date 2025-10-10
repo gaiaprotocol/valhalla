@@ -1,15 +1,6 @@
 import { handleGodModeCheck } from '@gaiaprotocol/god-mode-worker';
 import { handleGoogleLogin, handleGoogleLogout, handleGoogleMe, handleGoogleMeByWallet, handleLinkGoogleWeb3Wallet, handleLogin, handleNonce, handleOAuth2Callback, handleOAuth2Verify, handleUnlinkGoogleWeb3WalletBySession, handleUnlinkGoogleWeb3WalletByToken, handleUploadImage, handleValidateToken } from '@gaiaprotocol/worker-common';
 import { ChatRoom } from './do/chat-room';
-import { handleLinkAppleWeb3Wallet } from './handlers/apple-login/link-web3-wallet';
-import { handleAppleLogin } from './handlers/apple-login/login';
-import { handleAppleLogout } from './handlers/apple-login/logout';
-import { handleAppleMe } from './handlers/apple-login/me';
-import { handleAppleMeByWallet } from './handlers/apple-login/me-by-wallet';
-import { handleAppleOAuth2Callback } from './handlers/apple-login/oauth2-callback';
-import { handleAppleOAuth2Verify } from './handlers/apple-login/oauth2-verify';
-import { handleUnlinkAppleWeb3WalletBySession } from './handlers/apple-login/unlink-web3-wallet-by-session';
-import { handleUnlinkAppleWeb3WalletByToken } from './handlers/apple-login/unlink-web3-wallet-by-token';
 import { handleGetMainGodsWithNfts } from './handlers/get-main-gods-with-nfts';
 import { handleGetMyMainGod } from './handlers/get-my-main-god';
 import { handleSetMainGod } from './handlers/set-main-god';
@@ -95,7 +86,7 @@ export default {
     if (url.pathname === '/api/google-me-by-wallet') return handleGoogleMeByWallet(request, env);
 
     // Apple Login
-    if (url.pathname === '/api/apple-login') return handleAppleLogin(request, env);
+    /*if (url.pathname === '/api/apple-login') return handleAppleLogin(request, env);
     if (url.pathname === '/api/apple-oauth2/callback') return handleAppleOAuth2Callback(request, env);
     if (url.pathname === '/api/apple-oauth2/verify') return handleAppleOAuth2Verify(request, env);
     if (url.pathname === '/api/apple-me') return handleAppleMe(request, env);
@@ -103,7 +94,7 @@ export default {
     if (url.pathname === '/api/apple-logout') return handleAppleLogout(request, env);
     if (url.pathname === '/api/apple-link-web3-wallet' && request.method === 'POST') return handleLinkAppleWeb3Wallet(request, env);
     if (url.pathname === '/api/apple-unlink-web3-wallet-by-token' && request.method === 'POST') return handleUnlinkAppleWeb3WalletByToken(request, env);
-    if (url.pathname === '/api/apple-unlink-web3-wallet-by-session' && request.method === 'POST') return handleUnlinkAppleWeb3WalletBySession(request, env);
+    if (url.pathname === '/api/apple-unlink-web3-wallet-by-session' && request.method === 'POST') return handleUnlinkAppleWeb3WalletBySession(request, env);*/
 
     const chatMatch = url.pathname.match(/^\/api\/chat\/([^/]+)\/(stream|send)$/);
     if (chatMatch) {
