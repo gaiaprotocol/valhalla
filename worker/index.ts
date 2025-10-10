@@ -75,8 +75,8 @@ export default {
     if (url.pathname === '/api/get-main-gods-with-nfts') return handleGetMainGodsWithNfts(request, env);
 
     // Google Login
-    if (url.pathname === '/api/google-login') return handleGoogleLogin(request, env);
-    if (url.pathname === '/api/oauth2/callback') return handleOAuth2Callback(request, env);
+    if (url.pathname === '/api/google-login') return handleGoogleLogin(request, env, env.GOOGLE_REDIRECT_URI);
+    if (url.pathname === '/api/oauth2/callback') return handleOAuth2Callback(request, env, env.GOOGLE_REDIRECT_URI);
     if (url.pathname === '/api/oauth2/verify') return handleOAuth2Verify(request, env);
     if (url.pathname === '/api/google-me') return handleGoogleMe(request, env);
     if (url.pathname === '/api/google-logout') return handleGoogleLogout(request);
