@@ -3,7 +3,6 @@ import { SlButton } from '@shoelace-style/shoelace';
 import { disconnect, getAccount, watchAccount } from '@wagmi/core';
 import { el } from '@webtaku/el';
 import Navigo from 'navigo';
-import { appleLogin } from '../../auth/apple-login';
 import { googleLogin } from '../../auth/google-login';
 import { requestLogin } from '../../auth/login';
 import { signMessage } from '../../auth/siwe';
@@ -94,7 +93,8 @@ export function createLoginView(router: Navigo): View {
     el('span.login-or-line'),
     el(
       'span.login-or-text',
-      'Use Google or Apple if your wallet is already linked, or to link it after login'
+      //'Use Google or Apple if your wallet is already linked, or to link it after login'
+      'Use Google if your wallet is already linked, or to link it after login'
     ),
     el('span.login-or-line'),
   );
@@ -112,7 +112,7 @@ export function createLoginView(router: Navigo): View {
     )
   ) as SlButton;
 
-  const appleButton = el(
+  /*const appleButton = el(
     'sl-button.login-button.apple',
     {
       variant: 'default',
@@ -123,7 +123,7 @@ export function createLoginView(router: Navigo): View {
       el('.login-apple-icon'),
       el('span.login-apple-text', 'Continue with Apple')
     )
-  ) as SlButton;
+  ) as SlButton;*/
 
   const isDev = process.env.NODE_ENV === 'development'
   const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent)
@@ -137,7 +137,7 @@ export function createLoginView(router: Navigo): View {
     signButton,
     orDivider,
     googleButton,
-    isDev || isIOS ? appleButton : null
+    //isDev || isIOS ? appleButton : null
   );
 
   const unwatch = watchAccount(wagmiConfig, {
