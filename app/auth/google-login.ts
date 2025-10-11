@@ -1,9 +1,10 @@
-import { logoutGoogle, verifyGoogleLogin } from "../api/google";
+import { verifyGoogleLogin } from "../api/google";
 import { isWebView, platform } from "../platform";
 
 declare const API_BASE_URI: string;
 
 const GOOGLE_LOGIN_PATH = `${API_BASE_URI}/google-login`;
+const GOOGLE_LOGOUT_PATH = `${API_BASE_URI}/google-logout`;
 
 export function googleLogin() {
   if (isWebView && (window as any).Native?.signInWithGoogle) {
@@ -24,7 +25,7 @@ export async function googleLogout() {
     (window as any).Android.signOutFromGoogle()
     return new Promise<void>(resolve => signOutResolve = resolve)
   } else {
-    await logoutGoogle()
+    location.href = GOOGLE_LOGOUT_PATH
   }
 }
 

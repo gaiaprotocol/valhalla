@@ -2,7 +2,6 @@ declare const API_BASE_URI: string;
 
 const GOOGLE_ME_PATH = `${API_BASE_URI}/google-me`;
 const GOOGLE_ME_BY_WALLET_PATH = `${API_BASE_URI}/google-me-by-wallet`;
-const GOOGLE_LOGOUT_PATH = `${API_BASE_URI}/google-logout`;
 const LINK_WALLET_PATH = `${API_BASE_URI}/google-link-web3-wallet`;
 const UNLINK_WALLET_BY_TOKEN_PATH = `${API_BASE_URI}/google-unlink-web3-wallet-by-token`;
 const UNLINK_WALLET_BY_SESSION_PATH = `${API_BASE_URI}/google-unlink-web3-wallet-by-session`;
@@ -121,11 +120,6 @@ export async function fetchGoogleMe(): Promise<GoogleMe> {
 /** 지갑 JWT 기반: 지갑 주소로 연동된 Google 계정 조회 */
 export async function fetchGoogleMeByWallet(authToken: string): Promise<GoogleMeByWallet> {
   return await getJsonAuth<GoogleMeByWallet>(GOOGLE_ME_BY_WALLET_PATH, authToken);
-}
-
-/** 쿠키 세션 기반: 서버 세션 로그아웃 */
-export async function logoutGoogle(): Promise<void> {
-  await postJson(GOOGLE_LOGOUT_PATH);
 }
 
 /** 지갑 JWT 기반: Google 계정과 Web3 지갑 주소 링크 */
