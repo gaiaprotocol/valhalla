@@ -1,4 +1,4 @@
-"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[3967],{43967:(l,C,e)=>{e.r(C),e.d(C,{swapHorizontalBoldSvg:()=>a});const a=e(12618).JW`<svg width="10" height="10" viewBox="0 0 10 10">
+"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[3967],{43967:(l,C,e)=>{e.r(C),e.d(C,{swapHorizontalBoldSvg:()=>a});const a=e(86161).JW`<svg width="10" height="10" viewBox="0 0 10 10">
   <path
     fill="currentColor"
     fill-rule="evenodd"

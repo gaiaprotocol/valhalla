@@ -1,4 +1,4 @@
-"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[9390],{79390:(l,e,h)=>{h.r(e),h.d(e,{checkmarkSvg:()=>a});const a=h(12618).JW`<svg
+"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[9390],{79390:(l,e,h)=>{h.r(e),h.d(e,{checkmarkSvg:()=>a});const a=h(86161).JW`<svg
   width="28"
   height="28"
   viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">

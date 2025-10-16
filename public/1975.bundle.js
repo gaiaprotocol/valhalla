@@ -1,4 +1,4 @@
-"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[1975],{51975:(l,C,e)=>{e.r(C),e.d(C,{swapHorizontalMediumSvg:()=>a});const a=e(12618).JW`<svg
+"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[1975],{51975:(l,C,e)=>{e.r(C),e.d(C,{swapHorizontalMediumSvg:()=>a});const a=e(86161).JW`<svg
   width="14"
   height="14"
   viewBox="0 0 14 14"

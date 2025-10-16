@@ -1,5 +1,7 @@
 import { el } from '@webtaku/el';
+import { isMobile } from 'kiwiengine';
 import Navigo from 'navigo';
+import { isStandalone, launchInstallFlow } from '../../components/install-ui';
 import { createDashboardModal } from '../../modals/dashboard';
 import { createGodDetailModal } from '../../modals/god-detail';
 import { createMyGodsModal } from '../../modals/my-gods';
@@ -87,6 +89,33 @@ function createHeader(): HTMLElement {
           el('ion-icon', { slot: 'start', name: 'sparkles' }),
           el('ion-label', 'My Gods')
         ),
+
+        // Contact Us (opens default mail app)
+        el('ion-item', {
+          button: true,
+          detail: true,
+          onclick: () => {
+            const subject = encodeURIComponent('[Valhalla] Contact');
+            const body = encodeURIComponent('Hello,\n\nPlease write your inquiry below.\n\nThank you.');
+            window.location.href = `mailto:gaiaprotocolcontact@gmail.com?subject=${subject}&body=${body}`;
+            (popover as any).dismiss?.();
+          }
+        },
+          el('ion-icon', { slot: 'start', name: 'mail' }),
+          el('ion-label', 'Contact Us')
+        ),
+
+        isMobile && !isStandalone() ? el('ion-item', {
+          button: true,
+          detail: true,
+          onclick: () => {
+            launchInstallFlow();
+            (popover as any).dismiss?.()
+          }
+        },
+          el('ion-icon', { slot: 'start', name: 'download' }), // 'install' icon may not exist; 'download' is common
+          el('ion-label', 'Install App')
+        ) : null
       )
     )
   );

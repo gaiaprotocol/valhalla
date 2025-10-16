@@ -1,4 +1,4 @@
-"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[2565],{24946:(a,t,l)=>{l.r(t),l.d(t,{chromeStoreSvg:()=>e});const e=l(12618).JW`<svg width="36" height="36" fill="none">
+"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[2565],{2565:(a,t,l)=>{l.r(t),l.d(t,{chromeStoreSvg:()=>e});const e=l(86161).JW`<svg width="36" height="36" fill="none">
   <path
     fill="#fff"
     fill-opacity=".05"

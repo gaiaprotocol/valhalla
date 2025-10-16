@@ -1,4 +1,4 @@
-"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[7469],{77469:(a,l,h)=>{h.r(l),h.d(l,{playStoreSvg:()=>t});const t=h(12618).JW` <svg
+"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[7469],{77469:(a,l,h)=>{h.r(l),h.d(l,{playStoreSvg:()=>t});const t=h(86161).JW` <svg
   width="36"
   height="36"
   fill="none"

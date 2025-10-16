@@ -1,4 +1,4 @@
-"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[4554],{24554:(C,l,e)=>{e.r(l),e.d(l,{copySvg:()=>h});const h=e(12618).JW`<svg
+"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[4554],{24554:(C,l,e)=>{e.r(l),e.d(l,{copySvg:()=>h});const h=e(86161).JW`<svg
   xmlns="http://www.w3.org/2000/svg"
   width="16"
   height="16"

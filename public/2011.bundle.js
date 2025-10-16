@@ -1,4 +1,4 @@
-"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[2011],{92011:(l,a,e)=>{e.r(a),e.d(a,{compassSvg:()=>s});const s=e(12618).JW`<svg fill="none" viewBox="0 0 16 16">
+"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[2011],{92011:(l,a,e)=>{e.r(a),e.d(a,{compassSvg:()=>s});const s=e(86161).JW`<svg fill="none" viewBox="0 0 16 16">
   <path
     fill="currentColor"
     fill-rule="evenodd"

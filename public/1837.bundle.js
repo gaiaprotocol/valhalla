@@ -1,4 +1,4 @@
-"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[1837],{41837:(l,C,e)=>{e.r(C),e.d(C,{clockSvg:()=>a});const a=e(12618).JW`<svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[1837],{41837:(l,C,e)=>{e.r(C),e.d(C,{clockSvg:()=>a});const a=e(86161).JW`<svg width="14" height="14" viewBox="0 0 14 14" fill="none">
   <path 
     fill-rule="evenodd" 
     clip-rule="evenodd" 

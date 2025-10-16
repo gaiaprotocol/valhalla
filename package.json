@@ -13,19 +13,21 @@
   },
   "dependencies": {
     "@gaiaprotocol/chat-client": "^0.0.4",
-    "@gaiaprotocol/client-common": "^0.0.9",
+    "@gaiaprotocol/client-common": "^0.0.10",
     "@gaiaprotocol/god-mode-client": "^0.0.2",
     "@gaiaprotocol/god-mode-shared": "^0.0.4",
-    "@ionic/core": "^8.7.6",
+    "@gaiaprotocol/nft-attribute-editor": "^0.0.1",
+    "@ionic/core": "^8.7.7",
     "@webtaku/el": "^0.1.0",
     "firebase": "^12.4.0",
     "kiwiengine": "^0.5.12",
     "marked": "^16.4.0",
     "navigo": "^8.11.1",
-    "wagmi": "^2.18.0"
+    "viem": "^2.38.2",
+    "wagmi": "^2.18.1"
   },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.9.12",
+    "@cloudflare/vitest-pool-workers": "^0.9.13",
     "@gaiaprotocol/chat-worker": "^0.0.3",
     "@gaiaprotocol/god-mode-worker": "^0.0.9",
     "@gaiaprotocol/worker-common": "^0.1.15",
@@ -46,7 +48,7 @@
     "webpack": "^5.102.1",
     "webpack-cli": "^6.0.1",
     "webpack-dev-server": "^5.2.2",
-    "wrangler": "^4.42.2",
+    "wrangler": "^4.43.0",
     "yaml-loader": "^0.8.1",
     "zod": "^4.1.12"
   },

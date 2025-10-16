@@ -1,4 +1,4 @@
-"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[6426],{6426:(l,a,e)=>{e.r(a),e.d(a,{arrowLeftSvg:()=>r});const r=e(12618).JW`<svg fill="none" viewBox="0 0 14 15">
+"use strict";(self.webpackChunkvalhalla=self.webpackChunkvalhalla||[]).push([[6426],{6426:(l,a,e)=>{e.r(a),e.d(a,{arrowLeftSvg:()=>r});const r=e(86161).JW`<svg fill="none" viewBox="0 0 14 15">
   <path
     fill="currentColor"
     fill-rule="evenodd"
