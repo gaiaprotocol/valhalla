@@ -85,21 +85,18 @@ function ensureAndroidGuide(): HTMLDivElement {
         <li>Confirm to add/install</li>
       </ol>
       <div class="actions">
-        <button class="cancel" type="button">Close</button>
-        <button class="install-now" type="button">Install now</button>
+        <button class="ok" type="button">OK</button>
       </div>
     </div>
   `;
   document.body.appendChild(guide);
 
-  const close = guide.querySelector('.cancel') as HTMLButtonElement;
-  const installNow = guide.querySelector('.install-now') as HTMLButtonElement;
+  const ok = guide.querySelector('.ok') as HTMLButtonElement;
 
   const hide = () => guide!.setAttribute('data-open', 'false');
-  close.addEventListener('click', hide);
 
   // “Install now” tries native prompt if available; otherwise just closes.
-  installNow.addEventListener('click', async () => {
+  ok.addEventListener('click', async () => {
     const dp = window.deferredPWAInstallPrompt;
     if (dp) {
       hide();
