@@ -23,7 +23,8 @@
     "kiwiengine": "^0.5.12",
     "marked": "^16.4.0",
     "navigo": "^8.11.1",
-    "viem": "^2.38.2",
+    "react": "^19.2.0",
+    "viem": "^2.38.3",
     "wagmi": "^2.18.1"
   },
   "devDependencies": {
