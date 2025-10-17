@@ -14,9 +14,13 @@ declare global {
 }
 
 const IOS_GUIDE_ID = 'iosInstallGuide';
+const ANDROID_GUIDE_ID = 'androidInstallGuide';
 
 function isIOS(): boolean {
   return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+function isAndroid(): boolean {
+  return /Android/i.test(navigator.userAgent);
 }
 
 export function isStandalone(): boolean {
@@ -25,6 +29,8 @@ export function isStandalone(): boolean {
     window.matchMedia?.('(display-mode: standalone)').matches === true
   );
 }
+
+/* ---------------- iOS Guide ---------------- */
 
 function ensureIOSGuide(): HTMLDivElement {
   let guide = document.getElementById(IOS_GUIDE_ID) as HTMLDivElement | null;
@@ -37,7 +43,7 @@ function ensureIOSGuide(): HTMLDivElement {
       <h3 id="ios-guide-title">Add to Home Screen</h3>
       <p>To install this app on iOS Safari, use the “Share” menu:</p>
       <ol>
-        <li>Tap the <strong>Share</strong> icon (<ion-icon name="share-outline" style="color: #007AFF;"></ion-icon>)</li>
+        <li>Tap the <strong>Share</strong> icon (<ion-icon name="share-outline" style="color:#007AFF;"></ion-icon>)</li>
         <li>Select <strong>Add to Home Screen</strong></li>
         <li>Confirm the name and tap <strong>Add</strong></li>
       </ol>
@@ -51,9 +57,7 @@ function ensureIOSGuide(): HTMLDivElement {
   const ok = guide.querySelector('.ok') as HTMLButtonElement;
   const hide = () => guide!.setAttribute('data-open', 'false');
   ok.addEventListener('click', hide);
-  guide.addEventListener('click', (e) => {
-    if (e.target === guide) hide();
-  });
+  guide.addEventListener('click', (e) => { if (e.target === guide) hide(); });
 
   return guide;
 }
@@ -63,12 +67,67 @@ function showIOSGuide() {
   guide.setAttribute('data-open', 'true');
 }
 
+/* ---------------- Android Guide ---------------- */
+
+function ensureAndroidGuide(): HTMLDivElement {
+  let guide = document.getElementById(ANDROID_GUIDE_ID) as HTMLDivElement | null;
+  if (guide) return guide;
+
+  guide = document.createElement('div');
+  guide.id = ANDROID_GUIDE_ID;
+  guide.innerHTML = `
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="android-guide-title">
+      <h3 id="android-guide-title">Install this app</h3>
+      <p>You can install this app to your Home screen.</p>
+      <ol>
+        <li>Open the browser menu (<ion-icon name="ellipsis-vertical-outline"></ion-icon>)</li>
+        <li>Tap <strong>Add to Home screen</strong> or <strong>Install app</strong></li>
+        <li>Confirm to add/install</li>
+      </ol>
+      <div class="actions">
+        <button class="cancel" type="button">Close</button>
+        <button class="install-now" type="button">Install now</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(guide);
+
+  const close = guide.querySelector('.cancel') as HTMLButtonElement;
+  const installNow = guide.querySelector('.install-now') as HTMLButtonElement;
+
+  const hide = () => guide!.setAttribute('data-open', 'false');
+  close.addEventListener('click', hide);
+
+  // “Install now” tries native prompt if available; otherwise just closes.
+  installNow.addEventListener('click', async () => {
+    const dp = window.deferredPWAInstallPrompt;
+    if (dp) {
+      hide();
+      await dp.prompt();
+      try { await dp.userChoice; } finally { window.deferredPWAInstallPrompt = null; }
+    } else {
+      hide();
+    }
+  });
+
+  // click on backdrop to close
+  guide.addEventListener('click', (e) => { if (e.target === guide) hide(); });
+
+  return guide;
+}
+
+function showAndroidGuide() {
+  const guide = ensureAndroidGuide();
+  guide.setAttribute('data-open', 'true');
+}
+
+/* ---------------- Capture & Launch ---------------- */
+
 /**
  * Call this once during app bootstrap.
  * It captures the beforeinstallprompt event and stores it globally.
  */
 export function setupInstallCapture() {
-  // Avoid duplicate listeners in HMR/dev
   const handler = (e: Event) => {
     e.preventDefault();
     window.deferredPWAInstallPrompt = e as BeforeInstallPromptEvent;
@@ -81,17 +140,22 @@ export function setupInstallCapture() {
     window.deferredPWAInstallPrompt = null;
   });
 
-  // Ensure iOS guide exists (created lazily if needed)
+  // Prepare guides lazily; ensure elements exist so first open is snappy
   ensureIOSGuide();
+  ensureAndroidGuide();
 }
 
 /**
- * Triggered by your menu item.
- * - On iOS: opens the guide
- * - On Chrome/Edge: shows native install prompt if available
- * Returns the outcome for telemetry if you want it.
+ * Trigger from your menu.
+ * iOS: show iOS guide.
+ * Android:
+ *   - if prompt available: show Android guide with "Install now" (pre-prompt)
+ *   - else: show Android fallback guide with steps
+ * Desktop/others:
+ *   - if prompt available: show native prompt
+ *   - else: return 'unavailable'
  */
-export async function launchInstallFlow(): Promise<'ios-shown' | 'accepted' | 'dismissed' | 'unavailable' | 'installed'> {
+export async function launchInstallFlow(): Promise<'ios-shown' | 'android-shown' | 'accepted' | 'dismissed' | 'unavailable' | 'installed'> {
   if (isStandalone()) return 'installed';
 
   if (isIOS()) {
@@ -99,12 +163,17 @@ export async function launchInstallFlow(): Promise<'ios-shown' | 'accepted' | 'd
     return 'ios-shown';
   }
 
-  const dp = window.deferredPWAInstallPrompt;
-  if (!dp) {
-    // Optional: replace with your toast/alert component
-    // e.g., showToast('Install not available yet. Try visiting this page directly in your browser.');
-    return 'unavailable';
+  if (isAndroid()) {
+    const dp = window.deferredPWAInstallPrompt;
+    // Always show the Android guide; it contains an "Install now" button that uses dp if present.
+    showAndroidGuide();
+    if (dp) return 'android-shown';
+    return 'android-shown'; // fallback steps shown
   }
+
+  // Desktop Chrome/Edge, etc.
+  const dp = window.deferredPWAInstallPrompt;
+  if (!dp) return 'unavailable';
 
   await dp.prompt();
   const { outcome } = await dp.userChoice;
