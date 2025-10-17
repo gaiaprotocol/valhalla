@@ -8,6 +8,7 @@ import { createMyGodsModal } from '../../modals/my-gods';
 import { createNameSettingsModal } from '../../modals/name-settings';
 import { createNoticeModal } from '../../modals/notice';
 import { createProfileModal } from '../../modals/profile';
+import { isWebView } from '../../platform';
 import { loadLocalizedNotices } from '../../services/notice';
 import { View } from '../view';
 
@@ -105,11 +106,11 @@ function createHeader(): HTMLElement {
           el('ion-label', 'Contact Us')
         ),
 
-        isMobile && !isStandalone() ? el('ion-item', {
+        isMobile && !isWebView && !isStandalone() ? el('ion-item', {
           button: true,
           detail: true,
           onclick: () => {
-            launchInstallFlow();
+            launchInstallFlow().then((result) => console.log(result));
             (popover as any).dismiss?.()
           }
         },

@@ -37,7 +37,7 @@ function ensureIOSGuide(): HTMLDivElement {
       <h3 id="ios-guide-title">Add to Home Screen</h3>
       <p>To install this app on iOS Safari, use the “Share” menu:</p>
       <ol>
-        <li>Tap the <strong>Share</strong> icon (⬆️)</li>
+        <li>Tap the <strong>Share</strong> icon (<ion-icon name="share-outline" style="color: #007AFF;"></ion-icon>)</li>
         <li>Select <strong>Add to Home Screen</strong></li>
         <li>Confirm the name and tap <strong>Add</strong></li>
       </ol>
