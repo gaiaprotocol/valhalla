@@ -12,6 +12,7 @@
     "cf-typegen": "wrangler types"
   },
   "dependencies": {
+    "@adraffy/ens-normalize": "^1.11.1",
     "@gaiaprotocol/chat-client": "^0.0.5",
     "@gaiaprotocol/client-common": "^0.0.11",
     "@gaiaprotocol/god-mode-client": "^0.0.3",
