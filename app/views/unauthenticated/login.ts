@@ -2,12 +2,15 @@ import { openWalletConnectModal, tokenManager, wagmiConfig } from '@gaiaprotocol
 import { SlButton } from '@shoelace-style/shoelace';
 import { disconnect, getAccount, watchAccount } from '@wagmi/core';
 import { el } from '@webtaku/el';
+import { isMobile } from 'kiwiengine';
 import Navigo from 'navigo';
 import { googleLogin } from '../../auth/google-login';
 import { requestLogin } from '../../auth/login';
 import { signMessage } from '../../auth/siwe';
 import { showErrorAlert } from '../../components/alert';
 import { showGodModeRequirementDialog } from '../../components/god-mode-req-alert';
+import { isStandalone, launchInstallFlow } from '../../components/install-ui';
+import { isWebView } from '../../platform';
 import { checkGodMode } from '../../services/god-mode';
 import { View } from '../view';
 import './login.css';
@@ -39,6 +42,23 @@ async function handleLoginClick(router: Navigo) {
     console.error(err);
     showErrorAlert('Error', err instanceof Error ? err.message : String(err));
   }
+}
+
+async function handleInstallClick(btn: SlButton) {
+  btn.loading = true;
+  try {
+    const result = await launchInstallFlow();
+    console.log('[install]', result);
+  } finally {
+    btn.loading = false;
+  }
+}
+
+function handleContactClick() {
+  const subject = encodeURIComponent('[Valhalla] Contact');
+  const body = encodeURIComponent('Hello,\n\nPlease write your inquiry below.\n\nThank you.');
+  window.location.href =
+    `mailto:gaiaprotocolcontact@gmail.com?subject=${subject}&body=${body}`;
 }
 
 export function createLoginView(router: Navigo): View {
@@ -128,6 +148,33 @@ export function createLoginView(router: Navigo): View {
   const isDev = process.env.NODE_ENV === 'development'
   const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent)
 
+  const shouldShowInstall = isMobile && !isWebView && !isStandalone();
+
+  const installLink = shouldShowInstall
+    ? el(
+      'sl-button.login-link',
+      {
+        variant: 'text',
+        onclick: async (e: MouseEvent) => {
+          await handleInstallClick(e.currentTarget as SlButton);
+        }
+      },
+      'Install App'
+    ) as SlButton
+    : null;
+
+  const contactLink = el(
+    'sl-button.login-link',
+    {
+      variant: 'text',
+      onclick: handleContactClick
+    },
+    'Contact Us'
+  ) as SlButton;
+
+  // 좌우/세로 배치 컨테이너
+  const bottomLinks = el('.login-bottom-links', installLink, contactLink);
+
   const wrapper = el(
     '.login-wrapper',
     title,
@@ -138,6 +185,7 @@ export function createLoginView(router: Navigo): View {
     orDivider,
     googleButton,
     //isDev || isIOS ? appleButton : null
+    bottomLinks,
   );
 
   const unwatch = watchAccount(wagmiConfig, {

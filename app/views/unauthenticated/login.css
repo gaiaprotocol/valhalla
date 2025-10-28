@@ -208,3 +208,48 @@
   background-repeat: no-repeat;
   background-position: center;
 }
+
+/* 링크형 버튼 모양 */
+.login-link::part(base) {
+  background: none;
+  border: none;
+  color: #444;
+  font-size: 14px;
+  text-decoration: underline;
+  padding: 4px 0;
+  height: auto;
+  box-shadow: none;
+}
+
+.login-link::part(base):hover {
+  color: #000;
+  text-decoration: underline;
+}
+
+.login-link::part(base):active {
+  color: #666;
+}
+
+.login-link::part(base):focus-visible {
+  outline: none;
+  text-decoration: underline;
+  box-shadow: none;
+}
+
+/* 링크 컨테이너: 기본(데스크톱)은 세로, 모바일은 좌우 */
+.login-bottom-links {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+/* 모바일(폭 480px 이하)에서 좌우로 */
+@media (max-width: 480px) {
+  .login-bottom-links {
+    flex-direction: row;
+    justify-content: center;
+    gap: 16px;
+  }
+}
