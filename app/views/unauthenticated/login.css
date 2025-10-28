@@ -209,11 +209,11 @@
   background-position: center;
 }
 
-/* 링크형 버튼 모양 */
+/* 다크 모드 전용 텍스트 링크 */
 .login-link::part(base) {
   background: none;
   border: none;
-  color: #444;
+  color: #d1d5db;                /* 기본: 밝은 회색 */
   font-size: 14px;
   text-decoration: underline;
   padding: 4px 0;
@@ -222,12 +222,12 @@
 }
 
 .login-link::part(base):hover {
-  color: #000;
+  color: #ffffff;                /* hover 시 흰색 */
   text-decoration: underline;
 }
 
 .login-link::part(base):active {
-  color: #666;
+  color: #9ca3af;                /* 클릭 시 조금 어둡게 */
 }
 
 .login-link::part(base):focus-visible {
@@ -236,7 +236,7 @@
   box-shadow: none;
 }
 
-/* 링크 컨테이너: 기본(데스크톱)은 세로, 모바일은 좌우 */
+/* 링크 컨테이너 레이아웃 */
 .login-bottom-links {
   display: flex;
   flex-direction: column;
@@ -245,7 +245,7 @@
   margin-top: 6px;
 }
 
-/* 모바일(폭 480px 이하)에서 좌우로 */
+/* 모바일에서 좌우 정렬 */
 @media (max-width: 480px) {
   .login-bottom-links {
     flex-direction: row;
