@@ -32,12 +32,33 @@ function toImageUrl(img?: string | null) {
   }
 }
 
+function typeMeta(t?: string) {
+  const v = (t || '').toLowerCase();
+  if (v === 'update') return { label: 'Update', color: 'success' as const };
+  if (v === 'news') return { label: 'News', color: 'primary' as const };
+  // 알 수 없는 값: 보기 좋게 라벨만 정리
+  const pretty = v ? v.charAt(0).toUpperCase() + v.slice(1) : 'Notice';
+  return { label: pretty, color: 'medium' as const };
+}
+
+function formatDate(date: string | number) {
+  try {
+    return new Intl.DateTimeFormat('en', {
+      year: 'numeric', month: 'short', day: 'numeric',
+    }).format(new Date(date));
+  } catch {
+    return String(date);
+  }
+}
+
 function createHomeView(): View & { scrollToBottom: () => void } {
   const page = el('div', { className: 'page flex flex-col h-screen p-4 gap-2' }, { style: { height: '100%' } });
 
   loadLocalizedNotices().then(notices => {
     const latestNotice = notices[0];
     if (!latestNotice) return;
+
+    const tm = typeMeta((latestNotice as any).type);
 
     const noticeBar = el(
       'div',
@@ -52,7 +73,16 @@ function createHomeView(): View & { scrollToBottom: () => void } {
       },
       el(
         'span',
-        { className: 'title truncate', style: { maxWidth: '80%', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' } },
+        {
+          className: 'title truncate',
+          style: {
+            maxWidth: '80%', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
+            display: 'inline-flex', alignItems: 'center', gap: '6px'
+          }
+        },
+        // ⬇️ 타입 배지
+        el('ion-badge', { color: tm.color }, tm.label),
+        // 제목
         `📢 ${latestNotice.title}`
       ),
       el(

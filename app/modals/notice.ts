@@ -10,6 +10,24 @@ renderer.link = ({ href = "#", title, text }) => {
 };
 marked.setOptions({ renderer });
 
+function typeMeta(t?: string) {
+  const v = (t || '').toLowerCase();
+  if (v === 'update') return { label: 'Update', color: 'success' as const };
+  if (v === 'news') return { label: 'News', color: 'primary' as const };
+  const pretty = v ? v.charAt(0).toUpperCase() + v.slice(1) : 'Notice';
+  return { label: pretty, color: 'medium' as const };
+}
+
+function formatDate(date: string | number) {
+  try {
+    return new Intl.DateTimeFormat('en', {
+      year: 'numeric', month: 'short', day: 'numeric',
+    }).format(new Date(date));
+  } catch {
+    return String(date);
+  }
+}
+
 /* ---------- 타입: 배열 또는 로더 ---------- */
 type NoticeModalInput =
   | Notice[]
@@ -86,8 +104,9 @@ function createNoticeModal(input?: NoticeModalInput): HTMLIonModalElement {
       return;
     }
 
-    const items = notices.map((notice) =>
-      el(
+    const items = notices.map((notice) => {
+      const tm = typeMeta((notice as any).type);
+      return el(
         "ion-item",
         {
           button: true,
@@ -97,13 +116,15 @@ function createNoticeModal(input?: NoticeModalInput): HTMLIonModalElement {
             detailModal.present();
           },
         },
+        // ⬇️ 오른쪽 끝에 타입 배지
+        el("ion-badge", { slot: "end", color: tm.color }, tm.label),
         el(
           "ion-label",
           el("h2", notice.title),
-          el("p", `${notice.createdAt}`)
+          el("p", `${formatDate(notice.createdAt as any)}`)
         )
-      )
-    );
+      );
+    });
 
     // 중복 방지: 기존 자식 전부 교체
     (listContainer as HTMLElement).replaceChildren(...items);
@@ -150,6 +171,23 @@ function createNoticeDetailModal(notice: Notice): HTMLIonModalElement {
   const content = el("ion-content.ion-padding");
   const mdContainer = el("div");
 
+  // ⬇️ 타입/날짜 메타
+  const tm = typeMeta((notice as any).type);
+  const metaRow = el(
+    "div",
+    {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        marginBottom: "8px",
+        opacity: "0.9",
+      }
+    },
+    el("ion-badge", { color: tm.color }, tm.label),
+    el("span", { className: "notice-date" }, formatDate(notice.createdAt as any))
+  );
+
   const result = marked.parse(notice.content);
   if (result instanceof Promise) {
     result.then((html) => {
@@ -159,8 +197,8 @@ function createNoticeDetailModal(notice: Notice): HTMLIonModalElement {
     mdContainer.innerHTML = result;
   }
 
-  const date = el("p.notice-date", notice.createdAt);
-  content.append(date, mdContainer);
+  // 기존의 date <p>는 제거하고 metaRow로 대체
+  content.append(metaRow, mdContainer);
   detailModal.append(header, content);
 
   return detailModal;
