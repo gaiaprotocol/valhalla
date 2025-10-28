@@ -14,8 +14,8 @@
   "dependencies": {
     "@adraffy/ens-normalize": "^1.11.1",
     "@gaiaprotocol/chat-client": "^0.0.5",
-    "@gaiaprotocol/client-common": "^0.0.11",
-    "@gaiaprotocol/god-mode-client": "^0.0.3",
+    "@gaiaprotocol/client-common": "^0.0.12",
+    "@gaiaprotocol/god-mode-client": "^0.0.4",
     "@gaiaprotocol/god-mode-shared": "^0.0.4",
     "@gaiaprotocol/nft-attribute-editor": "^0.0.1",
     "@ionic/core": "^8.7.7",

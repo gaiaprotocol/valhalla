@@ -1,3 +1,4 @@
+import { ens_normalize } from '@adraffy/ens-normalize';
 import { chatProfileService } from '@gaiaprotocol/chat-client';
 import { tokenManager } from '@gaiaprotocol/client-common';
 import '@shoelace-style/shoelace';
@@ -6,12 +7,12 @@ import { fetchGaiaName, saveGaiaName } from '../api/gaia-name';
 import { checkGodMode } from '../services/god-mode';
 
 /**
- * Rules
- * - 2–30 chars
- * - a–z, 0–9, hyphen
+ * Rules (product policy + ENS normalization)
+ * - ENS normalization must succeed (ENSIP-15)
+ * - 2–30 characters (code points)
  * - cannot start/end with hyphen
+ * - comparison & saving use normalized value
  */
-const NAME_RE = /^[a-z0-9](?:[a-z0-9-]{0,28}[a-z0-9])?$/;
 
 type StatusKind = 'idle' | 'checking' | 'available' | 'taken' | 'invalid' | 'current';
 
@@ -26,12 +27,29 @@ function isNotFoundError(e: unknown) {
   return m.includes('failed to fetch gaia name') && m.includes(': 404');
 }
 
+/** ENS 규격 기반 유효성 검사 */
 function validateName(raw: string) {
-  const name = raw.trim().toLowerCase();
-  if (name.length < 2) return { ok: false, reason: 'Too short (min 2).' };
-  if (name.length > 30) return { ok: false, reason: 'Too long (max 30).' };
-  if (!NAME_RE.test(name)) return { ok: false, reason: 'Only a–z, 0–9, hyphen; cannot start/end with hyphen.' };
-  return { ok: true, name };
+  const input = (raw ?? '').trim();
+  if (!input) return { ok: false, reason: 'Empty.' } as const;
+
+  let normalized: string;
+  try {
+    normalized = ens_normalize(input);
+  } catch {
+    return { ok: false, reason: 'Invalid by ENS normalization.' } as const;
+  }
+
+  // 길이 제한(코드포인트 기준)
+  const len = Array.from(normalized).length;
+  if (len < 2) return { ok: false, reason: 'Too short (min 2).' } as const;
+  if (len > 30) return { ok: false, reason: 'Too long (max 30).' } as const;
+
+  // 시작/끝 하이픈 금지 (연속 하이픈은 ENS에서 금지 아님)
+  if (normalized.startsWith('-') || normalized.endsWith('-')) {
+    return { ok: false, reason: 'Cannot start or end with hyphen.' } as const;
+  }
+
+  return { ok: true, name: normalized } as const;
 }
 
 function debounce<T extends (...args: any[]) => any>(fn: T, ms: number) {
@@ -83,10 +101,10 @@ export function createNameSettingsModal(): HTMLElement {
     el('sl-badge', 'Not set', { variant: 'neutral', pill: true, id: 'current-gaia-name' })
   );
 
-  // Hint
+  // Hint (ENS 정책 안내)
   const hint = el(
     'div',
-    'Pick your Gaia Name. 2–30 chars, a–z, 0–9, hyphen (no leading/trailing hyphen).',
+    'Pick your Gaia Name. ENS-normalized Unicode allowed (letters, digits, emoji, etc.). 2–30 chars; no leading/trailing hyphen.',
     { style: 'color:#9CA3AF; font-size:13px;' }
   );
 
@@ -101,9 +119,9 @@ export function createNameSettingsModal(): HTMLElement {
     autocomplete: 'off',
     autocapitalize: 'off',
     autocorrect: 'off',
-    inputmode: 'latin',
+    // inputmode 제거: 비라틴/이모지 입력 허용
     style: 'flex:1 1 0%; min-width:0; width:0;'
-  } as any) as any
+  } as any) as any;
 
   // suffix ".gaia"
   input.append(el('span', '.gaia', { slot: 'suffix', style: 'opacity:.85;' }));
@@ -138,7 +156,8 @@ export function createNameSettingsModal(): HTMLElement {
   let available = false;             // result of availability check
   let valid = false;                 // result of validation
   let latestQueried = '';            // last name we asked server about
-  let initialNameAtOpen = '';        // initial name at modal open (without .gaia)
+  let initialNameAtOpen = '';        // initial name at modal open (without .gaia) - raw
+  let initialNameAtOpenNormalized = ''; // ENS-normalized
   let lastValidatedName = '';        // last normalized valid value (for save)
 
   const setError = (msg?: string) => {
@@ -161,7 +180,7 @@ export function createNameSettingsModal(): HTMLElement {
   };
 
   const updateSaveDisabled = () => {
-    // 저장 가능 조건: valid && available (현재 이름과 동일할 땐 저장 비활성)
+    // 저장 가능 조건: valid && available
     (saveBtn as any).disabled = !(valid && available);
   };
 
@@ -209,20 +228,18 @@ export function createNameSettingsModal(): HTMLElement {
 
     // 정상화된 이름
     lastValidatedName = v.name!;
+    setError();
+    valid = true;
 
     // 초기 이름과 동일하면 조회하지 않고 "Current"
-    if (initialNameAtOpen && v.name === initialNameAtOpen.toLowerCase()) {
-      setError();
-      valid = true;
-      available = false; // 본인 소유라 새로 저장 불필요
+    if (initialNameAtOpenNormalized && v.name === initialNameAtOpenNormalized) {
+      available = false; // 본인 소유
       setStatus('current', 'This is your current Gaia Name.');
       updateSaveDisabled();
       return;
     }
 
-    // 그 외엔 조회
-    setError();
-    valid = true;
+    // 그 외엔 가용성 조회
     await checkAvailability(v.name!);
   }, 250);
 
@@ -248,6 +265,7 @@ export function createNameSettingsModal(): HTMLElement {
       const eligible = addr ? await checkGodMode(addr) : false;
       if (!eligible) throw new Error('You are not eligible for God Mode.');
 
+      // 저장 시에도 정규화된 값 사용
       await saveGaiaName(v.name!, token);
 
       // 외부 UI 갱신
@@ -281,6 +299,14 @@ export function createNameSettingsModal(): HTMLElement {
     }
 
     initialNameAtOpen = initialName;
+
+    // 비교용으로 ENS 정규화
+    try {
+      initialNameAtOpenNormalized = initialName ? ens_normalize(initialName) : '';
+    } catch {
+      initialNameAtOpenNormalized = ''; // 캐시가 무효/비정규화면 비교 제외
+    }
+
     (input as any).value = initialName;
 
     // 상단 Current 갱신
