@@ -60,6 +60,15 @@ function createHomeView(): View & { scrollToBottom: () => void } {
 
     const tm = typeMeta((latestNotice as any).type);
 
+    const titleRow = el(
+      'div',
+      { style: { display: 'flex', alignItems: 'center', gap: '6px', maxWidth: '80%' } },
+      el('ion-badge', { color: tm.color, style: { flex: '0 0 auto' } }, tm.label),
+      el('div', { style: { flex: '1 1 auto', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' } },
+        `📢 ${latestNotice.title}`
+      )
+    );
+
     const noticeBar = el(
       'div',
       {
@@ -71,20 +80,7 @@ function createHomeView(): View & { scrollToBottom: () => void } {
           (detailModal as any).present?.() || (detailModal as any).showModal?.();
         }
       },
-      el(
-        'span',
-        {
-          className: 'title truncate',
-          style: {
-            maxWidth: '80%', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
-            display: 'inline-flex', alignItems: 'center', gap: '6px'
-          }
-        },
-        // ⬇️ 타입 배지
-        el('ion-badge', { color: tm.color }, tm.label),
-        // 제목
-        `📢 ${latestNotice.title}`
-      ),
+      titleRow,
       el(
         'button',
         {
