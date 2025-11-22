@@ -329,7 +329,12 @@ function createProfileModal(router: Navigo): HTMLElement {
       // Gaia Name
       menuItem("sparkles", "Gaia Name", "Set your Gaia Name", async () => {
         const token = tokenManager.getToken(); if (!token) throw new Error('Missing authorization token.');
-        const { name } = await fetchMyGaiaName(token);
+        let name: string | null = null;
+        try {
+          name = (await fetchMyGaiaName(token)).name;
+        } catch {
+          // 404 등은 이름 없음 → null 유지
+        }
         const handle = name ? name.replace(/\.gaia$/, "") : "";
         const btn = ensureHiddenNameTrigger();
         if (handle) btn.dataset.initialName = handle;
