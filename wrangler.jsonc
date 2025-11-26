@@ -118,6 +118,58 @@
 					"service": "api"
 				}
 			]
+		},
+		"testnet": {
+			"assets": {
+				"directory": "./public-testnet",
+				"not_found_handling": "single-page-application",
+				"run_worker_first": [
+					"/api/*"
+				]
+			},
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "valhalla_testnet",
+					"database_id": "88611a90-f366-4c50-8664-e34bf69d4e02"
+				}
+			],
+			"durable_objects": {
+				"bindings": [
+					{
+						"name": "CHATROOM",
+						"class_name": "ChatRoom"
+					}
+				]
+			},
+			"kv_namespaces": [
+				{
+					"binding": "SIWE_NONCES",
+					"id": "fd175184e88b4562a10ea4a58e75e140"
+				},
+				{
+					"binding": "FCM_TOKEN_CACHE",
+					"id": "c914b4e2cbb84800b48724082b12fa0f"
+				}
+			],
+			"vars": {
+				"ALLOWED_DOMAIN": "testnet.valhalla.gaia.cc",
+				"ALLOWED_URI": "https://testnet.valhalla.gaia.cc",
+				"MESSAGE_FOR_WALLET_LOGIN": "Please sign this message to log in to Valhalla.",
+				"GOOGLE_CLIENT_ID": "797829770593-kv6v54u6gdebc4j4jhedjiql34ugg2fo.apps.googleusercontent.com",
+				"GOOGLE_REDIRECT_URI": "https://testnet.valhalla.gaia.cc/api/oauth2/callback",
+				"SESSION_TTL_DAYS": "7",
+				/*"APPLE_TEAM_ID": "UJ82GS2C87",
+				"APPLE_CLIENT_ID": "com.gaiaprotocol.valhalla.service",
+				"APPLE_KEY_ID": "5Y633H9SJ4",
+				"APPLE_REDIRECT_URI": "https://testnet.valhalla.gaia.cc/api/apple-oauth2/callback"*/
+			},
+			"services": [
+				{
+					"binding": "API_WORKER",
+					"service": "api-testnet"
+				}
+			]
 		}
 	}
 }
