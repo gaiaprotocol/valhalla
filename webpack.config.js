@@ -67,7 +67,7 @@ module.exports = {
           ? 'https://api.gaia.cc'
           : (
             process.env.NODE_ENV === 'testnet'
-              ? 'https://api-testnet.gaia.cc'
+              ? 'https://testnet.api.gaia.cc'
               : 'http://localhost:8080'
           )
       ),
