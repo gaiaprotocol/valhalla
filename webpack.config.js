@@ -6,7 +6,11 @@ module.exports = {
   entry: './app/main.ts',
   output: {
     filename: 'bundle.js',
-    path: path.resolve(__dirname, process.env.NODE_ENV === 'production' ? './public' : './public-dev')
+    path: path.resolve(__dirname,
+      process.env.NODE_ENV === 'production' ? './public' : (
+        process.env.NODE_ENV === 'testnet' ? './public-testnet' : './public-dev'
+      )
+    )
   },
   module: {
     rules: [
@@ -61,7 +65,11 @@ module.exports = {
       GAIA_API_BASE_URI: JSON.stringify(
         process.env.NODE_ENV === 'production'
           ? 'https://api.gaia.cc'
-          : 'http://localhost:8080'
+          : (
+            process.env.NODE_ENV === 'testnet'
+              ? 'https://api-testnet.gaia.cc'
+              : 'http://localhost:8080'
+          )
       ),
       API_BASE_URI: JSON.stringify('/api'),
       APP_NAME: JSON.stringify('Valhalla'),
