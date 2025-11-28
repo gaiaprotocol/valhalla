@@ -9,8 +9,8 @@
     "build:app-testnet": "NODE_ENV=testnet webpack --mode=production",
     "build:sw-testnet": "cd firebase-messaging-sw && NODE_ENV=testnet webpack --mode=production --config webpack.config.js",
     "build-testnet": "concurrently \"npm run build:app-testnet\" \"npm run build:sw-testnet\"",
-    "dev": "concurrently -k \"webpack --watch --mode=development\" \"cd firebase-messaging-sw && webpack --watch --mode=development\" \"wrangler dev --env development --port=8081\"",
-    "start": "concurrently -k \"webpack --watch --mode=development\" \"cd firebase-messaging-sw && webpack --watch --mode=development\" \"wrangler dev --env development --port=8081\"",
+    "dev": "concurrently -k \"webpack --watch --mode=development\" \"cd firebase-messaging-sw && webpack --watch --mode=development\" \"wrangler dev -c wrangler.dev.jsonc --port=8081\"",
+    "start": "concurrently -k \"webpack --watch --mode=development\" \"cd firebase-messaging-sw && webpack --watch --mode=development\" \"wrangler dev -c wrangler.dev.jsonc --port=8081\"",
     "test": "vitest",
     "cf-typegen": "wrangler types"
   },
