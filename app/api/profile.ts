@@ -1,4 +1,5 @@
 import { getAddress } from 'viem';
+import { Profile, SocialLinks } from '../types/profile';
 
 declare const GAIA_API_BASE_URI: string;
 
@@ -6,16 +7,7 @@ export type SaveProfileInput = {
   // 전부 optional — 일부만 보냈을 때 서버에서 기존 값 유지
   nickname?: string;
   bio?: string;
-  profile_image?: string;
-};
-
-export type Profile = {
-  account: string;            // EVM 주소 (체크섬)
-  nickname: string | null;
-  bio: string | null;
-  profile_image: string | null;
-  created_at?: number;        // 서버 스키마가 epoch seconds
-  updated_at?: number | null;
+  socialLinks?: SocialLinks;
 };
 
 export type SaveProfileResult = { ok: true };
@@ -39,10 +31,9 @@ function assertValidProfileInput(input: SaveProfileInput) {
   // 최소 한 필드 이상
   if (
     input.nickname === undefined &&
-    input.bio === undefined &&
-    input.profile_image === undefined
+    input.bio === undefined
   ) {
-    throw new Error('At least one of nickname, bio, or profile_image must be provided.');
+    throw new Error('At least one of nickname, bio must be provided.');
   }
 
   if (input.nickname !== undefined) {
@@ -63,21 +54,6 @@ function assertValidProfileInput(input: SaveProfileInput) {
     }
     if (bio !== bio.normalize('NFC')) {
       throw new Error('Bio must be NFC-normalized.');
-    }
-  }
-
-  if (input.profile_image !== undefined) {
-    const url = input.profile_image.trim();
-    if (url.length > MAX_URL_LEN) {
-      throw new Error(`profile_image URL exceeds maximum length of ${MAX_URL_LEN}.`);
-    }
-    try {
-      const u = new URL(url);
-      if (u.protocol !== 'http:' && u.protocol !== 'https:') {
-        throw new Error('Only http(s) URLs are allowed for profile_image.');
-      }
-    } catch {
-      throw new Error('profile_image must be a valid URL.');
     }
   }
 }

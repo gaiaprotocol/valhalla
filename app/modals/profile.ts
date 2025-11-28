@@ -485,7 +485,7 @@ function createProfileModal(router: Navigo): HTMLElement {
     gaiaSubtitle.textContent = display;
 
     // 3) 아바타: 기본(프로필 이미지) → 메인 갓(있으면 덮어쓰기)
-    updateAvatar(profile?.profile_image ?? null);
+    updateAvatar(profile?.avatarUrl ?? null);
     bioSpan.textContent = (profile?.bio ?? "").trim() || "No bio yet";
 
     // 4) 메인 갓이 있으면, 소유 NFT 중 해당 갓의 이미지로 아바타 대체
