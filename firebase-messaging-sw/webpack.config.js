@@ -5,7 +5,11 @@ module.exports = {
   entry: './index.ts',
   output: {
     filename: 'firebase-messaging-sw.js',
-    path: path.resolve(__dirname, '../public')
+    path: path.resolve(__dirname,
+      process.env.NODE_ENV === 'production' ? '../public' : (
+        process.env.NODE_ENV === 'testnet' ? '../public-testnet' : '../public-dev'
+      )
+    )
   },
   module: {
     rules: [
@@ -29,7 +33,11 @@ module.exports = {
       GAIA_API_BASE_URI: JSON.stringify(
         process.env.NODE_ENV === 'production'
           ? 'https://api.gaia.cc'
-          : 'http://localhost:8080'
+          : (
+            process.env.NODE_ENV === 'testnet'
+              ? 'https://testnet.api.gaia.cc'
+              : 'http://localhost:8080'
+          )
       )
     })
   ],
