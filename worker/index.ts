@@ -66,7 +66,7 @@ export default {
 
     const url = new URL(request.url);
     if (url.pathname === '/api/nonce' && request.method === 'POST') return handleNonce(request, env);
-    if (url.pathname === '/api/login' && request.method === 'POST') return handleLogin(request, 1, env);
+    if (url.pathname === '/api/login' && request.method === 'POST') return handleLogin(request, 1, env, env.ALLOWED_DOMAIN, env.ALLOWED_URI, env.MESSAGE_FOR_WALLET_LOGIN);
     if (url.pathname === '/api/validate-token' && request.method === 'GET') return handleValidateToken(request, env);
     if (url.pathname === '/api/god-mode' && request.method === 'POST') return handleGodModeCheck(request);
     if (url.pathname === '/api/upload-image' && request.method === 'POST') return handleUploadImage(request, env);
