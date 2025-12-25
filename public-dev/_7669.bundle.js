@@ -8,14 +8,14 @@
  */
 (self["webpackChunkvalhalla"] = self["webpackChunkvalhalla"] || []).push([["_7669"],{
 
-/***/ "?7669":
+/***/ "?7669"
 /*!***********************************************************!*\
   !*** @react-native-async-storage/async-storage (ignored) ***!
   \***********************************************************/
-/***/ (() => {
+() {
 
 eval("{/* (ignored) */\n\n//# sourceURL=webpack://valhalla/@react-native-async-storage/async-storage_(ignored)?\n}");
 
-/***/ })
+/***/ }
 
 }]);

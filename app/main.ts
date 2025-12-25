@@ -2,6 +2,7 @@ import { chatProfileService } from '@gaiaprotocol/chat-client';
 import { createRainbowKit, tokenManager } from '@gaiaprotocol/client-common';
 import { BackButtonEvent, setupConfig } from '@ionic/core';
 import { defineCustomElements } from '@ionic/core/loader';
+import { el } from '@webtaku/el';
 import { initializeApp } from 'firebase/app';
 import { getMessaging /*, getToken*/ } from 'firebase/messaging';
 import Navigo from 'navigo';
@@ -15,8 +16,11 @@ import { hideLoading, showLoading } from './components/loading';
 import './main.css';
 import { isWebView } from './platform';
 import { checkGodMode } from './services/god-mode';
-import { createHomeView } from './views/authenticated/home';
+import { createChatView } from './views/authenticated/chat';
+import { createDashboardView } from './views/authenticated/dashboard';
 import { createLayoutView } from './views/authenticated/layout';
+import { createMainMenuView } from './views/authenticated/main-menu';
+import { createNoticesView } from './views/authenticated/notices';
 import { createGoogleLinkWeb3WalletView } from './views/unauthenticated/google-link-web3-wallet';
 import { createLoginView } from './views/unauthenticated/login';
 import { View } from './views/view';
@@ -36,25 +40,16 @@ const FIREBASE_CONFIG = {
 
 const ROUTES = {
   ROOT: '/',
+  MAIN_MENU: '/main-menu',
+  CHAT: '/chat',
+  NOTICES: '/notices',
+  DASHBOARD: '/dashboard',
   LOGIN: '/login',
   LINK_WALLET: '/google-link-web3-wallet'
 } as const;
 
 function safeRemove(view?: View) {
   try { view?.remove(); } catch { /* noop */ }
-}
-
-function bySel<T extends Element = HTMLElement>(root: ParentNode, sel: string) {
-  return root.querySelector(sel) as T | null;
-}
-
-// Debounce utility for small UI niceties
-function debounce<T extends (...args: any[]) => void>(fn: T, ms = 100) {
-  let t: number | undefined;
-  return ((...args: Parameters<T>) => {
-    if (t) window.clearTimeout(t);
-    t = window.setTimeout(() => fn(...args), ms);
-  }) as T;
 }
 
 // ------------------------------
@@ -91,30 +86,7 @@ function initFirebaseAndMessaging() {
   return { app, messaging };
 }
 
-async function requestNotificationPermission(): Promise<NotificationPermission> {
-  try {
-    return await Notification.requestPermission();
-  } catch {
-    // Fallback for older browsers just in case
-    return new Promise((resolve) => {
-      Notification.requestPermission((perm: NotificationPermission) => resolve(perm));
-    });
-  }
-}
-
-// // Uncomment when you are ready to fetch FCM tokens
-// async function maybeEnablePush(messaging: ReturnType<typeof getMessaging>) {
-//   const permission = await requestNotificationPermission();
-//   if (permission === 'granted') {
-//     const token = await getToken(messaging, { vapidKey: 'BGPXUkzHHkFCCnB0qvuEkj3VtJ3eK8z71PvYTorx4xRq9lBaY9BE4knxb1i13Qn49nogLJX9B1zOoX-Gvaj5TjI' });
-//     console.log('[FCM] token', token);
-//   } else {
-//     console.log('[FCM] permission denied:', permission);
-//   }
-// }
-
 if (!isWebView) {
-  // Lazy init; keep side-effects minimal
   initFirebaseAndMessaging();
 }
 
@@ -149,25 +121,43 @@ chatProfileService.init(async (addresses) => {
 const router = new Navigo('/') as Navigo;
 
 let layoutView: View | undefined;
-let contentContainer: HTMLElement | undefined;
-let unauthView: View | undefined; // login or link-wallet
+let currentContentView: View | undefined;
+let unauthView: View | undefined;
 
-const scrollBottomSoon = debounce(() => {
-  try {
-    const home = bySel<HTMLElement>(document, '[data-home-root]');
-    home?.scrollTo({ top: home.scrollHeight });
-  } catch {/* noop */ }
-}, 100);
+// 전역 ion-app 컨테이너 (한 번만 생성)
+let ionApp: HTMLElement | undefined;
+
+function getIonApp(): HTMLElement {
+  if (!ionApp) {
+    ionApp = document.createElement('ion-app');
+    ionApp.className = 'content-view';
+    document.body.appendChild(ionApp);
+  }
+  return ionApp;
+}
 
 function mountContent(content: View) {
+  // 레이아웃(모달 컨테이너)이 없으면 생성
   if (!layoutView) {
     layoutView = createLayoutView(router);
-    contentContainer = bySel<HTMLElement>(layoutView.el, '.content')!;
-    contentContainer.appendChild(content.el);
     document.body.appendChild(layoutView.el);
-  } else {
-    contentContainer!.replaceChildren(content.el);
   }
+
+  // 기존 컨텐츠 뷰 제거
+  safeRemove(currentContentView);
+
+  // ion-app의 기존 컨텐츠 제거하고 새 컨텐츠 추가
+  const app = getIonApp();
+  app.innerHTML = '';
+  app.appendChild(content.el);
+
+  // 참조 저장 (제거용)
+  currentContentView = {
+    el: content.el,
+    remove: () => {
+      content.remove();
+    }
+  };
 }
 
 function showAuthed(content: View) {
@@ -176,10 +166,20 @@ function showAuthed(content: View) {
 }
 
 function showUnauthed(factory: () => View) {
-  if (layoutView) { safeRemove(layoutView); layoutView = undefined; contentContainer = undefined; }
+  if (layoutView) { safeRemove(layoutView); layoutView = undefined; }
+  safeRemove(currentContentView); currentContentView = undefined;
   safeRemove(unauthView);
+
+  // ion-app 숨기기
+  if (ionApp) ionApp.style.display = 'none';
+
   unauthView = factory();
   document.body.appendChild(unauthView.el);
+}
+
+function showAuthedView() {
+  // ion-app 표시
+  if (ionApp) ionApp.style.display = '';
 }
 
 // ------------------------------
@@ -188,19 +188,15 @@ function showUnauthed(factory: () => View) {
 async function tryAutoLinkIfNeeded(googleMe: GoogleMe | null): Promise<'ok' | 'to-link' | 'skip'> {
   const walletHasToken = tokenManager.has();
 
-  // 1) 구글 세션이 완전하면 즉시 주입 (지갑 토큰 보유 여부와 무관)
   if (googleMe?.ok && googleMe.wallet_address && googleMe.token) {
     tokenManager.set(googleMe.token, googleMe.wallet_address);
     return 'ok';
   }
 
-  // 2) 구글 로그인 O, 그런데 링크/토큰 없음
   if (googleMe?.ok && !walletHasToken) {
-    // 지갑 토큰도 없으니 링크 화면으로
     return 'to-link';
   }
 
-  // 3) 지갑 토큰 O + 구글 로그인 O 이지만 구글 쪽 정보가 불완전 → 지갑 토큰으로 링크 시도
   if (walletHasToken && googleMe?.ok) {
     const authToken = tokenManager.getToken();
     if (!authToken) return 'to-link';
@@ -223,7 +219,6 @@ async function tryAutoLinkIfNeeded(googleMe: GoogleMe | null): Promise<'ok' | 't
     }
   }
 
-  // 4) (구글 X, 지갑 X) 등 기타 케이스
   return 'skip';
 }
 
@@ -235,7 +230,6 @@ async function determineFlow(): Promise<'ok' | 'to-login' | 'to-link'> {
 
   const linkResult = await tryAutoLinkIfNeeded(googleMe);
 
-  // tryAutoLink에서 tokenManager가 바뀌었을 수 있으니 갱신
   walletHasToken = tokenManager.has();
 
   if (!googleMe?.ok && !walletHasToken) return 'to-login';
@@ -280,12 +274,7 @@ async function runAuthFlow() {
       return;
     }
 
-    // ok
-    const view = createHomeView();
-    showAuthed(view);
-    // Scroll bottom twice (layout settle + content paint)
-    scrollBottomSoon();
-    window.setTimeout(scrollBottomSoon, 120);
+    router.navigate(ROUTES.MAIN_MENU);
   } finally {
     hideLoading();
   }
@@ -298,8 +287,35 @@ router.on(ROUTES.ROOT, async () => {
   await runAuthFlow();
 });
 
+router.on(ROUTES.MAIN_MENU, () => {
+  if (!tokenManager.has()) return router.navigate(ROUTES.ROOT);
+  showAuthedView();
+  const view = createMainMenuView(router);
+  showAuthed(view);
+});
+
+router.on(ROUTES.CHAT, () => {
+  if (!tokenManager.has()) return router.navigate(ROUTES.ROOT);
+  showAuthedView();
+  const view = createChatView(router);
+  showAuthed(view);
+});
+
+router.on(ROUTES.NOTICES, () => {
+  if (!tokenManager.has()) return router.navigate(ROUTES.ROOT);
+  showAuthedView();
+  const view = createNoticesView(router);
+  showAuthed(view);
+});
+
+router.on(ROUTES.DASHBOARD, () => {
+  if (!tokenManager.has()) return router.navigate(ROUTES.ROOT);
+  showAuthedView();
+  const view = createDashboardView(router);
+  showAuthed(view);
+});
+
 router.on(ROUTES.LOGIN, () => {
-  // 이미 인증 완료 상태면 루트로
   if (tokenManager.has()) return router.navigate(ROUTES.ROOT);
   showUnauthed(() => createLoginView(router));
 });

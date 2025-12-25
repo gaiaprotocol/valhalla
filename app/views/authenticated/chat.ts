@@ -1,12 +1,11 @@
 import { chatProfileService, createChatComponent } from '@gaiaprotocol/chat-client';
 import { tokenManager } from '@gaiaprotocol/client-common';
 import { el } from '@webtaku/el';
+import Navigo from 'navigo';
 import { fetchMainGod, setMainGod } from '../../api/main-god';
 import { fetchHeldNfts, HeldNft } from '../../api/nfts';
-import { createNoticeDetailModal, createNoticeModal } from '../../modals/notice';
 import { openUserProfileModal } from '../../modals/profile';
 import { createSelectMainGodModal } from '../../modals/select-main-god';
-import { loadLocalizedNotices } from '../../services/notice';
 import { View } from '../view';
 
 const roomId = 'test';
@@ -22,7 +21,6 @@ function getMyAccount(): string {
   }
 }
 
-// 상대 경로 이미지 보정
 function toImageUrl(img?: string | null) {
   if (!img) return '';
   try {
@@ -32,70 +30,30 @@ function toImageUrl(img?: string | null) {
   }
 }
 
-function typeMeta(t?: string) {
-  const v = (t || '').toLowerCase();
-  if (v === 'update') return { label: 'Update', color: 'success' as const };
-  if (v === 'news') return { label: 'News', color: 'primary' as const };
-  // 알 수 없는 값: 보기 좋게 라벨만 정리
-  const pretty = v ? v.charAt(0).toUpperCase() + v.slice(1) : 'Notice';
-  return { label: pretty, color: 'medium' as const };
-}
-
-function formatDate(date: string | number) {
-  try {
-    return new Intl.DateTimeFormat('en', {
-      year: 'numeric', month: 'short', day: 'numeric',
-    }).format(new Date(date));
-  } catch {
-    return String(date);
-  }
-}
-
-function createHomeView(): View & { scrollToBottom: () => void } {
-  const page = el('div', { className: 'page flex flex-col h-screen p-4 gap-2' }, { style: { height: '100%' } });
-
-  loadLocalizedNotices().then(notices => {
-    const latestNotice = notices[0];
-    if (!latestNotice) return;
-
-    const tm = typeMeta((latestNotice as any).type);
-
-    const titleRow = el(
-      'div',
-      { style: { display: 'flex', alignItems: 'center', gap: '6px', maxWidth: '80%' } },
-      el('ion-badge', { color: tm.color, style: { flex: '0 0 auto' } }, tm.label),
-      el('div', { style: { flex: '1 1 auto', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' } },
-        `📢 ${latestNotice.title}`
-      )
-    );
-
-    const noticeBar = el(
-      'div',
-      {
-        className: 'notice-bar',
-        style: { cursor: 'pointer' },
-        onclick: () => {
-          const detailModal = createNoticeDetailModal(latestNotice);
-          document.body.appendChild(detailModal);
-          (detailModal as any).present?.() || (detailModal as any).showModal?.();
-        }
-      },
-      titleRow,
-      el(
-        'button',
-        {
-          className: 'text-blue-600 text-xs underline',
-          onclick: (e: Event) => {
-            e.stopPropagation();
-            document.getElementById('open-notice')?.click();
-          }
-        },
-        'All Notices'
-      )
-    );
-    page.prepend(noticeBar);
-    chat.scrollToBottom();
+function createChatView(router: Navigo): View & { scrollToBottom: () => void } {
+  const wrapper = el('div', {
+    className: 'chat-page',
+    style: { display: 'contents' }
   });
+
+  // 헤더
+  const header = el('ion-header',
+    el('ion-toolbar',
+      el('ion-buttons', { slot: 'start' },
+        el('ion-button', {
+          onclick: () => router.navigate('/main-menu')
+        },
+          el('ion-icon', { slot: 'icon-only', name: 'arrow-back' })
+        )
+      ),
+      el('ion-title', { style: { textAlign: 'center' } }, 'Chat Room'),
+      el('ion-buttons', { slot: 'end' },
+        el('ion-button', { style: { visibility: 'hidden' } },
+          el('ion-icon', { slot: 'icon-only', name: 'ellipsis-vertical' })
+        )
+      )
+    )
+  );
 
   /* ---------- ChatComponent ---------- */
   const myAccount = getMyAccount();
@@ -108,7 +66,15 @@ function createHomeView(): View & { scrollToBottom: () => void } {
     },
   });
 
-  page.append(chat.el);
+  // Make chat.el fill the available space
+  (chat.el as HTMLElement).style.height = '100%';
+  (chat.el as HTMLElement).style.display = 'flex';
+  (chat.el as HTMLElement).style.flexDirection = 'column';
+
+  const content = el('ion-content');
+  content.append(chat.el);
+
+  wrapper.append(header, content);
 
   /* ---------- 내 프로필 프리로드 ---------- */
   if (myAccount && myAccount !== 'unknown') {
@@ -132,14 +98,10 @@ function createHomeView(): View & { scrollToBottom: () => void } {
         },
         onSelected: async (godId: string, selected?: { image?: string }) => {
           await setMainGod(godId);
-
-          // (선택) 메인 God 이미지로 아바타 즉시 갱신
           if (selected?.image && myAccount && myAccount !== 'unknown') {
             const prev = chatProfileService.getCached(myAccount);
             chatProfileService.setProfile(myAccount, prev?.nickname ?? undefined, selected.image);
           }
-
-          // 서버값 동기화
           if (myAccount && myAccount !== 'unknown') {
             chatProfileService.preload([myAccount]);
           }
@@ -150,30 +112,26 @@ function createHomeView(): View & { scrollToBottom: () => void } {
     }
   });
 
-  /* ---------- 이름 변경 시: 채팅 닉네임 즉시 갱신(.gaia, @없음) ---------- */
+  /* ---------- 이름 변경 시 ---------- */
   const onGaiaNameUpdated = (e: any) => {
     const newName = e?.detail?.name as string | undefined;
     if (!newName) return;
     if (!myAccount || myAccount === 'unknown') return;
-
     const prev = chatProfileService.getCached(myAccount);
-    // 닉네임을 항상 "<name>.gaia" 형태로 저장
     chatProfileService.setProfile(myAccount, `${newName}.gaia`, prev?.profileImage ?? undefined);
-
-    // (선택) 서버값으로 최종 보정
     chatProfileService.preload([myAccount]);
   };
   window.addEventListener('gaiaName:updated', onGaiaNameUpdated as EventListener);
 
   return {
-    el: page,
+    el: wrapper,
     scrollToBottom: chat.scrollToBottom,
     remove() {
       window.removeEventListener('gaiaName:updated', onGaiaNameUpdated as EventListener);
       chat.remove();
-      page.remove();
+      wrapper.remove();
     },
   };
 }
 
-export { createHomeView };
+export { createChatView };

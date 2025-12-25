@@ -12,7 +12,7 @@ import { isWebView } from '../../platform';
 import { loadLocalizedNotices } from '../../services/notice';
 import { View } from '../view';
 
-function createHeader(): HTMLElement {
+function createHeader(router: Navigo): HTMLElement {
   // 숨겨진 모달 트리거 버튼들(기존 trigger 호환)
   const hiddenTriggers = el('div', {
     style: 'display:none'
@@ -34,35 +34,6 @@ function createHeader(): HTMLElement {
   },
     el('ion-content',
       el('ion-list',
-        // Dashboard
-        el('ion-item', {
-          button: true,
-          detail: true,
-          onclick: async () => {
-            const modalTrigger = document.getElementById('open-dashboard') as HTMLElement | null;
-            if (modalTrigger) modalTrigger.click();
-            (popover as any).dismiss?.();
-          }
-        },
-          el('ion-icon', { slot: 'start', name: 'bar-chart-sharp' }),
-          el('ion-label', 'Dashboard')
-        ),
-
-        // Notices
-        el(
-          'ion-item',
-          {
-            button: true,
-            detail: true,
-            onclick: () => {
-              document.getElementById('open-notice')?.click();
-              (popover as any).dismiss?.();
-            }
-          },
-          el('ion-icon', { slot: 'start', name: 'notifications' }),
-          el('ion-label', 'Notices')
-        ),
-
         // Profile
         el('ion-item', {
           button: true,
@@ -121,20 +92,10 @@ function createHeader(): HTMLElement {
     )
   );
 
-  // 헤더(우측에 메뉴 버튼 하나만)
-  const header = el('ion-header',
-    el('ion-toolbar',
-      el('ion-title', { style: 'text-align: center;' }, 'Valhalla'),
-      el('ion-buttons', { slot: 'start' },
-        el('ion-button', {
-          id: 'open-menu',
-          ariaLabel: 'Open menu'
-        },
-          el('ion-icon', { slot: 'icon-only', name: 'menu' })
-        )
-      )
-    ),
-    // 숨겨진 트리거/팝오버를 헤더 안에 넣어두면 유지/정리 관리가 쉬움
+  // 헤더는 숨기고 팝오버만 유지
+  const header = el('div', {
+    style: { display: 'none' }
+  },
     hiddenTriggers,
     popover
   );
@@ -143,10 +104,9 @@ function createHeader(): HTMLElement {
 }
 
 function createLayoutView(router: Navigo): View {
-  const layout = el('ion-app',
-    createHeader(),
-    el('ion-content', { className: 'content' }),
-    // 기존 모달 유지(트리거는 숨겨둔 버튼이 담당)
+  // 레이아웃은 모달과 팝오버만 제공 (각 뷰가 독립적인 구조를 가짐)
+  const layout = el('div', { className: 'layout-modals' },
+    createHeader(router),
     createDashboardModal(),
     createNoticeModal({ load: loadLocalizedNotices }),
     createMyGodsModal(),
