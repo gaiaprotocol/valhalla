@@ -16,6 +16,7 @@ import { hideLoading, showLoading } from './components/loading';
 import './main.css';
 import { isWebView } from './platform';
 import { checkGodMode } from './services/god-mode';
+import { initializeNoticesIfFirstRun } from './services/notice';
 import { createChatView } from './views/authenticated/chat';
 import { createDashboardView } from './views/authenticated/dashboard';
 import { createLayoutView } from './views/authenticated/layout';
@@ -273,6 +274,9 @@ async function runAuthFlow() {
       router.navigate(ROUTES.LINK_WALLET);
       return;
     }
+
+    // 앱 첫 실행 시 모든 공지사항을 읽음 처리
+    await initializeNoticesIfFirstRun();
 
     router.navigate(ROUTES.MAIN_MENU);
   } finally {

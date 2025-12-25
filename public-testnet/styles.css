@@ -5241,29 +5241,67 @@ ion-modal ion-content {
   border-color: rgba(255, 255, 255, 0.5) !important;
 }
 
-@media (max-width: 768px) {
-  .main-menu-title {
-    font-size: 2rem !important;
+/* 메인 메뉴 카드 그리드 - PC에서 3개 한 줄 */
+.main-menu-card-container {
+  display: grid;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 1000px;
+  padding: 0 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .main-menu-content-wrapper {
+    height: 100%;
+    justify-content: center !important;
+    padding-bottom: 120px !important;
   }
 
-  .menu-card ion-card-content {
-    padding: 2rem 1.5rem !important;
-  }
-
-  .menu-card ion-icon:first-child {
-    font-size: 3rem !important;
-    margin-bottom: 1rem !important;
-  }
-
-  .menu-card h2 {
-    font-size: 1.25rem !important;
-  }
-
-  .menu-card p {
-    font-size: 0.8rem !important;
+  .main-menu-card-container {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
+@media (max-width: 768px) {
+  .main-menu-title {
+    font-size: 1.75rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .main-menu-page .main-menu-subtitle {
+    margin-bottom: 1.5rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .main-menu-page .main-menu-content-wrapper {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+
+  .menu-card ion-card-content {
+    padding: 1.25rem 1rem !important;
+  }
+
+  .menu-card ion-icon:first-child {
+    font-size: 2rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .menu-card h2 {
+    font-size: 1rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .menu-card p {
+    font-size: 0.75rem !important;
+    margin: 0 !important;
+  }
+
+  .main-menu-card-container {
+    gap: 0.75rem;
+  }
+}
 .gaia-dashboard {
   padding: 20px;
 }

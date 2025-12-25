@@ -61,6 +61,7 @@ function createMainMenuView(router: Navigo): View {
   }, 'Welcome to Valhalla');
 
   const subtitle = el('p', {
+    className: 'main-menu-subtitle',
     style: {
       color: 'rgba(255, 255, 255, 0.5)',
       fontSize: '0.875rem',
@@ -73,14 +74,7 @@ function createMainMenuView(router: Navigo): View {
 
   // 카드 컨테이너
   const cardContainer = el('div', {
-    style: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-      gap: '1.5rem',
-      width: '100%',
-      maxWidth: '900px',
-      padding: '0 1rem'
-    }
+    className: 'main-menu-card-container'
   });
 
   // 공지사항 카드
@@ -221,6 +215,7 @@ function createMainMenuView(router: Navigo): View {
 
   // 컨텐츠 래퍼 (중앙 정렬용)
   const contentWrapper = el('div', {
+    className: 'main-menu-content-wrapper',
     style: {
       display: 'flex',
       flexDirection: 'column',
