@@ -3,8 +3,8 @@ import { createRainbowKit, tokenManager } from '@gaiaprotocol/client-common';
 import { BackButtonEvent, setupConfig } from '@ionic/core';
 import { defineCustomElements } from '@ionic/core/loader';
 import { el } from '@webtaku/el';
-import { initializeApp } from 'firebase/app';
-import { getMessaging /*, getToken*/ } from 'firebase/messaging';
+import { initializeApp, type FirebaseApp } from 'firebase/app';
+import { getMessaging } from 'firebase/messaging';
 import Navigo from 'navigo';
 import { getAddress } from 'viem';
 import { fetchGaiaNames } from './api/gaia-name';
@@ -17,6 +17,11 @@ import './main.css';
 import { isWebView } from './platform';
 import { checkGodMode } from './services/god-mode';
 import { initializeNoticesIfFirstRun } from './services/notice';
+import {
+  initializePushNotifications,
+  setupForegroundMessageHandler,
+  setupServiceWorkerMessageHandler,
+} from './services/push-notification';
 import { createChatView } from './views/authenticated/chat';
 import { createDashboardView } from './views/authenticated/dashboard';
 import { createLayoutView } from './views/authenticated/layout';
@@ -74,10 +79,13 @@ defineCustomElements(window);
 document.body.appendChild(createRainbowKit());
 
 // ------------------------------
-// Notifications (optional)
+// Firebase & Push Notifications
 // ------------------------------
+let firebaseApp: FirebaseApp | null = null;
+
 function initFirebaseAndMessaging() {
   const app = initializeApp(FIREBASE_CONFIG);
+  firebaseApp = app;
   let messaging;
   try {
     messaging = getMessaging();
@@ -89,6 +97,63 @@ function initFirebaseAndMessaging() {
 
 if (!isWebView) {
   initFirebaseAndMessaging();
+}
+
+/**
+ * 포그라운드 푸시 알림 토스트 표시
+ */
+async function showPushToast(title: string, body: string, onClick?: () => void) {
+  const toastEl = document.createElement('ion-toast');
+  toastEl.message = `${title}: ${body}`;
+  toastEl.duration = 5000;
+  toastEl.position = 'top';
+  toastEl.buttons = [
+    {
+      text: 'View',
+      role: 'info',
+      handler: () => {
+        onClick?.();
+      },
+    },
+    {
+      text: 'Dismiss',
+      role: 'cancel',
+    },
+  ];
+
+  document.body.appendChild(toastEl);
+  await toastEl.present();
+}
+
+/**
+ * 푸시 알림 초기화 (로그인 후 호출)
+ */
+async function initializePush() {
+  if (isWebView || !firebaseApp) return;
+
+  try {
+    await initializePushNotifications(firebaseApp);
+
+    // 포그라운드 메시지 핸들러
+    setupForegroundMessageHandler(firebaseApp, (payload) => {
+      const title = payload.notification?.title || 'Valhalla';
+      const body = payload.notification?.body || '';
+      const data = payload.data;
+
+      showPushToast(title, body, () => {
+        if (data?.type === 'notice') {
+          router.navigate(ROUTES.NOTICES);
+        }
+      });
+    });
+
+    // Service Worker 메시지 핸들러 (알림 클릭 시 네비게이션)
+    setupServiceWorkerMessageHandler((path) => {
+      router.navigate(path);
+    });
+  } catch (err) {
+    console.error('Failed to initialize push notifications:', err);
+  }
 }
 
 // ------------------------------
@@ -277,6 +342,9 @@ async function runAuthFlow() {
 
     // 앱 첫 실행 시 모든 공지사항을 읽음 처리
     await initializeNoticesIfFirstRun();
+
+    // 푸시 알림 초기화 (비동기로 처리하여 로그인 흐름 차단 방지)
+    initializePush();
 
     router.navigate(ROUTES.MAIN_MENU);
   } finally {
