@@ -22,6 +22,7 @@ import {
   setupForegroundMessageHandler,
   setupServiceWorkerMessageHandler,
 } from './services/push-notification';
+import { createAppSettingsView } from './views/authenticated/app-settings';
 import { createChatView } from './views/authenticated/chat';
 import { createDashboardView } from './views/authenticated/dashboard';
 import { createLayoutView } from './views/authenticated/layout';
@@ -50,6 +51,7 @@ const ROUTES = {
   CHAT: '/chat',
   NOTICES: '/notices',
   DASHBOARD: '/dashboard',
+  SETTINGS: '/settings',
   LOGIN: '/login',
   LINK_WALLET: '/google-link-web3-wallet'
 } as const;
@@ -384,6 +386,13 @@ router.on(ROUTES.DASHBOARD, () => {
   if (!tokenManager.has()) return router.navigate(ROUTES.ROOT);
   showAuthedView();
   const view = createDashboardView(router);
+  showAuthed(view);
+});
+
+router.on(ROUTES.SETTINGS, () => {
+  if (!tokenManager.has()) return router.navigate(ROUTES.ROOT);
+  showAuthedView();
+  const view = createAppSettingsView(router, { firebaseApp });
   showAuthed(view);
 });
 

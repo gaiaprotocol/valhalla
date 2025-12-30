@@ -211,7 +211,43 @@ function createMainMenuView(router: Navigo): View {
     )
   );
 
-  cardContainer.append(noticeCard, dashboardCard, chatCard);
+  // 설정 카드
+  const settingsCard = el('ion-card', {
+    button: true,
+    className: 'menu-card',
+    onclick: () => router.navigate('/settings'),
+    style: {
+      margin: '0',
+      background: 'rgba(128, 128, 128, 0.1)',
+      border: '1px solid rgba(128, 128, 128, 0.3)',
+      borderRadius: '20px',
+      overflow: 'hidden',
+      transition: 'all 0.3s ease'
+    }
+  },
+    el('ion-card-content', {
+      style: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '3rem 2rem',
+        textAlign: 'center'
+      }
+    },
+      el('ion-icon', {
+        name: 'settings-outline',
+        style: { fontSize: '4rem', color: '#888', marginBottom: '1.5rem' }
+      }),
+      el('h2', {
+        style: { fontSize: '1.5rem', fontWeight: '600', color: '#fff', marginBottom: '0.5rem' }
+      }, 'Settings'),
+      el('p', {
+        style: { fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)', margin: '0' }
+      }, 'App preferences and notifications')
+    )
+  );
+
+  cardContainer.append(noticeCard, dashboardCard, chatCard, settingsCard);
 
   // 컨텐츠 래퍼 (중앙 정렬용)
   const contentWrapper = el('div', {

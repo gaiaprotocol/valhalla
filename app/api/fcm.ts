@@ -19,7 +19,7 @@ export async function registerFcmToken(fcmToken: string, platform: 'web' | 'andr
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${authToken}`,
       },
-      body: JSON.stringify({ token: fcmToken, platform }),
+      body: JSON.stringify({ token: fcmToken, platform, app: 'valhalla' }),
     });
 
     if (!res.ok) {
@@ -52,7 +52,7 @@ export async function unregisterFcmToken(fcmToken: string): Promise<boolean> {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${authToken}`,
       },
-      body: JSON.stringify({ token: fcmToken }),
+      body: JSON.stringify({ token: fcmToken, app: 'valhalla' }),
     });
 
     if (!res.ok) {

@@ -144,3 +144,11 @@ export function setupServiceWorkerMessageHandler(
     }
   });
 }
+
+/**
+ * 저장된 FCM 토큰 및 권한 요청 플래그 삭제
+ */
+export function clearFcmToken(): void {
+  localStorage.removeItem(FCM_TOKEN_KEY);
+  localStorage.removeItem(PUSH_PERMISSION_KEY);
+}
