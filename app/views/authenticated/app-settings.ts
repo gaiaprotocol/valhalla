@@ -188,7 +188,7 @@ function createAppSettingsView(router: Navigo, options: AppSettingsViewOptions):
   );
 
   const content = el('ion-content', {
-    style: { '--background': 'var(--ion-background-color)' }
+    style: { '--background': 'var(--ion-background-color)' } as any
   },
     el('div', {
       style: {
