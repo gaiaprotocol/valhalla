@@ -3,7 +3,7 @@ import { tokenManager } from '@gaiaprotocol/client-common';
 declare const GAIA_API_BASE_URI: string;
 
 /**
- * FCM 토큰을 서버에 등록
+ * FCM 토큰을 서버에 등록 및 토픽 구독
  */
 export async function registerFcmToken(fcmToken: string, platform: 'web' | 'android' | 'ios' = 'web'): Promise<boolean> {
   const authToken = tokenManager.getToken();
@@ -36,7 +36,7 @@ export async function registerFcmToken(fcmToken: string, platform: 'web' | 'andr
 }
 
 /**
- * FCM 토큰을 서버에서 해제
+ * FCM 토큰을 서버에서 해제 및 토픽 구독 해제
  */
 export async function unregisterFcmToken(fcmToken: string): Promise<boolean> {
   const authToken = tokenManager.getToken();
