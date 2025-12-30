@@ -17,7 +17,16 @@ let messaging: ReturnType<typeof getMessaging> | null = null;
 try {
   messaging = getMessaging(firebaseApp);
 } catch (err) {
-  console.error('Failed to initialize Firebase Messaging', err);
+  console.error('[SW] Failed to initialize Firebase Messaging', err);
+}
+
+// 상대 경로를 절대 URL로 변환
+function toAbsoluteUrl(urlOrPath: string): string {
+  try {
+    return new URL(urlOrPath).toString();
+  } catch {
+    return new URL(urlOrPath.startsWith('/') ? urlOrPath : `/${urlOrPath}`, self.location.origin).toString();
+  }
 }
 
 // 백그라운드 메시지 핸들러
@@ -50,21 +59,21 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
   }
 
   // 알림 데이터에서 이동할 경로 결정
-  const data = event.notification.data || {};
-  let targetUrl = '/';
+  const data = (event.notification.data || {}) as Record<string, any>;
 
-  if (data.type === 'notice') {
-    targetUrl = '/notices';
-  } else if (data.clickAction) {
-    targetUrl = data.clickAction;
-  }
+  // 우선순위: data.clickAction > notice 타입 기본 경로 > '/'
+  const target =
+    (typeof data.clickAction === 'string' && data.clickAction) ||
+    (data.type === 'notice' ? '/notices' : '/');
+
+  const targetUrl = toAbsoluteUrl(target);
 
   // 기존 탭이 있으면 포커스, 없으면 새 탭 열기
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       // 같은 origin의 탭 찾기
       for (const client of clientList) {
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
+        if (client.url.startsWith(self.location.origin) && 'focus' in client) {
           client.focus();
           client.postMessage({
             type: 'NOTIFICATION_CLICK',
