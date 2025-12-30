@@ -77,6 +77,19 @@ function createHeader(router: Navigo): HTMLElement {
           el('ion-label', 'Contact Us')
         ),
 
+        // App Settings
+        el('ion-item', {
+          button: true,
+          detail: true,
+          onclick: () => {
+            router.navigate('/settings');
+            (popover as any).dismiss?.();
+          }
+        },
+          el('ion-icon', { slot: 'start', name: 'settings' }),
+          el('ion-label', 'App Settings')
+        ),
+
         isMobile && !isWebView && !isStandalone() ? el('ion-item', {
           button: true,
           detail: true,
