@@ -2,6 +2,7 @@ import { el } from '@webtaku/el';
 import type { FirebaseApp } from 'firebase/app';
 import Navigo from 'navigo';
 import { unregisterFcmToken } from '../../api/fcm';
+import { isStandalone } from '../../components/install-ui';
 import {
   clearFcmToken,
   getCurrentFcmToken,
@@ -52,11 +53,11 @@ function createAppSettingsView(router: Navigo, options: AppSettingsViewOptions):
       name: 'warning-outline',
       style: { marginRight: '0.5rem', verticalAlign: 'middle' }
     }),
-    'Push notifications are blocked. Please enable them in your browser settings.'
+    'Push notifications are blocked.'
   );
 
-  // 권한 거부 시 설정 열기 안내
-  const openSettingsNote = el('ion-item', {
+  // 권한 거부 시 설정 열기 안내 (브라우저 모드)
+  const browserSettingsNote = el('ion-item', {
     style: { display: 'none' },
     lines: 'none'
   },
@@ -81,27 +82,57 @@ function createAppSettingsView(router: Navigo, options: AppSettingsViewOptions):
     )
   );
 
+  // 권한 거부 시 설정 열기 안내 (PWA 모드)
+  const pwaSettingsNote = el('ion-item', {
+    style: { display: 'none' },
+    lines: 'none'
+  },
+    el('ion-label', {
+      style: { fontSize: '0.875rem', color: 'var(--ion-color-medium)' }
+    },
+      el('p', { style: { margin: '0 0 0.5rem 0' } },
+        'To enable push notifications:'
+      ),
+      el('ol', {
+        style: {
+          margin: '0',
+          paddingLeft: '1.25rem',
+          lineHeight: '1.6'
+        }
+      },
+        el('li', 'Open your device\'s Settings app'),
+        el('li', 'Find this app in your app list'),
+        el('li', 'Tap "Notifications" and enable them'),
+        el('li', 'Return to this app')
+      )
+    )
+  );
+
   // 푸시 알림 상태 업데이트 함수
   const updatePushUI = () => {
     const permission = getPushPermissionStatus();
     const token = getCurrentFcmToken();
+    const isPWA = isStandalone();
 
     if (permission === 'unsupported') {
       pushToggle.disabled = true;
       pushToggle.checked = false;
       deniedNote.textContent = 'Push notifications are not supported in this browser.';
       deniedNote.style.display = 'block';
-      openSettingsNote.style.display = 'none';
+      browserSettingsNote.style.display = 'none';
+      pwaSettingsNote.style.display = 'none';
     } else if (permission === 'denied') {
       pushToggle.disabled = true;
       pushToggle.checked = false;
       deniedNote.style.display = 'block';
-      openSettingsNote.style.display = '';
+      browserSettingsNote.style.display = isPWA ? 'none' : '';
+      pwaSettingsNote.style.display = isPWA ? '' : 'none';
     } else {
       pushToggle.disabled = false;
       pushToggle.checked = permission === 'granted' && !!token;
       deniedNote.style.display = 'none';
-      openSettingsNote.style.display = 'none';
+      browserSettingsNote.style.display = 'none';
+      pwaSettingsNote.style.display = 'none';
     }
   };
 
@@ -164,7 +195,8 @@ function createAppSettingsView(router: Navigo, options: AppSettingsViewOptions):
       pushToggle
     ),
     deniedNote,
-    openSettingsNote
+    browserSettingsNote,
+    pwaSettingsNote
   );
 
   // 정보 섹션
